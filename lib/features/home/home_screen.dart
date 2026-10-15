@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../cards/card_catalog.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../data/app_settings.dart';
 import '../../data/bible_models.dart';
@@ -65,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final s = _services;
     final books = await s.bible.books(_translationId);
     final config = await s.contentConfig.load();
+    CardCatalog.apply(config.cardStyles);
     final passage = await s.bible.passage(_translationId, _range);
     Passage? votd;
     var pull = '';

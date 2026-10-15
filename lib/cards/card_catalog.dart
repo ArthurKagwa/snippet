@@ -1,3 +1,4 @@
+import 'card_style_overrides.dart';
 import 'card_style_spec.dart';
 import 'palettes/graphic_palettes.dart';
 import 'palettes/serif_palettes.dart';
@@ -8,9 +9,26 @@ import 'styles/riso_card.dart';
 import 'styles/swiss_card.dart';
 import 'styles/vigil_card.dart';
 
-/// Every style, in swipe order.
+/// The card styles, as bundled and then adjusted by [apply].
 abstract final class CardCatalog {
-  static final List<CardStyleSpec> styles = [
+  /// Offered styles, in swipe order.
+  static List<CardStyleSpec> get styles => _shown;
+
+  static List<CardStyleSpec> _shown = bundled;
+  static List<CardStyleSpec> _all = bundled;
+
+  /// Swaps in [overrides] over the bundled styles. Screens opened after
+  /// this see the change; [CardStyleOverrides.none] restores the bundle.
+  static void apply(CardStyleOverrides overrides) {
+    final all = overrides.applyTo(bundled);
+    _all = all;
+    _shown = [
+      for (final s in all)
+        if (!overrides.isHidden(s.id, all)) s,
+    ];
+  }
+
+  static final List<CardStyleSpec> bundled = [
     CardStyleSpec(
       id: 'vigil',
       name: 'Vigil',
@@ -60,5 +78,8 @@ abstract final class CardCatalog {
     return i < 0 ? 0 : i;
   }
 
-  static CardStyleSpec byId(String? styleId) => styles[indexOf(styleId)];
+  /// Also finds hidden styles, so saved cards keep their look.
+  static CardStyleSpec byId(String? styleId) =>
+      _all.where((s) => s.id == styleId).firstOrNull ??
+      styles[indexOf(styleId)];
 }

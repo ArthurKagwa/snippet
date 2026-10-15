@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart';
 
+import '../cards/card_style_overrides.dart';
 import 'content_config_service.dart';
 
 /// [ContentConfigService] backed by Firebase Remote Config.
@@ -11,6 +12,8 @@ import 'content_config_service.dart';
 /// Parameters (see remoteconfig.template.json):
 /// - `featured_verses`: JSON array of references, e.g. `["PSA 46:10"]`.
 /// - `announcement`: plain text; empty means none.
+/// - `card_styles`: JSON changes to the card styles; see
+///   [CardStyleOverrides]. `{}` means as bundled.
 ///
 /// The first launch waits briefly for a fetch. After that the values
 /// fetched on the previous launch are applied right away and a new fetch
@@ -21,6 +24,7 @@ class FirebaseContentConfigService implements ContentConfigService {
 
   static const featuredVersesKey = 'featured_verses';
   static const announcementKey = 'announcement';
+  static const cardStylesKey = 'card_styles';
 
   final FirebaseRemoteConfig _remoteConfig;
   Future<ContentConfig>? _loaded;
@@ -44,6 +48,7 @@ class FirebaseContentConfigService implements ContentConfigService {
           for (final v in defaultContentConfig.featuredVerses) v.ref,
         ]),
         announcementKey: '',
+        cardStylesKey: '{}',
       });
       if (rc.lastFetchStatus == RemoteConfigFetchStatus.noFetchYet) {
         try {
@@ -62,6 +67,7 @@ class FirebaseContentConfigService implements ContentConfigService {
       return parseRemoteContent(
         featuredVersesJson: rc.getString(featuredVersesKey),
         announcement: rc.getString(announcementKey),
+        cardStylesJson: rc.getString(cardStylesKey),
       );
     } catch (e) {
       debugPrint('Remote Config unavailable, using bundled content: $e');
@@ -75,6 +81,7 @@ class FirebaseContentConfigService implements ContentConfigService {
 ContentConfig parseRemoteContent({
   required String featuredVersesJson,
   required String announcement,
+  String cardStylesJson = '',
 }) {
   var verses = <FeaturedVerse>[];
   try {
@@ -94,5 +101,6 @@ ContentConfig parseRemoteContent({
         ? defaultContentConfig.featuredVerses
         : verses,
     announcement: text.isEmpty ? null : text,
+    cardStyles: CardStyleOverrides.parse(cardStylesJson),
   );
 }

@@ -28,6 +28,7 @@ class CardStyleSpec {
     required this.variants,
     required this.builder,
     this.collection = 'Snippet originals',
+    this.hiddenVariants = const [],
   });
 
   final String id;
@@ -37,10 +38,31 @@ class CardStyleSpec {
   final List<CardVariant> variants;
   final CardArtBuilder builder;
 
+  /// Colourways no longer offered, kept so saved cards still render.
+  final List<CardVariant> hiddenVariants;
+
   int variantIndex(String? variantId) {
     final i = variants.indexWhere((v) => v.id == variantId);
     return i < 0 ? 0 : i;
   }
 
-  CardVariant variant(String? variantId) => variants[variantIndex(variantId)];
+  CardVariant variant(String? variantId) =>
+      hiddenVariants.where((v) => v.id == variantId).firstOrNull ??
+      variants[variantIndex(variantId)];
+
+  CardStyleSpec copyWith({
+    String? name,
+    String? collection,
+    Set<StyleTag>? tags,
+    List<CardVariant>? variants,
+    List<CardVariant>? hiddenVariants,
+  }) => CardStyleSpec(
+    id: id,
+    name: name ?? this.name,
+    collection: collection ?? this.collection,
+    tags: tags ?? this.tags,
+    variants: variants ?? this.variants,
+    hiddenVariants: hiddenVariants ?? this.hiddenVariants,
+    builder: builder,
+  );
 }

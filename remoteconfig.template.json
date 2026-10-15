@@ -13,6 +13,13 @@
       },
       "valueType": "STRING",
       "description": "Short message for users; empty means none."
+    },
+    "card_styles": {
+      "defaultValue": {
+        "value": "{}"
+      },
+      "valueType": "JSON",
+      "description": "Card style changes: \"order\" and \"hidden\" take style ids (vigil, riso, dawn, swiss, night-watch, cobalt-arch); \"styles\" maps an id to name, tags, hidden_variants and variants (id plus hex colours: background, ink, accent, surface, ...). {} means as bundled. See lib/cards/card_style_overrides.dart."
     }
   }
 }

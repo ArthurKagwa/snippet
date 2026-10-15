@@ -1,12 +1,20 @@
+import '../cards/card_style_overrides.dart';
 import '../data/bible_models.dart';
 
-/// Remotely updatable content (verse suggestions, announcements, themes).
+/// Remotely updatable content (verse suggestions, announcements, styles).
 class ContentConfig {
-  const ContentConfig({this.featuredVerses = const [], this.announcement});
+  const ContentConfig({
+    this.featuredVerses = const [],
+    this.announcement,
+    this.cardStyles = CardStyleOverrides.none,
+  });
 
   /// Suggested verses; one is shown each day as the verse of the day.
   final List<FeaturedVerse> featuredVerses;
   final String? announcement;
+
+  /// Changes to the bundled card styles; see CardCatalog.apply.
+  final CardStyleOverrides cardStyles;
 
   FeaturedVerse? verseOfTheDay(DateTime day) {
     if (featuredVerses.isEmpty) return null;

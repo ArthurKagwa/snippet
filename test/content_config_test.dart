@@ -70,5 +70,9 @@ void main() {
     expect(jsonDecode(value as String), [
       for (final v in defaultContentConfig.featuredVerses) v.ref,
     ]);
+    final styles =
+        template['parameters'][FirebaseContentConfigService
+            .cardStylesKey]['defaultValue']['value'];
+    expect(jsonDecode(styles as String), <String, dynamic>{});
   });
 }
