@@ -45,12 +45,16 @@ class AppSettings extends ChangeNotifier {
   bool _showMark = false;
   bool _swipeHints = true;
   List<RecentVerse> _recent = const [];
+  String? _dismissedAnnouncement;
 
   String get defaultTranslationId => _translationId;
   CardShape get defaultShape => _shape;
   bool get showMark => _showMark;
   bool get swipeHints => _swipeHints;
   List<RecentVerse> get recent => _recent;
+
+  /// The last announcement the user closed; a different one shows again.
+  String? get dismissedAnnouncement => _dismissedAnnouncement;
 
   /// Missing or unreadable settings fall back to defaults.
   Future<void> load() async {
@@ -66,6 +70,7 @@ class AppSettings extends ChangeNotifier {
     _shape = CardShape.byName(raw['shape'] as String?);
     _showMark = raw['showMark'] as bool? ?? _showMark;
     _swipeHints = raw['swipeHints'] as bool? ?? _swipeHints;
+    _dismissedAnnouncement = raw['dismissedAnnouncement'] as String?;
     _recent = [
       for (final r in raw['recent'] as List<dynamic>? ?? const [])
         RecentVerse.fromJson(r as Map<String, dynamic>),
@@ -77,6 +82,9 @@ class AppSettings extends ChangeNotifier {
   set defaultShape(CardShape s) => _update(() => _shape = s);
   set showMark(bool v) => _update(() => _showMark = v);
   set swipeHints(bool v) => _update(() => _swipeHints = v);
+
+  set dismissedAnnouncement(String? v) =>
+      _update(() => _dismissedAnnouncement = v);
 
   void addRecent(RecentVerse v) => _update(() {
     _recent = [
@@ -95,6 +103,7 @@ class AppSettings extends ChangeNotifier {
           'showMark': _showMark,
           'swipeHints': _swipeHints,
           'recent': [for (final r in _recent) r.toJson()],
+          'dismissedAnnouncement': _dismissedAnnouncement,
         })
         .catchError((Object e) => debugPrint('Could not save settings: $e'));
   }

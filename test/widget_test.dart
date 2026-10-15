@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:snippet/app.dart';
 import 'package:snippet/data/json_store.dart';
 import 'package:snippet/features/library/saved_card_tile.dart';
+import 'package:snippet/services/content_config_service.dart';
 import 'package:snippet/services/export_service.dart';
 
 class _FakeExport implements ExportService {
@@ -39,6 +40,18 @@ class _FakeExport implements ExportService {
   }) async {}
 }
 
+class _FakeContent implements ContentConfigService {
+  _FakeContent(this.announcement);
+
+  final String announcement;
+
+  @override
+  Future<ContentConfig> load() async => ContentConfig(
+    featuredVerses: defaultContentConfig.featuredVerses,
+    announcement: announcement,
+  );
+}
+
 Future<void> _settle(WidgetTester tester) async {
   await tester.runAsync(() => Future<void>.delayed(const Duration(seconds: 1)));
   await tester.pumpAndSettle();
@@ -52,13 +65,25 @@ void main() {
   // which never complete in the next test.
   setUp(rootBundle.clear);
 
-  Future<void> boot(WidgetTester tester) async {
+  Future<void> boot(
+    WidgetTester tester, {
+    ContentConfigService? contentConfig,
+    MemoryJsonStore? reuseStore,
+  }) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.reset);
     export = _FakeExport();
-    store = MemoryJsonStore();
-    await tester.pumpWidget(SnippetApp(export: export, store: store));
+    store = reuseStore ?? MemoryJsonStore();
+    await tester.pumpWidget(
+      SnippetApp(
+        // A new key relaunches the app instead of updating it.
+        key: UniqueKey(),
+        export: export,
+        store: store,
+        contentConfig: contentConfig,
+      ),
+    );
     await _settle(tester);
   }
 
@@ -174,6 +199,36 @@ void main() {
     expect(find.text('Make a card'), findsOneWidget);
     expect(find.text('Use this verse'), findsOneWidget);
     expect(find.text('Preview'), findsNothing);
+  });
+
+  testWidgets('home shows an announcement until it is dismissed', (
+    tester,
+  ) async {
+    const message = 'New styles this week';
+    final text = find.byKey(const Key('announcement-text'));
+
+    await boot(tester);
+    expect(text, findsNothing); // Bundled content has none.
+
+    await boot(tester, contentConfig: _FakeContent(message));
+    expect(find.text(message), findsOneWidget);
+    expect(find.text('Make a card'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('announcement-dismiss')));
+    await tester.pumpAndSettle();
+    expect(text, findsNothing);
+
+    // Stays dismissed after a relaunch...
+    await boot(tester, contentConfig: _FakeContent(message), reuseStore: store);
+    expect(text, findsNothing);
+
+    // ...but a new message shows.
+    await boot(
+      tester,
+      contentConfig: _FakeContent('Daily reminders are here'),
+      reuseStore: store,
+    );
+    expect(find.text('Daily reminders are here'), findsOneWidget);
   });
 
   testWidgets('profile offers sign-in, never sign-out, without an account', (

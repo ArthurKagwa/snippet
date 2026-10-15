@@ -9,6 +9,7 @@ import '../../widgets/profile_button.dart';
 import '../../widgets/snippet_wordmark.dart';
 import '../profile/profile_screen.dart';
 import '../shell/shell_controller.dart';
+import 'announcement_banner.dart';
 import 'book_picker_sheet.dart';
 import 'verse_of_day.dart';
 import 'verse_picker_panel.dart';
@@ -32,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Passage? _passage;
   Passage? _votd;
   String _votdPull = '';
+  String? _announcement;
   bool _loading = true;
   Object? _error;
   bool _started = false;
@@ -83,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _passage = passage;
       _votd = votd;
       _votdPull = pull;
+      _announcement = config.announcement;
     });
   }
 
@@ -183,6 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Center(child: CircularProgressIndicator(color: c.lime)),
             )
           else ...[
+            _announcementBanner(),
             if (_votd != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 20, 16, 22),
@@ -196,6 +200,22 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ],
       ),
+    );
+  }
+
+  Widget _announcementBanner() {
+    final settings = _services.settings;
+    return ListenableBuilder(
+      listenable: settings,
+      builder: (context, _) {
+        final text = _announcement;
+        return AnnouncementBanner(
+          message: text != null && text != settings.dismissedAnnouncement
+              ? text
+              : null,
+          onDismiss: () => settings.dismissedAnnouncement = text,
+        );
+      },
     );
   }
 
