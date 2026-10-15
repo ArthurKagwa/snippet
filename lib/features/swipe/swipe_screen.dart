@@ -190,11 +190,16 @@ class _SwipeScreenState extends State<SwipeScreen> {
 
   bool _onScroll(ScrollNotification n) {
     if (n.metrics.axis != Axis.horizontal) return false;
-    final dragging = n is ScrollStartNotification
-        ? n.dragDetails != null
-        : n is ScrollUpdateNotification
-        ? _sideways
-        : false;
+    // Only start and end flip the hint; anything else mid-drag (like the
+    // direction notice) would switch it back off and rebuild the screen.
+    final bool dragging;
+    if (n is ScrollStartNotification) {
+      dragging = n.dragDetails != null;
+    } else if (n is ScrollEndNotification) {
+      dragging = false;
+    } else {
+      return false;
+    }
     if (dragging != _sideways) setState(() => _sideways = dragging);
     return false;
   }

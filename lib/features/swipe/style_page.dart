@@ -4,6 +4,7 @@ import '../../cards/card_content.dart';
 import '../../cards/card_style_spec.dart';
 import '../../cards/quote_card.dart';
 import '../../core/theme/snippet_colors.dart';
+import 'swipe_page_physics.dart';
 
 /// One style in the vertical stack: its colourways side by side in a
 /// horizontal PageView, with the next style peeking out underneath.
@@ -57,6 +58,12 @@ class StylePage extends StatelessWidget {
               child: PageView.builder(
                 key: PageStorageKey('variants-${style.id}'),
                 controller: controller,
+                pageSnapping: false,
+                physics: SwipePagePhysics(
+                  parent: ScrollConfiguration.of(
+                    context,
+                  ).getScrollPhysics(context),
+                ),
                 itemCount: style.variants.length,
                 onPageChanged: onVariantChanged,
                 itemBuilder: (context, i) => Center(
