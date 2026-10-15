@@ -29,7 +29,7 @@ The app code is MIT licensed (see `LICENSE`).
 
 ```
 lib/
-  main.dart                       entry point (Firebase.initializeApp goes here later)
+  main.dart                       entry point (Firebase.initializeApp; see Firebase setup)
   app.dart                        MaterialApp + dependency wiring
   core/                           app theme; theme/ holds color tokens + font styles
   cards/                          card design system: shapes, palettes/, styles/, QuoteCard
@@ -44,7 +44,8 @@ lib/
     profile/                      account, preferences, about
   widgets/                        shared chrome: header, arch panel/sheet, pills, switch, icons
   services/
-    auth_service.dart             AuthService + LocalAuthService (no Firebase yet)
+    auth_service.dart             AuthService + LocalAuthService (offline fallback)
+    firebase_auth_service.dart    Firebase Auth + Google sign-in
     content_config_service.dart   ContentConfigService + LocalContentConfigService
     export_service.dart           PNG capture, save to gallery (gal), share (share_plus)
     services.dart                 InheritedWidget container for the services above
@@ -57,6 +58,13 @@ test/                             repository, export, and widget tests
 
 ## Develop
 
+Requires the Flutter stable SDK (developed on 3.47) and, for device builds, the Android SDK / Xcode.
+Android minSdk is 24 (required by the `gal` plugin).
+
+Set up Firebase first (see [Firebase setup](#firebase-setup) below). A fresh clone does not include
+`lib/firebase_options.dart`; without it, `flutter analyze` reports a missing import until you generate
+or copy that file.
+
 ```
 flutter pub get
 flutter analyze
@@ -64,21 +72,40 @@ flutter test
 flutter run
 ```
 
-Requires the Flutter stable SDK (developed on 3.47) and, for device builds, the Android SDK / Xcode.
-Android minSdk is 24 (required by the `gal` plugin).
+## Firebase setup
+
+Sign-in and cloud library sync use Firebase. Configuration files are **gitignored on purpose** so API keys
+and app IDs are not committed.
+
+1. Create a [Firebase](https://console.firebase.google.com/) project and register the Android app
+   (`com.arthur.snippet`) and iOS app (`com.arthur.snippet`).
+2. In the Firebase console, enable **Authentication** → sign-in methods **Google** and **Anonymous**.
+3. Enable **Cloud Firestore** (start in test mode or add rules from `firestore.rules` as you prefer).
+4. On your machine, install the FlutterFire CLI and generate config:
+
+   ```bash
+   dart pub global activate flutterfire_cli
+   flutterfire configure
+   ```
+
+   This writes `lib/firebase_options.dart`, `android/app/google-services.json`, and
+   `ios/Runner/GoogleService-Info.plist` (and macOS equivalents if you enable that platform).
+
+   **Or** copy the template and fill in your project values:
+
+   ```bash
+   cp lib/firebase_options.dart.example lib/firebase_options.dart
+   ```
+
+   Then add `google-services.json` / `GoogleService-Info.plist` from the Firebase console if you build
+   native Android or iOS targets.
+
+5. Run `flutter pub get`, then `flutter analyze` and `flutter test`.
+
+Do not commit `lib/firebase_options.dart`, `google-services.json`, `GoogleService-Info.plist`, or
+`firebase_app_id_file.json`. Keep them on each developer machine or in CI secrets.
 
 ## Next steps
-
-### Firebase setup (not done yet)
-
-1. Create a Firebase project; register Android (`com.arthur.snippet`) and iOS apps.
-2. Enable Authentication providers: Anonymous and Google. Add your debug and release SHA-1/SHA-256 to the Android app.
-3. Enable Remote Config (and/or Firestore) for hot content (featured verses, announcements).
-4. Run `flutterfire configure`; add `firebase_core`, `firebase_auth`, `google_sign_in`, `firebase_remote_config`.
-5. Implement `FirebaseAuthService implements AuthService` and `FirebaseContentConfigService implements ContentConfigService`;
-   call `Firebase.initializeApp()` in `main.dart` and pass them into `SnippetApp(auth: ..., contentConfig: ...)`.
-6. `google-services.json` and `GoogleService-Info.plist` are git-ignored; do not commit them.
-   Keep them in CI secrets or each developer's machine.
 
 ### Play Store signing / release checklist
 
