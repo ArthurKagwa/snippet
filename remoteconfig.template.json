@@ -19,7 +19,7 @@
         "value": "{}"
       },
       "valueType": "JSON",
-      "description": "Card styles: \"order\" and \"hidden\" take style ids; \"styles\" maps an id to name, tags, hidden_variants, variants (id plus hex colours) and an optional \"layout\". An id that isn't bundled with a layout adds a new style. {} means as bundled. See remote_card_styles.example.json."
+      "description": "Card styles: order, hidden (style ids), styles (id -> name, tags, hidden_variants, variants, layout). An unbundled id with a layout adds a style. {} = as bundled. See remote_card_styles.example.json."
     },
     "invite_message": {
       "defaultValue": {
