@@ -1,15 +1,16 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/painting.dart';
+import 'package:flutter/widgets.dart';
 
 import 'card_palette.dart';
 import 'card_style_spec.dart';
+import 'remote/layout_node.dart';
 
 /// Remote changes to the bundled card styles (Remote Config `card_styles`).
 ///
-/// Layouts are code, so styles can't be added remotely; this reorders,
-/// hides and renames them, and adds, recolours or hides colourways:
+/// Reorders, hides and renames styles, adds, recolours or hides
+/// colourways, and adds whole new styles from a JSON `layout` (see
+/// [LayoutNode] and remote_card_styles.example.json):
 ///
 /// ```json
 /// {
@@ -25,14 +26,23 @@ import 'card_style_spec.dart';
 ///         {"id": "tangerine", "name": "Tangerine", "background": "#FF7A1A",
 ///          "ink": "#141414", "accent": "#141414", "surface": "#FFE14D"}
 ///       ]
+///     },
+///     "psalter": {
+///       "name": "Psalter",
+///       "tags": ["classic"],
+///       "layout": {"type": "box", "color": "background", ...},
+///       "variants": [{"id": "ink", "background": "#101010", "ink": "#F4EFE6"}]
 ///     }
 ///   }
 /// }
 /// ```
 ///
 /// A variant whose id matches a bundled one only changes the fields given;
-/// a new id needs at least `background` and `ink`. Hidden styles and
-/// colourways still render on cards that were saved with them.
+/// a new id needs at least `background` and `ink`. A style id that isn't
+/// bundled needs a `layout` and one valid variant; a `layout` on a bundled
+/// id redraws it. Hidden styles and colourways still render on cards that
+/// were saved with them, but a style deleted from the config falls back to
+/// the first style, so hide styles rather than delete them.
 @immutable
 class CardStyleOverrides {
   const CardStyleOverrides({
@@ -75,8 +85,25 @@ class CardStyleOverrides {
   /// Applies these changes to [bundled], returning every style in display
   /// order with hidden ones still included (see [isHidden]).
   List<CardStyleSpec> applyTo(List<CardStyleSpec> bundled) {
+    final base = {for (final s in bundled) s.id: s};
+    for (final MapEntry(key: id, value: o) in styles.entries) {
+      if (o.layout == null) continue;
+      base.putIfAbsent(
+        id,
+        () => CardStyleSpec(
+          id: id,
+          name: id,
+          tags: const {},
+          variants: const [],
+          builder: (_, _, _) => const SizedBox.shrink(),
+        ),
+      );
+    }
     final byId = {
-      for (final s in bundled) s.id: styles[s.id]?._applyTo(s) ?? s,
+      for (final s in base.values)
+        if (styles[s.id]?._applyTo(s) ?? s case final spec
+            when spec.variants.isNotEmpty)
+          s.id: spec,
     };
     return [for (final id in order.toSet()) ?byId.remove(id), ...byId.values];
   }
@@ -95,6 +122,7 @@ class StyleOverride {
     this.tags,
     this.hiddenVariants = const {},
     this.variants = const [],
+    this.layout,
   });
 
   factory StyleOverride._fromJson(Map json) {
@@ -115,6 +143,7 @@ class StyleOverride {
           for (final v in variants.whereType<Map>())
             if (_string(v['id']) case final id?) VariantOverride._(id, v),
       ],
+      layout: _layout(json['layout']),
     );
   }
 
@@ -123,6 +152,16 @@ class StyleOverride {
   final Set<StyleTag>? tags;
   final Set<String> hiddenVariants;
   final List<VariantOverride> variants;
+
+  /// Replaces the style's drawing; required for a new style.
+  final LayoutNode? layout;
+
+  static LayoutNode? _layout(Object? json) {
+    if (json == null) return null;
+    final node = LayoutNode.parse(json);
+    if (node == null) debugPrint('Remote Config card_styles: bad layout');
+    return node;
+  }
 
   CardStyleSpec _applyTo(CardStyleSpec style) {
     final merged = [...style.variants, ...style.hiddenVariants];
@@ -147,6 +186,10 @@ class StyleOverride {
       collection: collection,
       tags: tags == null || tags!.isEmpty ? null : tags,
       variants: shown,
+      builder: switch (layout) {
+        final l? => (c, p, s) => l.build(LayoutScope(c, p, s)),
+        null => null,
+      },
       hiddenVariants: [
         for (final v in merged)
           if (!shown.contains(v)) v,

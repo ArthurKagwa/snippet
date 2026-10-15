@@ -19,7 +19,7 @@
         "value": "{}"
       },
       "valueType": "JSON",
-      "description": "Card style changes: \"order\" and \"hidden\" take style ids (vigil, riso, dawn, swiss, night-watch, cobalt-arch); \"styles\" maps an id to name, tags, hidden_variants and variants (id plus hex colours: background, ink, accent, surface, ...). {} means as bundled. See lib/cards/card_style_overrides.dart."
+      "description": "Card styles: \"order\" and \"hidden\" take style ids; \"styles\" maps an id to name, tags, hidden_variants, variants (id plus hex colours) and an optional \"layout\". An id that isn't bundled with a layout adds a new style. {} means as bundled. See remote_card_styles.example.json."
     },
     "invite_message": {
       "defaultValue": {

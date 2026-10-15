@@ -56,6 +56,7 @@ class CardStyleSpec {
     Set<StyleTag>? tags,
     List<CardVariant>? variants,
     List<CardVariant>? hiddenVariants,
+    CardArtBuilder? builder,
   }) => CardStyleSpec(
     id: id,
     name: name ?? this.name,
@@ -63,6 +64,6 @@ class CardStyleSpec {
     tags: tags ?? this.tags,
     variants: variants ?? this.variants,
     hiddenVariants: hiddenVariants ?? this.hiddenVariants,
-    builder: builder,
+    builder: builder ?? this.builder,
   );
 }
