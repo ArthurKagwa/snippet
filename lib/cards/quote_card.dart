@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../core/theme/snippet_fonts.dart';
 import 'card_content.dart';
 import 'card_palette.dart';
 import 'card_shape.dart';
 import 'card_style_spec.dart';
+import 'snippet_mark.dart';
 
 /// Hero tag shared by every on-screen copy of one style + colourway, so a
 /// thumbnail can fly into the full-size card.
@@ -54,14 +54,8 @@ class QuoteCard extends StatelessWidget {
                   Positioned(
                     right: 10,
                     bottom: 7,
-                    child: Text(
-                      'snippet',
-                      textScaler: TextScaler.noScaling,
-                      style: SnippetFonts.display(
-                        8,
-                        color: palette.ink.withValues(alpha: 0.55),
-                        letterSpacing: -0.2,
-                      ),
+                    child: SnippetMark(
+                      color: palette.ink.withValues(alpha: 0.55),
                     ),
                   ),
               ],

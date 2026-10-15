@@ -42,7 +42,7 @@ class AppSettings extends ChangeNotifier {
 
   String _translationId = 'kjv';
   CardShape _shape = CardShape.portrait;
-  bool _showMark = false;
+  bool _showMark = true;
   bool _hdExport = false;
   bool _swipeHints = true;
   List<RecentVerse> _recent = const [];
