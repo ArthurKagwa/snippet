@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
+import '../../services/auth_service.dart';
 import '../../services/services.dart';
 import '../../widgets/arch_sheet.dart';
 import '../../widgets/icons/google_logo.dart';
+import '../../widgets/overlay_toast.dart';
 import '../../widgets/pill_button.dart';
-import '../../widgets/toast.dart';
+import 'email_sign_in_form.dart';
 
 /// Returns true when a user is signed in, showing the optional sign-in
 /// sheet first if needed. "Not now" returns false and keeps current work.
@@ -35,16 +37,18 @@ class _SignInSheetState extends State<SignInSheet> {
 
   bool get _busy => _running != null;
 
+  /// Showing the email and password form instead of the other options.
+  bool _email = false;
+
   Future<void> _signIn(String id, Future<bool> Function() attempt) async {
     if (_busy) return;
     final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _running = id);
     try {
       if (await attempt()) navigator.pop(true);
     } catch (e) {
       debugPrint('Sign-in failed: $e');
-      showToast(messenger, 'Could not sign in. Try again.');
+      if (mounted) showOverlayToast(context, 'Could not sign in. Try again.');
     } finally {
       if (mounted) setState(() => _running = null);
     }
@@ -93,58 +97,16 @@ class _SignInSheetState extends State<SignInSheet> {
           textAlign: TextAlign.center,
           style: SnippetFonts.body(14, color: c.inkDim, height: 1.4),
         ),
-        const SizedBox(height: 40),
-        SizedBox(
-          width: double.infinity,
-          child: PillButton(
-            key: const Key('google-sign-in'),
-            label: 'Continue with Google',
-            leading: const GoogleLogo(),
-            onPressed: _busy || !auth.supportsGoogleSignIn ? null : _google,
-            busy: _running == 'google',
-            foreground: c.ink,
-            background: c.white,
-            outlined: true,
-            labelStyle: SnippetFonts.body(14, weight: FontWeight.w600),
-          ),
-        ),
-        if (!auth.supportsGoogleSignIn) ...[
-          const SizedBox(height: 8),
-          Text(
-            'Google sign-in is not set up in this build yet.',
-            style: SnippetFonts.body(12, color: c.inkDim),
-          ),
-          TextButton(
-            key: const Key('local-sign-in'),
-            onPressed: _busy ? null : _thisPhoneOnly,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_running == 'local') ...[
-                  SizedBox.square(
-                    dimension: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: c.cobalt,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Flexible(
-                  child: Text(
-                    'Keep cards on this phone only',
-                    style: SnippetFonts.body(
-                      13,
-                      weight: FontWeight.w600,
-                      color: _busy && _running != 'local' ? c.inkDim : c.cobalt,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        SizedBox(height: _email ? 24 : 40),
+        if (_email)
+          EmailSignInForm(
+            onSignedIn: () => Navigator.of(context).pop(true),
+            onBack: auth.supportsGoogleSignIn
+                ? () => setState(() => _email = false)
+                : null,
+          )
+        else
+          ..._options(auth),
         SizedBox(
           width: double.infinity,
           height: 44,
@@ -162,5 +124,81 @@ class _SignInSheetState extends State<SignInSheet> {
         ),
       ],
     );
+  }
+
+  /// Google first, then email, then "this phone only" where Google is
+  /// missing.
+  List<Widget> _options(AuthService auth) {
+    final c = context.colors;
+    return [
+      SizedBox(
+        width: double.infinity,
+        child: PillButton(
+          key: const Key('google-sign-in'),
+          label: 'Continue with Google',
+          leading: const GoogleLogo(),
+          onPressed: _busy || !auth.supportsGoogleSignIn ? null : _google,
+          busy: _running == 'google',
+          foreground: c.ink,
+          background: c.white,
+          outlined: true,
+          labelStyle: SnippetFonts.body(14, weight: FontWeight.w600),
+        ),
+      ),
+      if (auth.supportsEmailSignIn) ...[
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: PillButton(
+            key: const Key('email-sign-in'),
+            label: 'Continue with email',
+            icon: Icons.mail_outline_rounded,
+            onPressed: _busy ? null : () => setState(() => _email = true),
+            foreground: c.ink,
+            background: c.white,
+            outlined: true,
+            labelStyle: SnippetFonts.body(14, weight: FontWeight.w600),
+          ),
+        ),
+        const SizedBox(height: 4),
+      ],
+      if (!auth.supportsGoogleSignIn) ...[
+        const SizedBox(height: 8),
+        Text(
+          'Google sign-in is not set up in this build yet.',
+          style: SnippetFonts.body(12, color: c.inkDim),
+        ),
+        TextButton(
+          key: const Key('local-sign-in'),
+          onPressed: _busy ? null : _thisPhoneOnly,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_running == 'local') ...[
+                SizedBox.square(
+                  dimension: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: c.cobalt,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Text(
+                  'Keep cards on this phone only',
+                  style: SnippetFonts.body(
+                    13,
+                    weight: FontWeight.w600,
+                    color: _busy && _running != 'local' ? c.inkDim : c.cobalt,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ];
   }
 }

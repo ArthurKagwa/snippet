@@ -33,6 +33,9 @@ class _LinkingAuth implements AuthService {
   @override
   bool get supportsGoogleSignIn => true;
 
+  @override
+  bool get supportsEmailSignIn => false;
+
   void _set(AppUser? user) {
     _user = user;
     _changes.add(user);
@@ -49,6 +52,20 @@ class _LinkingAuth implements AuthService {
     _set(const AppUser(id: 'u1', displayName: 'Ada'));
     return _user;
   }
+
+  @override
+  Future<AppUser> signInWithEmail(String email, String password) =>
+      throw UnimplementedError();
+
+  @override
+  Future<AppUser> createAccountWithEmail(String email, String password) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> sendPasswordReset(String email) => throw UnimplementedError();
+
+  @override
+  Future<void> confirmPassword(String password) async {}
 
   @override
   Future<void> signOut() async => _set(null);

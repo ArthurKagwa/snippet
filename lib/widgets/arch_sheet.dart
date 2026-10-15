@@ -17,8 +17,11 @@ Future<T?> showArchSheet<T>(
     backgroundColor: c.stone.withAlpha(0),
     barrierColor: c.scrim,
     elevation: 0,
+    // The keyboard inset goes inside the panel so it grows above the keys.
     builder: (ctx) => ArchPanel(
-      padding: padding,
+      padding: padding.add(
+        EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
+      ),
       child: SafeArea(
         top: false,
         child: SingleChildScrollView(child: builder(ctx)),

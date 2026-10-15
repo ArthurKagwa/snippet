@@ -1,10 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'auth_service.dart';
 
-/// [AuthService] backed by Firebase Auth, with Google as the sign-in
-/// provider. Client IDs come from google-services.json /
+/// [AuthService] backed by Firebase Auth, with Google and email/password
+/// as sign-in providers. Client IDs come from google-services.json /
 /// GoogleService-Info.plist, so nothing is hardcoded here.
 class FirebaseAuthService implements AuthService {
   FirebaseAuthService({FirebaseAuth? auth, GoogleSignIn? google})
@@ -22,7 +23,37 @@ class FirebaseAuthService implements AuthService {
           displayName: u.displayName,
           email: u.email,
           isAnonymous: u.isAnonymous,
+          usesPassword: u.providerData.any(
+            (p) => p.providerId == EmailAuthProvider.PROVIDER_ID,
+          ),
         );
+
+  /// Firebase error codes as messages people can act on.
+  static AuthException _friendly(FirebaseAuthException e) =>
+      AuthException(switch (e.code) {
+        'invalid-credential' ||
+        'wrong-password' ||
+        'user-not-found' => 'That email and password do not match.',
+        'invalid-email' => 'Check the email address.',
+        'missing-password' => 'Enter your password.',
+        'email-already-in-use' =>
+          'That email already has an account. Sign in instead.',
+        'weak-password' => 'Use a password of at least 6 characters.',
+        'user-disabled' => 'This account has been turned off.',
+        'too-many-requests' => 'Too many tries. Wait a moment and try again.',
+        'network-request-failed' => 'No connection. Check your internet.',
+        _ => 'Could not sign in. Try again.',
+      });
+
+  /// Runs [action], turning Firebase errors into [AuthException]s.
+  static Future<T> _guard<T>(Future<T> Function() action) async {
+    try {
+      return await action();
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Firebase auth error: ${e.code}');
+      throw _friendly(e);
+    }
+  }
 
   @override
   AppUser? get currentUser => _toAppUser(_auth.currentUser);
@@ -33,6 +64,9 @@ class FirebaseAuthService implements AuthService {
 
   @override
   bool get supportsGoogleSignIn => _google.supportsAuthenticate();
+
+  @override
+  bool get supportsEmailSignIn => true;
 
   @override
   Future<AppUser> signInAnonymously() async {
@@ -80,6 +114,52 @@ class FirebaseAuthService implements AuthService {
   }
 
   @override
+  Future<AppUser> signInWithEmail(String email, String password) =>
+      _guard(() async {
+        final result = await _auth.signInWithEmailAndPassword(
+          email: email.trim(),
+          password: password,
+        );
+        return _toAppUser(result.user)!;
+      });
+
+  /// Upgrades a "this phone only" session in place so its cards are kept.
+  @override
+  Future<AppUser> createAccountWithEmail(String email, String password) =>
+      _guard(() async {
+        final current = _auth.currentUser;
+        final UserCredential result;
+        if (current != null && current.isAnonymous) {
+          result = await current.linkWithCredential(
+            EmailAuthProvider.credential(
+              email: email.trim(),
+              password: password,
+            ),
+          );
+        } else {
+          result = await _auth.createUserWithEmailAndPassword(
+            email: email.trim(),
+            password: password,
+          );
+        }
+        return _toAppUser(result.user)!;
+      });
+
+  @override
+  Future<void> sendPasswordReset(String email) =>
+      _guard(() => _auth.sendPasswordResetEmail(email: email.trim()));
+
+  @override
+  Future<void> confirmPassword(String password) => _guard(() async {
+    final user = _auth.currentUser;
+    final email = user?.email;
+    if (user == null || email == null) return;
+    await user.reauthenticateWithCredential(
+      EmailAuthProvider.credential(email: email, password: password),
+    );
+  });
+
+  @override
   Future<void> signOut() async {
     if (_googleReady != null) {
       try {
@@ -91,8 +171,9 @@ class FirebaseAuthService implements AuthService {
     await _auth.signOut();
   }
 
-  /// Firebase only deletes accounts that signed in recently, so this
-  /// re-confirms with Google when asked to.
+  /// Firebase only deletes accounts that signed in recently: email
+  /// accounts call [confirmPassword] first, and Google accounts re-confirm
+  /// with Google when asked to.
   @override
   Future<void> deleteAccount() async {
     final user = _auth.currentUser;

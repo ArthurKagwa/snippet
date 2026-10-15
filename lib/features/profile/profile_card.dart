@@ -16,7 +16,7 @@ class ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = context.colors;
     final u = user;
-    final google = u != null && !u.isAnonymous;
+    final google = u != null && !u.isAnonymous && !u.usesPassword;
     final initials = u?.initials ?? '';
     final name = u == null
         ? 'Not signed in'
@@ -27,6 +27,8 @@ class ProfileCard extends StatelessWidget {
         ? 'Swiping and exporting never need an account'
         : u.isAnonymous
         ? 'Cards stay on this device'
+        : u.usesPassword
+        ? 'Signed in with email'
         : 'Signed in with Google';
     return Row(
       children: [

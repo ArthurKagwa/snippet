@@ -8,10 +8,12 @@ import '../../widgets/icons/google_logo.dart';
 import '../../widgets/pill_button.dart';
 import '../../widgets/toast.dart';
 import '../auth/sign_in_sheet.dart';
+import 'password_confirm_dialog.dart';
 
 /// Bottom of Profile. What it offers depends on the account:
 /// signed out → sign in; on this phone → sync with Google and clear cards;
-/// Google → sign out and delete the account.
+/// Google or email → sign out and delete the account (email accounts
+/// confirm with their password first).
 ///
 /// While one action runs it shows a spinner and the others are blocked.
 class AccountActions extends StatefulWidget {
@@ -125,13 +127,18 @@ class _AccountActionsState extends State<AccountActions> {
     final messenger = ScaffoldMessenger.of(context);
     var deleted = false;
     await _guard(() async {
-      final ok = await _confirm(
-        title: 'Delete account and data?',
-        body:
-            'This removes every saved card and signs you out. It cannot be '
-            'undone.',
-        action: 'Delete',
-      );
+      const title = 'Delete account and data?';
+      const body =
+          'This removes every saved card and signs you out. It cannot be '
+          'undone.';
+      final ok = widget.user?.usesPassword ?? false
+          ? await confirmPasswordDialog(
+              context,
+              title: title,
+              body: body,
+              action: 'Delete',
+            )
+          : await _confirm(title: title, body: body, action: 'Delete');
       if (!ok) return;
       _spin('delete');
       try {
