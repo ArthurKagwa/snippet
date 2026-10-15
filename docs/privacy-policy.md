@@ -48,7 +48,7 @@ Contractual Clauses.
 
 Your data is kept until you delete it. In the app, go to **Profile → Delete
 account and data** to remove your saved cards and your account. You can also
-request deletion at [DELETION_REQUEST_URL] or by emailing [CONTACT_EMAIL];
+request deletion at https://snippetverses.app/delete-account or by emailing support@snippetverses.app;
 we will act on requests within 30 days.
 
 ## Your rights
@@ -56,7 +56,7 @@ we will act on requests within 30 days.
 Depending on where you live (for example the EU/UK under GDPR, or Uganda
 under the Data Protection and Privacy Act, 2019), you may have the right to
 access, correct, delete or export your data, to object to processing, and to
-complain to your data protection authority. Contact [CONTACT_EMAIL] to
+complain to your data protection authority. Contact support@snippetverses.app to
 exercise them.
 
 ## Children
@@ -72,4 +72,4 @@ app if the change is material.
 
 ## Contact
 
-[YOUR_NAME / ORGANISATION] · [CONTACT_EMAIL]
+Asasira Arthur · support@snippetverses.app

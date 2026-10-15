@@ -1,0 +1,13 @@
+{
+  "name": "snippetverses-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public",
+    "html_handling": "drop-trailing-slash",
+    "not_found_handling": "404-page"
+  },
+  "routes": [
+    { "pattern": "snippetverses.app", "custom_domain": true },
+    { "pattern": "www.snippetverses.app", "custom_domain": true }
+  ]
+}
