@@ -43,6 +43,7 @@ class AppSettings extends ChangeNotifier {
   String _translationId = 'kjv';
   CardShape _shape = CardShape.portrait;
   bool _showMark = false;
+  bool _hdExport = false;
   bool _swipeHints = true;
   List<RecentVerse> _recent = const [];
   String? _dismissedAnnouncement;
@@ -50,6 +51,9 @@ class AppSettings extends ChangeNotifier {
   String get defaultTranslationId => _translationId;
   CardShape get defaultShape => _shape;
   bool get showMark => _showMark;
+
+  /// Export at [CardShape.hdScale] times the base resolution.
+  bool get hdExport => _hdExport;
   bool get swipeHints => _swipeHints;
   List<RecentVerse> get recent => _recent;
 
@@ -69,6 +73,7 @@ class AppSettings extends ChangeNotifier {
     _translationId = raw['translation'] as String? ?? _translationId;
     _shape = CardShape.byName(raw['shape'] as String?);
     _showMark = raw['showMark'] as bool? ?? _showMark;
+    _hdExport = raw['hdExport'] as bool? ?? _hdExport;
     _swipeHints = raw['swipeHints'] as bool? ?? _swipeHints;
     _dismissedAnnouncement = raw['dismissedAnnouncement'] as String?;
     _recent = [
@@ -81,6 +86,7 @@ class AppSettings extends ChangeNotifier {
   set defaultTranslationId(String id) => _update(() => _translationId = id);
   set defaultShape(CardShape s) => _update(() => _shape = s);
   set showMark(bool v) => _update(() => _showMark = v);
+  set hdExport(bool v) => _update(() => _hdExport = v);
   set swipeHints(bool v) => _update(() => _swipeHints = v);
 
   set dismissedAnnouncement(String? v) =>
@@ -101,6 +107,7 @@ class AppSettings extends ChangeNotifier {
           'translation': _translationId,
           'shape': _shape.name,
           'showMark': _showMark,
+          'hdExport': _hdExport,
           'swipeHints': _swipeHints,
           'recent': [for (final r in _recent) r.toJson()],
           'dismissedAnnouncement': _dismissedAnnouncement,

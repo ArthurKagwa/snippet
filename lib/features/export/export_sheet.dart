@@ -13,8 +13,8 @@ import '../../services/services.dart';
 import '../../widgets/arch_sheet.dart';
 import '../../widgets/circle_button.dart';
 import '../../widgets/pill_button.dart';
-import '../../widgets/snippet_switch.dart';
 import '../../widgets/toast.dart';
+import 'export_toggle_row.dart';
 import 'shape_option.dart';
 
 /// "Share it": pick a shape, optionally add the mark, save or share a PNG.
@@ -50,6 +50,7 @@ class _ExportSheetState extends State<ExportSheet> {
   final GlobalKey _boundaryKey = GlobalKey();
   late CardShape _shape = Services.of(context).settings.defaultShape;
   late bool _mark = Services.of(context).settings.showMark;
+  late bool _hd = Services.of(context).settings.hdExport;
 
   /// 'save' or 'share' while that export runs; everything else waits.
   String? _running;
@@ -67,7 +68,7 @@ class _ExportSheetState extends State<ExportSheet> {
       RegExp(r'[^a-z0-9]+'),
       '_',
     );
-    return 'snippet_${slug}_${_shape.name}';
+    return 'snippet_${slug}_${_shape.name}${_hd ? '_hd' : ''}';
   }
 
   Future<void> _run(
@@ -82,7 +83,7 @@ class _ExportSheetState extends State<ExportSheet> {
       final boundary =
           _boundaryKey.currentContext!.findRenderObject()
               as RenderRepaintBoundary;
-      final ratio = _shape.pixelWidth / boundary.size.width;
+      final ratio = _shape.exportWidth(hd: _hd) / boundary.size.width;
       final png = await services.export.capturePng(boundary, pixelRatio: ratio);
       await action(services, png);
     } catch (e) {
@@ -172,34 +173,26 @@ class _ExportSheetState extends State<ExportSheet> {
               horizontal: BorderSide(color: c.stone2, width: 1),
             ),
           ),
-          child: Row(
+          child: Column(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Small Snippet mark',
-                      style: SnippetFonts.body(12, color: c.ink),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'PNG · ${_shape.pixelWidth} × ${_shape.pixelHeight} px',
-                      style: SnippetFonts.body(8.7, color: c.inkDim),
-                    ),
-                  ],
-                ),
-              ),
-              SnippetSwitch(
-                semanticLabel: 'Small Snippet mark',
+              ExportToggleRow(
+                label: 'Small Snippet mark',
                 value: _mark,
                 onChanged: (v) {
                   if (!_busy) setState(() => _mark = v);
                 },
-                onTrack: c.cobalt,
-                onThumb: c.white,
-                offTrack: c.stone2,
-                offThumb: c.white,
+              ),
+              const SizedBox(height: 8),
+              ExportToggleRow(
+                key: const Key('hd-export'),
+                label: 'HD quality',
+                detail:
+                    'PNG · ${_shape.exportWidth(hd: _hd)} × '
+                    '${_shape.exportHeight(hd: _hd)} px',
+                value: _hd,
+                onChanged: (v) {
+                  if (!_busy) setState(() => _hd = v);
+                },
               ),
             ],
           ),

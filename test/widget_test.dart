@@ -9,6 +9,7 @@ import 'package:snippet/data/json_store.dart';
 import 'package:snippet/features/library/saved_card_tile.dart';
 import 'package:snippet/services/content_config_service.dart';
 import 'package:snippet/services/export_service.dart';
+import 'package:snippet/widgets/snippet_switch.dart';
 
 class _FakeExport implements ExportService {
   final List<String> saved = [];
@@ -159,6 +160,29 @@ void main() {
     await tester.tap(find.byKey(const Key('share-image')));
     await tester.pumpAndSettle();
     expect(export.captions, ['PSALM 46:10 · KJV']);
+  });
+
+  testWidgets('HD toggle doubles the export resolution', (tester) async {
+    await boot(tester);
+    await tester.tap(find.byKey(const Key('swipe-styles')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('export-card')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('PNG · 1080 × 1350 px'), findsOneWidget);
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('hd-export')),
+        matching: find.byType(SnippetSwitch),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('PNG · 2160 × 2700 px'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('save-image')));
+    await tester.pumpAndSettle();
+    expect(export.saved, ['snippet_psalm_46_10_portrait_hd']);
+    expect(export.ratios.single, closeTo(2160, 0.5));
   });
 
   testWidgets('share caption and invite text come from content config', (

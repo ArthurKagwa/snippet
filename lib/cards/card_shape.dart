@@ -18,6 +18,14 @@ enum CardShape {
 
   double get aspectRatio => pixelWidth / pixelHeight;
 
+  /// HD exports render at this multiple of the base size, so WhatsApp's HD
+  /// option (and similar) has real detail to keep.
+  static const int hdScale = 2;
+
+  int exportWidth({required bool hd}) => hd ? pixelWidth * hdScale : pixelWidth;
+  int exportHeight({required bool hd}) =>
+      hd ? pixelHeight * hdScale : pixelHeight;
+
   /// Cards are composed at this logical width and scaled to fit.
   static const double designWidth = 304;
 

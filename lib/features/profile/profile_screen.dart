@@ -176,6 +176,15 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             SettingsRow(
+              label: 'HD exports',
+              trailing: _switch(
+                context,
+                'HD exports',
+                settings.hdExport,
+                (v) => settings.hdExport = v,
+              ),
+            ),
+            SettingsRow(
               label: 'Swipe hints',
               trailing: _switch(
                 context,
