@@ -7,6 +7,7 @@ import '../../data/bible_models.dart';
 import '../../data/bible_repository.dart';
 import '../../data/saved_card.dart';
 import '../../services/services.dart';
+import '../../widgets/toast.dart';
 import '../all_styles/all_styles_screen.dart';
 import '../auth/sign_in_sheet.dart';
 import '../export/export_sheet.dart';
@@ -43,6 +44,9 @@ class _SwipeScreenState extends State<SwipeScreen> {
   };
   final Map<int, PageController> _variantControllers = {};
   bool _sideways = false;
+  bool _saving = false;
+  bool _exportOpen = false;
+  bool _askingSignIn = false;
 
   /// Follows the passage, so a new verse keeps the current style.
   CardContent get _content => CardContent(
@@ -96,44 +100,59 @@ class _SwipeScreenState extends State<SwipeScreen> {
   }
 
   Future<void> _save() async {
+    if (_saving || _askingSignIn) return;
     final services = Services.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final shell = ShellScope.read(context);
-    if (!await ensureSignedIn(context)) return;
+    // Captured now so a swipe mid-save cannot change what gets saved.
     final style = _styles[_styleIndex];
+    final variant = style.variants[_variantIndex(_styleIndex)];
+    // The sign-in sheet waits on the user, so no spinner yet; just ignore
+    // repeat taps.
+    _askingSignIn = true;
+    final bool signedIn;
+    try {
+      signedIn = await ensureSignedIn(context);
+    } finally {
+      _askingSignIn = false;
+    }
+    if (!signedIn || !mounted) return;
+    setState(() => _saving = true);
     try {
       await services.library.add(
         SavedCard.fromPassage(
           widget.passage,
           styleId: style.id,
-          variantId: style.variants[_variantIndex(_styleIndex)].id,
+          variantId: variant.id,
         ),
       );
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Could not save: $e')));
+      debugPrint('Could not save card: $e');
+      showToast(messenger, 'Could not save this card. Try again.');
       return;
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: const Text('Saved to your library'),
-          action: SnackBarAction(
-            label: 'View',
-            onPressed: () => shell.select(ShellTab.saved),
-          ),
-        ),
-      );
+    showToast(
+      messenger,
+      'Saved to your library',
+      actionLabel: 'View',
+      onAction: () => shell.select(ShellTab.saved),
+    );
   }
 
+  /// Not awaited by the button (the sheet covers it), but a second tap
+  /// while the sheet is opening is ignored.
   void _export() {
+    if (_exportOpen || _saving) return;
+    _exportOpen = true;
     final style = _styles[_styleIndex];
     showExportSheet(
       context,
       content: _content,
       style: style,
       variant: style.variants[_variantIndex(_styleIndex)],
-    );
+    ).whenComplete(() => _exportOpen = false);
   }
 
   bool _onScroll(ScrollNotification n) {
@@ -196,6 +215,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
                 style: style,
                 variantIndex: _variantIndex(_styleIndex),
                 onVariant: _selectVariant,
+                saving: _saving,
                 onSave: _save,
                 onExport: _export,
               ),

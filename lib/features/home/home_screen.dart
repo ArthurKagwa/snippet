@@ -141,10 +141,11 @@ class _HomeScreenState extends State<HomeScreen> {
     if (p != null) ShellScope.read(context).setPassage(p);
   }
 
-  void _openProfile() {
+  /// Returns the route's Future so the button ignores a double tap.
+  Future<void> _openProfile() {
     final navigator = Navigator.of(context);
     final shell = ShellScope.read(context);
-    navigator.push(
+    return navigator.push(
       MaterialPageRoute<void>(
         builder: (_) =>
             ProfileScreen(onShowSaved: () => shell.select(ShellTab.saved)),

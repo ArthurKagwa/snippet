@@ -14,6 +14,7 @@ import '../../widgets/arch_sheet.dart';
 import '../../widgets/circle_button.dart';
 import '../../widgets/pill_button.dart';
 import '../../widgets/snippet_switch.dart';
+import '../../widgets/toast.dart';
 import 'shape_option.dart';
 
 /// "Share it": pick a shape, optionally add the mark, save or share a PNG.
@@ -49,7 +50,11 @@ class _ExportSheetState extends State<ExportSheet> {
   final GlobalKey _boundaryKey = GlobalKey();
   late CardShape _shape = Services.of(context).settings.defaultShape;
   late bool _mark = Services.of(context).settings.showMark;
-  bool _busy = false;
+
+  /// 'save' or 'share' while that export runs; everything else waits.
+  String? _running;
+
+  bool get _busy => _running != null;
 
   static const Map<CardShape, double> _previewWidth = {
     CardShape.feed: 84,
@@ -66,11 +71,13 @@ class _ExportSheetState extends State<ExportSheet> {
   }
 
   Future<void> _run(
+    String id,
     Future<void> Function(Services s, Uint8List png) action,
   ) async {
+    if (_busy) return;
     final services = Services.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    setState(() => _busy = true);
+    setState(() => _running = id);
     try {
       final boundary =
           _boundaryKey.currentContext!.findRenderObject()
@@ -79,19 +86,21 @@ class _ExportSheetState extends State<ExportSheet> {
       final png = await services.export.capturePng(boundary, pixelRatio: ratio);
       await action(services, png);
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Export failed: $e')));
+      debugPrint('Export failed: $e');
+      showToast(messenger, 'Could not export the image. Try again.');
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) setState(() => _running = null);
     }
   }
 
-  Future<void> _saveImage() => _run((s, png) async {
+  Future<void> _saveImage() => _run('save', (s, png) async {
     final messenger = ScaffoldMessenger.of(context);
     await s.export.saveToGallery(png, name: _fileName);
-    messenger.showSnackBar(const SnackBar(content: Text('Saved to Photos')));
+    showToast(messenger, 'Saved to Photos');
   });
 
   Future<void> _share() => _run(
+    'share',
     (s, png) => s.export.share(
       png,
       name: _fileName,
@@ -150,7 +159,7 @@ class _ExportSheetState extends State<ExportSheet> {
                   selected: s == _shape,
                   width: _previewWidth[s]!,
                   boundaryKey: s == _shape ? _boundaryKey : null,
-                  onTap: () => setState(() => _shape = s),
+                  onTap: _busy ? null : () => setState(() => _shape = s),
                 ),
               ),
           ],
@@ -184,7 +193,9 @@ class _ExportSheetState extends State<ExportSheet> {
               SnippetSwitch(
                 semanticLabel: 'Small Snippet mark',
                 value: _mark,
-                onChanged: (v) => setState(() => _mark = v),
+                onChanged: (v) {
+                  if (!_busy) setState(() => _mark = v);
+                },
                 onTrack: c.cobalt,
                 onThumb: c.white,
                 offTrack: c.stone2,
@@ -203,6 +214,7 @@ class _ExportSheetState extends State<ExportSheet> {
                 label: 'Save image',
                 icon: Icons.download_rounded,
                 onPressed: _busy ? null : _saveImage,
+                busy: _running == 'save',
                 foreground: c.ink,
                 fontSize: 12.7,
               ),
@@ -215,6 +227,7 @@ class _ExportSheetState extends State<ExportSheet> {
                 label: 'Share',
                 icon: Icons.share_rounded,
                 onPressed: _busy ? null : _share,
+                busy: _running == 'share',
                 background: c.cobalt,
                 foreground: c.white,
                 fontSize: 14,

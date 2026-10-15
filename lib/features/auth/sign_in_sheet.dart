@@ -6,6 +6,7 @@ import '../../services/services.dart';
 import '../../widgets/arch_sheet.dart';
 import '../../widgets/icons/google_logo.dart';
 import '../../widgets/pill_button.dart';
+import '../../widgets/toast.dart';
 
 /// Returns true when a user is signed in, showing the optional sign-in
 /// sheet first if needed. "Not now" returns false and keeps current work.
@@ -29,27 +30,37 @@ class SignInSheet extends StatefulWidget {
 }
 
 class _SignInSheetState extends State<SignInSheet> {
-  bool _busy = false;
+  /// 'google' or 'local' while that sign-in runs; every option waits.
+  String? _running;
 
-  Future<void> _google() async {
-    final auth = Services.of(context).auth;
+  bool get _busy => _running != null;
+
+  Future<void> _signIn(String id, Future<bool> Function() attempt) async {
+    if (_busy) return;
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    setState(() => _busy = true);
+    setState(() => _running = id);
     try {
-      final user = await auth.signInWithGoogle();
-      if (user != null) navigator.pop(true);
+      if (await attempt()) navigator.pop(true);
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Sign-in failed: $e')));
+      debugPrint('Sign-in failed: $e');
+      showToast(messenger, 'Could not sign in. Try again.');
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) setState(() => _running = null);
     }
   }
 
-  Future<void> _thisPhoneOnly() async {
-    final navigator = Navigator.of(context);
-    await Services.of(context).auth.signInAnonymously();
-    navigator.pop(true);
+  Future<void> _google() {
+    final auth = Services.of(context).auth;
+    return _signIn('google', () async => await auth.signInWithGoogle() != null);
+  }
+
+  Future<void> _thisPhoneOnly() {
+    final auth = Services.of(context).auth;
+    return _signIn('local', () async {
+      await auth.signInAnonymously();
+      return true;
+    });
   }
 
   @override
@@ -83,20 +94,18 @@ class _SignInSheetState extends State<SignInSheet> {
           style: SnippetFonts.body(14, color: c.inkDim, height: 1.4),
         ),
         const SizedBox(height: 40),
-        Opacity(
-          opacity: auth.supportsGoogleSignIn ? 1 : 0.45,
-          child: SizedBox(
-            width: double.infinity,
-            child: PillButton(
-              key: const Key('google-sign-in'),
-              label: 'Continue with Google',
-              leading: const GoogleLogo(),
-              onPressed: _busy || !auth.supportsGoogleSignIn ? null : _google,
-              foreground: c.ink,
-              background: c.white,
-              outlined: true,
-              labelStyle: SnippetFonts.body(14, weight: FontWeight.w600),
-            ),
+        SizedBox(
+          width: double.infinity,
+          child: PillButton(
+            key: const Key('google-sign-in'),
+            label: 'Continue with Google',
+            leading: const GoogleLogo(),
+            onPressed: _busy || !auth.supportsGoogleSignIn ? null : _google,
+            busy: _running == 'google',
+            foreground: c.ink,
+            background: c.white,
+            outlined: true,
+            labelStyle: SnippetFonts.body(14, weight: FontWeight.w600),
           ),
         ),
         if (!auth.supportsGoogleSignIn) ...[
@@ -107,15 +116,32 @@ class _SignInSheetState extends State<SignInSheet> {
           ),
           TextButton(
             key: const Key('local-sign-in'),
-            onPressed: _thisPhoneOnly,
-            child: Text(
-              'Keep cards on this phone only',
-              style: SnippetFonts.body(
-                13,
-                weight: FontWeight.w600,
-                color: c.cobalt,
-                decoration: TextDecoration.underline,
-              ),
+            onPressed: _busy ? null : _thisPhoneOnly,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_running == 'local') ...[
+                  SizedBox.square(
+                    dimension: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: c.cobalt,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Flexible(
+                  child: Text(
+                    'Keep cards on this phone only',
+                    style: SnippetFonts.body(
+                      13,
+                      weight: FontWeight.w600,
+                      color: _busy && _running != 'local' ? c.inkDim : c.cobalt,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -123,13 +149,13 @@ class _SignInSheetState extends State<SignInSheet> {
           width: double.infinity,
           height: 44,
           child: TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: _busy ? null : () => Navigator.of(context).pop(false),
             child: Text(
               'Not now',
               style: SnippetFonts.display(
                 12,
                 weight: FontWeight.w700,
-                color: c.ink,
+                color: _busy ? c.inkDim : c.ink,
               ),
             ),
           ),

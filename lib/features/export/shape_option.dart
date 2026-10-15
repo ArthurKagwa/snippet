@@ -7,6 +7,7 @@ import '../../cards/card_style_spec.dart';
 import '../../cards/quote_card.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
+import '../../widgets/press_scale.dart';
 
 /// A live mini card in one shape. The selected one doubles as the export
 /// source: its [boundaryKey] is captured at full resolution.
@@ -30,7 +31,7 @@ class ShapeOption extends StatelessWidget {
   final CardVariant variant;
   final bool showMark;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final double width;
   final GlobalKey? boundaryKey;
 
@@ -41,7 +42,7 @@ class ShapeOption extends StatelessWidget {
       button: true,
       selected: selected,
       label: '${shape.label} ${shape.ratioLabel}',
-      child: GestureDetector(
+      child: PressScale(
         onTap: onTap,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,

@@ -6,6 +6,7 @@ import '../../cards/card_style_spec.dart';
 import '../../cards/quote_card.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
+import '../../widgets/press_scale.dart';
 
 /// Grid tile: a card thumbnail with the style name and colour count.
 class StyleTile extends StatelessWidget {
@@ -31,8 +32,9 @@ class StyleTile extends StatelessWidget {
       selected: selected,
       button: true,
       label: style.name,
-      child: GestureDetector(
+      child: PressScale(
         onTap: onTap,
+        scale: 0.97,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

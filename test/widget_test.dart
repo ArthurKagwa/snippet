@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -9,6 +12,9 @@ class _FakeExport implements ExportService {
   final List<String> saved = [];
   final List<double> ratios = [];
 
+  /// When set, saving waits on it, so a test can tap while work is pending.
+  Completer<void>? gate;
+
   @override
   Future<Uint8List> capturePng(
     RenderRepaintBoundary boundary, {
@@ -19,8 +25,10 @@ class _FakeExport implements ExportService {
   }
 
   @override
-  Future<void> saveToGallery(Uint8List png, {required String name}) async =>
-      saved.add(name);
+  Future<void> saveToGallery(Uint8List png, {required String name}) async {
+    saved.add(name);
+    await gate?.future;
+  }
 
   @override
   Future<void> share(
@@ -130,6 +138,32 @@ void main() {
     await _settle(tester);
     expect(find.text('Saved to your library'), findsOneWidget);
     expect(await store.read('library'), hasLength(1));
+
+    // The toast has a View action but still goes away on its own.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(find.text('Saved to your library'), findsNothing);
+  });
+
+  testWidgets('a double tap on Save image exports once', (tester) async {
+    await boot(tester);
+    await tester.tap(find.byKey(const Key('swipe-styles')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('export-card')));
+    await tester.pumpAndSettle();
+
+    export.gate = Completer<void>();
+    await tester.tap(find.byKey(const Key('save-image')));
+    await tester.pump();
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await tester.tap(find.byKey(const Key('save-image')));
+    await tester.tap(find.byKey(const Key('share-image')));
+    await tester.pump();
+    expect(export.saved, hasLength(1));
+
+    export.gate!.complete();
+    await tester.pumpAndSettle();
+    expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
   testWidgets('home has one main action, distinct from the daily verse', (

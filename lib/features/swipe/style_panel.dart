@@ -6,6 +6,7 @@ import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
 import '../../widgets/arch_panel.dart';
 import '../../widgets/pill_button.dart';
+import '../../widgets/press_scale.dart';
 
 /// Stone panel under the swipe card: style name, colour swatches, actions.
 class StylePanel extends StatelessWidget {
@@ -16,13 +17,17 @@ class StylePanel extends StatelessWidget {
     required this.onVariant,
     required this.onSave,
     required this.onExport,
+    this.saving = false,
   });
 
   final CardStyleSpec style;
   final int variantIndex;
   final ValueChanged<int> onVariant;
-  final VoidCallback onSave;
+  final Future<void> Function() onSave;
   final VoidCallback onExport;
+
+  /// While a save runs, Save spins and Export is blocked.
+  final bool saving;
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +105,12 @@ class StylePanel extends StatelessWidget {
                   key: const Key('save-card'),
                   label: 'Save',
                   icon: Icons.bookmark_border_rounded,
-                  onPressed: onSave,
+                  // Not handed the Future: the sign-in sheet may be open
+                  // first, and [saving] drives the spinner for the save.
+                  onPressed: () {
+                    onSave();
+                  },
+                  busy: saving,
                   foreground: c.ink,
                   height: 48,
                   fontSize: 12.7,
@@ -113,7 +123,7 @@ class StylePanel extends StatelessWidget {
                   key: const Key('export-card'),
                   label: 'Export',
                   icon: Icons.download_rounded,
-                  onPressed: onExport,
+                  onPressed: saving ? null : onExport,
                   background: c.cobalt,
                   foreground: c.white,
                   height: 48,
@@ -148,8 +158,9 @@ class _Swatch extends StatelessWidget {
       label: variant.name,
       selected: selected,
       button: true,
-      child: GestureDetector(
+      child: PressScale(
         onTap: onTap,
+        scale: 0.85,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           width: 32,

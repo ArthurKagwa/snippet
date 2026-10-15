@@ -4,13 +4,14 @@ import '../core/theme/snippet_colors.dart';
 import '../core/theme/snippet_fonts.dart';
 import '../services/auth_service.dart';
 import '../services/services.dart';
+import 'async_tap.dart';
 import 'circle_button.dart';
 
 /// Header avatar: lime initials when signed in, dashed outline when not.
 class ProfileButton extends StatelessWidget {
   const ProfileButton({super.key, required this.onPressed});
 
-  final VoidCallback onPressed;
+  final TapAction onPressed;
 
   @override
   Widget build(BuildContext context) {

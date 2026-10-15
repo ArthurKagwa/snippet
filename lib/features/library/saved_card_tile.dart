@@ -5,6 +5,7 @@ import '../../cards/quote_card.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
 import '../../data/saved_card.dart';
+import '../../widgets/press_scale.dart';
 
 /// Library grid tile: the saved card, its reference, and its look.
 class SavedCardTile extends StatelessWidget {
@@ -28,9 +29,10 @@ class SavedCardTile extends StatelessWidget {
       button: true,
       label: '${card.reference}, ${style.name} ${variant.name}',
       hint: 'Long press to remove',
-      child: GestureDetector(
+      child: PressScale(
         onTap: onTap,
         onLongPress: onLongPress,
+        scale: 0.97,
         child: ExcludeSemantics(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

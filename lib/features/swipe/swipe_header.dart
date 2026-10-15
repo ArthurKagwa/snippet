@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
+import '../../widgets/async_tap.dart';
 import '../../widgets/circle_button.dart';
 import '../../widgets/icons/arch_icon.dart';
 
@@ -18,7 +19,7 @@ class SwipeHeader extends StatelessWidget {
   final String reference;
   final String translation;
   final VoidCallback onBack;
-  final VoidCallback onAllStyles;
+  final TapAction onAllStyles;
 
   @override
   Widget build(BuildContext context) {

@@ -6,6 +6,7 @@ import '../../data/saved_card.dart';
 import '../../services/services.dart';
 import '../../widgets/cobalt_header.dart';
 import '../../widgets/profile_button.dart';
+import '../../widgets/toast.dart';
 import '../profile/profile_screen.dart';
 import '../shell/shell_controller.dart';
 import 'library_empty.dart';
@@ -32,9 +33,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
-  void _openProfile() {
+  /// Returns the route's Future so the button ignores a double tap.
+  Future<void> _openProfile() {
     final navigator = Navigator.of(context);
-    navigator.push(
+    return navigator.push(
       MaterialPageRoute<void>(
         // Already on Saved; popping back is enough.
         builder: (_) => ProfileScreen(onShowSaved: () {}),
@@ -48,6 +50,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   Future<void> _confirmRemove(SavedCard card) async {
     final library = Services.of(context).library;
+    final messenger = ScaffoldMessenger.of(context);
     final remove = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -65,7 +68,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ],
       ),
     );
-    if (remove ?? false) await library.remove(card.id);
+    if (!(remove ?? false)) return;
+    try {
+      await library.remove(card.id);
+      showToast(messenger, 'Card removed');
+    } catch (e) {
+      debugPrint('Could not remove card: $e');
+      showToast(messenger, 'Could not remove the card. Try again.');
+    }
   }
 
   @override
