@@ -42,7 +42,7 @@ void main() {
           endVerse: 3,
         ),
       );
-      expect(p!.reference, 'Psalms 23:1-3');
+      expect(p!.reference, 'Psalm 23:1–3');
       expect(p.text, contains('The LORD is my shepherd'));
     });
 

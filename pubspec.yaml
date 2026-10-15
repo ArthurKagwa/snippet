@@ -62,6 +62,34 @@ flutter:
   assets:
     - assets/bibles/
 
+  # Bundled so the app works offline. All SIL Open Font License 1.1
+  # (licenses in assets/fonts/OFL-*.txt, sourced from github.com/google/fonts).
+  fonts:
+    - family: Syne
+      fonts:
+        - asset: assets/fonts/Syne-Variable.ttf
+    - family: InstrumentSerif
+      fonts:
+        - asset: assets/fonts/InstrumentSerif-Regular.ttf
+        - asset: assets/fonts/InstrumentSerif-Italic.ttf
+          style: italic
+    - family: InstrumentSans
+      fonts:
+        - asset: assets/fonts/InstrumentSans-Variable.ttf
+    - family: CormorantGaramond
+      fonts:
+        - asset: assets/fonts/CormorantGaramond-Variable.ttf
+        - asset: assets/fonts/CormorantGaramond-Italic-Variable.ttf
+          style: italic
+    - family: SpaceMono
+      fonts:
+        - asset: assets/fonts/SpaceMono-Regular.ttf
+        - asset: assets/fonts/SpaceMono-Bold.ttf
+          weight: 700
+    - family: BricolageGrotesque
+      fonts:
+        - asset: assets/fonts/BricolageGrotesque-Variable.ttf
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

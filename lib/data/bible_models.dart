@@ -95,12 +95,15 @@ class VerseRange {
 /// Resolved passage ready to display.
 class Passage {
   const Passage({
+    required this.range,
     required this.reference,
     required this.text,
     required this.translationId,
   });
 
-  /// e.g. "John 3:16" or "Psalm 23:1-3".
+  final VerseRange range;
+
+  /// e.g. "John 3:16" or "Psalm 23:1–3".
   final String reference;
   final String text;
   final String translationId;

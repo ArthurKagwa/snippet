@@ -4,7 +4,10 @@ Bible verse quote cards. Pick a verse, style it, export a PNG, save or share.
 
 - Offline: KJV and WEB texts are bundled as assets (no network needed).
 - Pick any book, chapter, and verse range; toggle KJV / WEB.
-- Card themes (6 backgrounds/colors), 4 fonts, adjustable size.
+- "Cobalt swipe" design: swipe up through 6 card styles (Vigil, Riso Loud, Dawn, Swiss,
+  Night Watch, Cobalt Arch), sideways through each style's colourways.
+- Export in three shapes (Feed 1:1, Portrait 4:5, Story 9:16), each laid out natively.
+- Optional sign-in only gates the Library; picking, swiping and exporting never need it.
 - Export as PNG (`RepaintBoundary` + `toImage`), save to gallery or share.
 - Optional login and hot content updates are stubbed behind interfaces, ready for Firebase.
 
@@ -28,17 +31,26 @@ The app code is MIT licensed (see `LICENSE`).
 lib/
   main.dart                       entry point (Firebase.initializeApp goes here later)
   app.dart                        MaterialApp + dependency wiring
-  core/                           app theme, card styles and fonts
-  data/                           models + BibleRepository (loads/queries assets)
+  core/                           app theme; theme/ holds color tokens + font styles
+  cards/                          card design system: shapes, palettes/, styles/, QuoteCard
+  data/                           Bible models/repository, saved cards, settings, JSON store
   features/
-    picker/                       translation toggle, book/chapter/verse picker, account sheet
-    card_editor/                  QuoteCard widget, theme/font controls, PNG export UI
+    home/                         verse of the day + "Pick a verse" panel (wheels, book sheet)
+    swipe/                        style swiper (vertical styles, horizontal colourways)
+    all_styles/                   every style at once, with filters
+    export/                       "Share it" sheet: shape, Snippet mark, save/share PNG
+    auth/                         optional sign-in sheet (shown on Save)
+    library/                      saved cards grid + empty state
+    profile/                      account, preferences, about
+  widgets/                        shared chrome: header, arch panel/sheet, pills, switch, icons
   services/
     auth_service.dart             AuthService + LocalAuthService (no Firebase yet)
     content_config_service.dart   ContentConfigService + LocalContentConfigService
     export_service.dart           PNG capture, save to gallery (gal), share (share_plus)
     services.dart                 InheritedWidget container for the services above
 assets/bibles/{kjv,web}.json      66 books; {id,name,license,books:[{id,name,chapters:[[verse,...]]}]}
+assets/fonts/                     Syne, Instrument Serif/Sans, Cormorant Garamond, Space Mono,
+                                  Bricolage Grotesque (all SIL OFL 1.1, licenses alongside)
 tool/build_bibles.py              regenerates the JSON assets from eBible.org files
 test/                             repository, export, and widget tests
 ```

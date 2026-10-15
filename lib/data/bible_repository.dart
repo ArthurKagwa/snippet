@@ -51,16 +51,19 @@ class BibleRepository {
     final text = verses.join(' ');
     if (text.isEmpty) return null;
     return Passage(
+      range: range,
       reference: formatReference(book.name, range),
       text: text,
       translationId: translationId,
     );
   }
 
+  /// "Psalm 46:10", "John 3:16–17". A single psalm reads "Psalm".
   static String formatReference(String bookName, VerseRange r) {
     final verses = r.startVerse == r.endVerse
         ? '${r.startVerse}'
-        : '${r.startVerse}-${r.endVerse}';
-    return '$bookName ${r.chapter}:$verses';
+        : '${r.startVerse}\u2013${r.endVerse}';
+    final name = bookName == 'Psalms' ? 'Psalm' : bookName;
+    return '$name ${r.chapter}:$verses';
   }
 }

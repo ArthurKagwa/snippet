@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 
+import '../data/app_settings.dart';
 import '../data/bible_repository.dart';
+import '../data/library_repository.dart';
 import 'auth_service.dart';
 import 'content_config_service.dart';
 import 'export_service.dart';
@@ -14,6 +16,8 @@ class Services extends InheritedWidget {
     required this.auth,
     required this.contentConfig,
     required this.export,
+    required this.library,
+    required this.settings,
     required super.child,
   });
 
@@ -21,6 +25,8 @@ class Services extends InheritedWidget {
   final AuthService auth;
   final ContentConfigService contentConfig;
   final ExportService export;
+  final LibraryRepository library;
+  final AppSettings settings;
 
   static Services of(BuildContext context) {
     final s = context.dependOnInheritedWidgetOfExactType<Services>();
@@ -33,5 +39,7 @@ class Services extends InheritedWidget {
       bible != old.bible ||
       auth != old.auth ||
       contentConfig != old.contentConfig ||
-      export != old.export;
+      export != old.export ||
+      library != old.library ||
+      settings != old.settings;
 }

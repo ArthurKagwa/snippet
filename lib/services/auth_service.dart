@@ -2,11 +2,27 @@ import 'dart:async';
 
 /// Minimal user model, independent of any auth SDK.
 class AppUser {
-  const AppUser({required this.id, this.displayName, this.isAnonymous = false});
+  const AppUser({
+    required this.id,
+    this.displayName,
+    this.email,
+    this.isAnonymous = false,
+  });
 
   final String id;
   final String? displayName;
+  final String? email;
   final bool isAnonymous;
+
+  /// "DM" for "Daniel Mugisha"; empty when there is no name.
+  String get initials {
+    final parts = (displayName ?? '').trim().split(RegExp(r'\s+'));
+    return parts
+        .where((p) => p.isNotEmpty)
+        .take(2)
+        .map((p) => p[0].toUpperCase())
+        .join();
+  }
 }
 
 /// Optional login. The app is fully usable signed out.
