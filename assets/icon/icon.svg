@@ -1,0 +1,8 @@
+<!-- C0 "Cobalt Arch" app icon: full-bleed tile (iOS masks the corners). Geometry from the 516px artboard tile. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 516 516">
+  <rect width="516" height="516" fill="#2433D6"/>
+  <path d="M120 516V270a138 138 0 0 1 276 0v246z" fill="#F1EEE8"/>
+  <circle cx="258" cy="246" r="81" fill="#10133F"/>
+  <circle cx="258" cy="246" r="75" fill="#F1EEE8"/>
+  <circle cx="258" cy="246" r="60" fill="#D9F75B"/>
+</svg>

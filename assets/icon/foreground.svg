@@ -1,0 +1,7 @@
+<!-- Android adaptive foreground, 108dp canvas. Geometry from the 192px circle variant mapped onto the 72dp visible viewport. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 108 108">
+  <path d="M34.875 108V57.375a19.125 19.125 0 0 1 38.25 0V108z" fill="#F1EEE8"/>
+  <circle cx="54" cy="54" r="11.25" fill="#10133F"/>
+  <circle cx="54" cy="54" r="10.5" fill="#F1EEE8"/>
+  <circle cx="54" cy="54" r="8.25" fill="#D9F75B"/>
+</svg>

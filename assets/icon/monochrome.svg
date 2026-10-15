@@ -1,0 +1,5 @@
+<!-- Android 13+ themed (monochrome) layer, 108dp canvas: outlined arch and solid sun. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 108 108">
+  <path d="M36 110V57.375a18 18 0 0 1 36 0V110" fill="none" stroke="#FFFFFF" stroke-width="2.25"/>
+  <circle cx="54" cy="55.5" r="7.5" fill="#FFFFFF"/>
+</svg>
