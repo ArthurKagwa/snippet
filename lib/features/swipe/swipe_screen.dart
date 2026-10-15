@@ -85,18 +85,19 @@ class _SwipeScreenState extends State<SwipeScreen> {
   }
 
   Future<void> _openAllStyles() async {
-    final picked = await Navigator.of(context).push<int>(
+    await Navigator.of(context).push<int>(
       MaterialPageRoute(
         builder: (_) => AllStylesScreen(
           content: _content,
           selectedIndex: _styleIndex,
           variantOf: _variantIndex,
+          // Jump before the pop so the picked card is there to land on.
+          onPick: (i) {
+            if (_styleController.hasClients) _styleController.jumpToPage(i);
+          },
         ),
       ),
     );
-    if (picked != null && mounted && _styleController.hasClients) {
-      _styleController.jumpToPage(picked);
-    }
   }
 
   Future<void> _save() async {

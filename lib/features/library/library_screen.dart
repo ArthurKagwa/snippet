@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
+import '../../core/theme/snippet_motion.dart';
+import '../../data/library_repository.dart';
 import '../../data/saved_card.dart';
 import '../../services/services.dart';
 import '../../widgets/cobalt_header.dart';
@@ -23,6 +25,9 @@ class LibraryScreen extends StatefulWidget {
 class _LibraryScreenState extends State<LibraryScreen> {
   bool _newestFirst = true;
   bool _started = false;
+
+  /// Cards fading out after "Remove"; deleted once the exit has played.
+  final Set<String> _leaving = {};
 
   @override
   void didChangeDependencies() {
@@ -68,12 +73,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ],
       ),
     );
-    if (!(remove ?? false)) return;
+    if (!(remove ?? false) || !mounted) return;
+    final exit = SnippetMotion.reduce(context)
+        ? SnippetMotion.reduced
+        : SnippetMotion.exit;
+    setState(() => _leaving.add(card.id));
+    await Future<void>.delayed(exit);
     try {
       await library.remove(card.id);
       showToast(messenger, 'Card removed');
     } catch (e) {
       debugPrint('Could not remove card: $e');
+      if (mounted) setState(() => _leaving.remove(card.id));
       showToast(messenger, 'Could not remove the card. Try again.');
     }
   }
@@ -106,36 +117,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
           Expanded(
             child: ListenableBuilder(
               listenable: library,
-              builder: (context, _) {
-                if (!library.isLoaded) {
-                  return Center(
-                    child: CircularProgressIndicator(color: c.lime),
-                  );
-                }
-                if (library.error != null && library.cards.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(36),
-                      child: Text(
-                        'Your library could not be loaded. Check your '
-                        'connection and try again.',
-                        textAlign: TextAlign.center,
-                        style: SnippetFonts.body(13.3, color: c.mist),
-                      ),
-                    ),
-                  );
-                }
-                final cards = _newestFirst
-                    ? library.cards
-                    : library.cards.reversed.toList();
-                if (cards.isEmpty) {
-                  return LibraryEmpty(
-                    onPickVerse: () =>
-                        ShellScope.read(context).select(ShellTab.home),
-                  );
-                }
-                return _grid(cards);
-              },
+              builder: (context, _) => AnimatedSwitcher(
+                duration: SnippetMotion.swap,
+                switchInCurve: SnippetMotion.easeOut,
+                switchOutCurve: SnippetMotion.easeOut,
+                layoutBuilder: (current, previous) => Stack(
+                  fit: StackFit.expand,
+                  children: [...previous, ?current],
+                ),
+                child: _body(library),
+              ),
             ),
           ),
         ],
@@ -143,9 +134,46 @@ class _LibraryScreenState extends State<LibraryScreen> {
     );
   }
 
+  /// Loading, error, empty or the grid; keyed so switching between them
+  /// cross-fades (removing the last card fades into the empty state).
+  Widget _body(LibraryRepository library) {
+    final c = context.colors;
+    if (!library.isLoaded) {
+      return Center(
+        key: const ValueKey('loading'),
+        child: CircularProgressIndicator(color: c.lime),
+      );
+    }
+    if (library.error != null && library.cards.isEmpty) {
+      return Center(
+        key: const ValueKey('error'),
+        child: Padding(
+          padding: const EdgeInsets.all(36),
+          child: Text(
+            'Your library could not be loaded. Check your '
+            'connection and try again.',
+            textAlign: TextAlign.center,
+            style: SnippetFonts.body(13.3, color: c.mist),
+          ),
+        ),
+      );
+    }
+    final cards = _newestFirst
+        ? library.cards
+        : library.cards.reversed.toList();
+    if (cards.isEmpty) {
+      return LibraryEmpty(
+        key: const ValueKey('empty'),
+        onPickVerse: () => ShellScope.read(context).select(ShellTab.home),
+      );
+    }
+    return KeyedSubtree(key: const ValueKey('grid'), child: _grid(cards));
+  }
+
   Widget _grid(List<SavedCard> cards) {
     final c = context.colors;
     final n = cards.length;
+    final reduce = SnippetMotion.reduce(context);
     return CustomScrollView(
       slivers: [
         SliverPadding(
@@ -210,15 +238,35 @@ class _LibraryScreenState extends State<LibraryScreen> {
               childAspectRatio: 0.6,
             ),
             itemCount: n,
-            itemBuilder: (context, i) => SavedCardTile(
-              key: Key('saved-${cards[i].id}'),
-              card: cards[i],
-              onTap: () => _open(cards[i]),
-              onLongPress: () => _confirmRemove(cards[i]),
-            ),
+            itemBuilder: (context, i) => _tile(cards[i], reduce),
           ),
         ),
       ],
+    );
+  }
+
+  /// A removed card fades and shrinks slightly before it is deleted.
+  Widget _tile(SavedCard card, bool reduce) {
+    final leaving = _leaving.contains(card.id);
+    final duration = reduce ? SnippetMotion.reduced : SnippetMotion.exit;
+    return IgnorePointer(
+      ignoring: leaving,
+      child: AnimatedOpacity(
+        opacity: leaving ? 0 : 1,
+        duration: duration,
+        curve: SnippetMotion.easeOut,
+        child: AnimatedScale(
+          scale: leaving && !reduce ? 0.95 : 1,
+          duration: duration,
+          curve: SnippetMotion.easeOut,
+          child: SavedCardTile(
+            key: Key('saved-${card.id}'),
+            card: card,
+            onTap: () => _open(card),
+            onLongPress: () => _confirmRemove(card),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -6,6 +6,7 @@ import '../../cards/card_style_spec.dart';
 import '../../cards/quote_card.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
+import '../../core/theme/snippet_motion.dart';
 import '../../widgets/press_scale.dart';
 
 /// Grid tile: a card thumbnail with the style name and colour count.
@@ -17,6 +18,7 @@ class StyleTile extends StatelessWidget {
     required this.content,
     required this.selected,
     required this.onTap,
+    this.hero = false,
   });
 
   final CardStyleSpec style;
@@ -24,6 +26,9 @@ class StyleTile extends StatelessWidget {
   final CardContent content;
   final bool selected;
   final VoidCallback onTap;
+
+  /// Flies into the swipe card when this tile is picked.
+  final bool hero;
 
   @override
   Widget build(BuildContext context) {
@@ -38,21 +43,27 @@ class StyleTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                boxShadow: selected
-                    ? [
-                        BoxShadow(color: c.lime, spreadRadius: 4.7),
-                        BoxShadow(color: c.black, spreadRadius: 2.7),
-                      ]
-                    : const [],
-              ),
-              child: QuoteCard(
-                content: content,
-                style: style,
-                variant: variant,
-                radius: 8,
+            HeroMode(
+              enabled: hero && !SnippetMotion.reduce(context),
+              child: Hero(
+                tag: cardHeroTag(style, variant),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: selected
+                        ? [
+                            BoxShadow(color: c.lime, spreadRadius: 4.7),
+                            BoxShadow(color: c.black, spreadRadius: 2.7),
+                          ]
+                        : const [],
+                  ),
+                  child: QuoteCard(
+                    content: content,
+                    style: style,
+                    variant: variant,
+                    radius: 8,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 8),

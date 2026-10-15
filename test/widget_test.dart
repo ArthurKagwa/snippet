@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snippet/app.dart';
 import 'package:snippet/data/json_store.dart';
+import 'package:snippet/features/library/saved_card_tile.dart';
 import 'package:snippet/services/export_service.dart';
 
 class _FakeExport implements ExportService {
@@ -209,5 +210,55 @@ void main() {
     await tester.tap(find.byKey(const Key('pick-a-verse')));
     await tester.pumpAndSettle();
     expect(find.text('Pick a verse'), findsOneWidget);
+  });
+
+  testWidgets('picking in All styles lands on that style', (tester) async {
+    await boot(tester);
+    await tester.tap(find.byKey(const Key('swipe-styles')));
+    await tester.pumpAndSettle();
+    expect(find.text('Vigil'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('all-styles')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('style-tile-riso')));
+    // Mid-flight: the tile is on its way into the swipe card.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.takeException(), isNull);
+    await tester.pumpAndSettle();
+
+    expect(find.text('All styles'), findsNothing);
+    expect(find.text('Riso Loud'), findsOneWidget);
+  });
+
+  testWidgets('removing the last saved card fades to the empty state', (
+    tester,
+  ) async {
+    await boot(tester);
+    await tester.tap(find.byKey(const Key('swipe-styles')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-card')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('local-sign-in')));
+    await _settle(tester);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('nav-saved')));
+    await _settle(tester);
+    expect(find.byType(SavedCardTile), findsOneWidget);
+
+    await tester.longPress(find.byType(SavedCardTile));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Remove'));
+    // The tile plays its exit before the card is deleted.
+    await tester.pump(const Duration(milliseconds: 90));
+    expect(await store.read('library'), hasLength(1));
+    await tester.pump(const Duration(milliseconds: 120));
+    await _settle(tester);
+
+    expect(await store.read('library'), isEmpty);
+    expect(find.byType(SavedCardTile), findsNothing);
+    expect(find.text('Nothing saved yet'), findsOneWidget);
   });
 }

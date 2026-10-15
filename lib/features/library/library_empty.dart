@@ -2,13 +2,80 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
+import '../../core/theme/snippet_motion.dart';
 import '../../widgets/pill_button.dart';
+import '../shell/shell_controller.dart';
 
 /// "Nothing saved yet": dashed arch with the lime sun.
-class LibraryEmpty extends StatelessWidget {
+///
+/// The first time it is on screen the sun rises into the arch and the
+/// words follow. Saved is built at launch behind the other tabs, so this
+/// waits for the Saved tab rather than playing on mount.
+class LibraryEmpty extends StatefulWidget {
   const LibraryEmpty({super.key, required this.onPickVerse});
 
   final VoidCallback onPickVerse;
+
+  @override
+  State<LibraryEmpty> createState() => _LibraryEmptyState();
+}
+
+class _LibraryEmptyState extends State<LibraryEmpty>
+    with SingleTickerProviderStateMixin {
+  // Sun over 600ms; the three text rows 300ms each, 60ms apart, starting
+  // as the sun settles. Total 660ms.
+  static const _total = 660.0;
+  static Interval _at(double startMs, double endMs) =>
+      Interval(startMs / _total, endMs / _total, curve: SnippetMotion.easeOut);
+
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: Duration(milliseconds: _total.round()),
+  );
+  late final Animation<double> _sun = _controller.drive(
+    CurveTween(curve: _at(0, 600)),
+  );
+  late final List<Animation<double>> _rows = [
+    for (final start in [240.0, 300.0, 360.0])
+      _controller.drive(CurveTween(curve: _at(start, start + 300))),
+  ];
+  bool _reduce = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final showing = ShellScope.of(context).tab == ShellTab.saved;
+    if (showing && _controller.isDismissed) {
+      _reduce = SnippetMotion.reduce(context);
+      if (_reduce) _controller.duration = const Duration(milliseconds: 200);
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// Fades in while rising [distance] px into place (fade only when the
+  /// system asks for less motion). Never blocks taps.
+  Widget _rise(Animation<double> a, double distance, Widget child) {
+    return AnimatedBuilder(
+      animation: a,
+      child: child,
+      builder: (context, child) {
+        final t = _reduce ? _controller.value : a.value;
+        return Opacity(
+          opacity: t,
+          child: Transform.translate(
+            offset: Offset(0, _reduce ? 0 : distance * (1 - t)),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +98,16 @@ class LibraryEmpty extends StatelessWidget {
                       alignment: Alignment.topCenter,
                       child: Padding(
                         padding: const EdgeInsets.only(top: 36),
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: c.lime,
-                            shape: BoxShape.circle,
+                        child: _rise(
+                          _sun,
+                          16,
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: c.lime,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                         ),
                       ),
@@ -44,33 +115,45 @@ class LibraryEmpty extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-                Text(
-                  'Nothing saved yet',
-                  textAlign: TextAlign.center,
-                  style: SnippetFonts.display(
-                    26.7,
-                    color: c.white,
-                    letterSpacing: -1,
-                    height: 1.02,
+                _rise(
+                  _rows[0],
+                  8,
+                  Text(
+                    'Nothing saved yet',
+                    textAlign: TextAlign.center,
+                    style: SnippetFonts.display(
+                      26.7,
+                      color: c.white,
+                      letterSpacing: -1,
+                      height: 1.02,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  'Tap the bookmark while you swipe and the card will wait '
-                  'for you here.',
-                  textAlign: TextAlign.center,
-                  style: SnippetFonts.body(13.3, color: c.mist, height: 1.4),
+                _rise(
+                  _rows[1],
+                  8,
+                  Text(
+                    'Tap the bookmark while you swipe and the card will wait '
+                    'for you here.',
+                    textAlign: TextAlign.center,
+                    style: SnippetFonts.body(13.3, color: c.mist, height: 1.4),
+                  ),
                 ),
                 const SizedBox(height: 28),
-                SizedBox(
-                  width: double.infinity,
-                  child: PillButton(
-                    key: const Key('pick-a-verse'),
-                    label: 'Pick a verse',
-                    onPressed: onPickVerse,
-                    background: c.lime,
-                    foreground: c.ink,
-                    fontSize: 14,
+                _rise(
+                  _rows[2],
+                  8,
+                  SizedBox(
+                    width: double.infinity,
+                    child: PillButton(
+                      key: const Key('pick-a-verse'),
+                      label: 'Pick a verse',
+                      onPressed: widget.onPickVerse,
+                      background: c.lime,
+                      foreground: c.ink,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ],

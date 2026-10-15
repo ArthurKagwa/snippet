@@ -60,25 +60,29 @@ class StylePage extends StatelessWidget {
                 itemCount: style.variants.length,
                 onPageChanged: onVariantChanged,
                 itemBuilder: (context, i) => Center(
-                  child: Container(
-                    width: cardSize.width,
-                    height: cardSize.height,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      boxShadow: [
-                        BoxShadow(
-                          color: c.shadow,
-                          blurRadius: 30,
-                          offset: const Offset(0, 13),
-                        ),
-                      ],
-                    ),
-                    child: QuoteCard(
-                      key: Key('card-${style.id}-${style.variants[i].id}'),
-                      content: content,
-                      style: style,
-                      variant: style.variants[i],
-                      radius: 4,
+                  // Lands the tile picked in All styles.
+                  child: Hero(
+                    tag: cardHeroTag(style, style.variants[i]),
+                    child: Container(
+                      width: cardSize.width,
+                      height: cardSize.height,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: c.shadow,
+                            blurRadius: 30,
+                            offset: const Offset(0, 13),
+                          ),
+                        ],
+                      ),
+                      child: QuoteCard(
+                        key: Key('card-${style.id}-${style.variants[i].id}'),
+                        content: content,
+                        style: style,
+                        variant: style.variants[i],
+                        radius: 4,
+                      ),
                     ),
                   ),
                 ),

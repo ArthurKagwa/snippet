@@ -6,6 +6,11 @@ import 'card_palette.dart';
 import 'card_shape.dart';
 import 'card_style_spec.dart';
 
+/// Hero tag shared by every on-screen copy of one style + colourway, so a
+/// thumbnail can fly into the full-size card.
+String cardHeroTag(CardStyleSpec style, CardVariant variant) =>
+    'card-${style.id}-${variant.id}';
+
 /// A card at any size: composed at [CardShape.designWidth] and scaled, so
 /// thumbnails, the swipe preview and the export all match.
 ///
