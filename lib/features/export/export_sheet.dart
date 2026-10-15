@@ -13,7 +13,7 @@ import '../../services/services.dart';
 import '../../widgets/arch_sheet.dart';
 import '../../widgets/circle_button.dart';
 import '../../widgets/pill_button.dart';
-import '../../widgets/toast.dart';
+import '../../widgets/overlay_toast.dart';
 import 'export_toggle_row.dart';
 import 'shape_option.dart';
 
@@ -77,7 +77,6 @@ class _ExportSheetState extends State<ExportSheet> {
   ) async {
     if (_busy) return;
     final services = Services.of(context);
-    final messenger = ScaffoldMessenger.of(context);
     setState(() => _running = id);
     try {
       final boundary =
@@ -88,16 +87,17 @@ class _ExportSheetState extends State<ExportSheet> {
       await action(services, png);
     } catch (e) {
       debugPrint('Export failed: $e');
-      showToast(messenger, 'Could not export the image. Try again.');
+      if (mounted) {
+        showOverlayToast(context, 'Could not export the image. Try again.');
+      }
     } finally {
       if (mounted) setState(() => _running = null);
     }
   }
 
   Future<void> _saveImage() => _run('save', (s, png) async {
-    final messenger = ScaffoldMessenger.of(context);
     await s.export.saveToGallery(png, name: _fileName);
-    showToast(messenger, 'Saved to Photos');
+    if (mounted) showOverlayToast(context, 'Saved to Photos');
   });
 
   Future<void> _share() => _run('share', (s, png) async {

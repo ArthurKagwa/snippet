@@ -38,6 +38,10 @@ class AppSettings extends ChangeNotifier {
   static const String _doc = 'settings';
   static const int maxRecent = 3;
 
+  /// Bumped when a stored value should be reset to a new default. Version 2
+  /// turns the export mark back on for installs saved while it defaulted off.
+  static const int _version = 2;
+
   final JsonStore _store;
 
   String _translationId = 'kjv';
@@ -76,7 +80,8 @@ class AppSettings extends ChangeNotifier {
     if (raw is! Map<String, dynamic>) return;
     _translationId = raw['translation'] as String? ?? _translationId;
     _shape = CardShape.byName(raw['shape'] as String?);
-    _showMark = raw['showMark'] as bool? ?? _showMark;
+    final version = raw['version'] as int? ?? 1;
+    if (version >= 2) _showMark = raw['showMark'] as bool? ?? _showMark;
     _hdExport = raw['hdExport'] as bool? ?? _hdExport;
     _swipeHints = raw['swipeHints'] as bool? ?? _swipeHints;
     _reminderPrompted = raw['reminderPrompted'] as bool? ?? _reminderPrompted;
@@ -111,6 +116,7 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
     _store
         .write(_doc, {
+          'version': _version,
           'translation': _translationId,
           'shape': _shape.name,
           'showMark': _showMark,
