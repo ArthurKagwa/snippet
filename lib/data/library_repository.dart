@@ -11,7 +11,8 @@ typedef LibraryBackendFactory = LibraryBackend Function(AppUser user);
 /// The signed-in user's saved cards, newest first. Empty when signed out.
 ///
 /// Follows [AuthService]: each user gets their own [LibraryBackend]
-/// (Firestore when Firebase is set up, a local file otherwise).
+/// (Firestore when Firebase is set up, a local file otherwise). When a
+/// "this phone only" user links Google, their cards move to the new backend.
 class LibraryRepository extends ChangeNotifier {
   LibraryRepository({required this._auth, required this.backendFor});
 
@@ -19,6 +20,7 @@ class LibraryRepository extends ChangeNotifier {
   final LibraryBackendFactory backendFor;
 
   String? _userId;
+  bool _anonymous = false;
   LibraryBackend? _backend;
   StreamSubscription<List<SavedCard>>? _cardsSub;
   StreamSubscription<AppUser?>? _authSub;
@@ -41,14 +43,23 @@ class LibraryRepository extends ChangeNotifier {
   }
 
   void _follow(AppUser? user) {
-    if (user?.id == _userId && (_backend != null || user == null)) {
+    final sameUser =
+        user?.id == _userId && (user?.isAnonymous ?? false) == _anonymous;
+    if (sameUser && (_backend != null || user == null)) {
       if (user == null && !_loaded) _setCards(const []);
       return;
     }
     _cardsSub?.cancel();
-    _backend?.dispose();
+    final previous = _backend;
+    final upgrading = _anonymous && user != null && !user.isAnonymous;
     _userId = user?.id;
+    _anonymous = user?.isAnonymous ?? false;
     _backend = user == null ? null : backendFor(user);
+    if (previous != null && upgrading) {
+      _carrying = _carry(from: previous, to: _backend!);
+    } else {
+      previous?.dispose();
+    }
     _error = null;
     if (_backend == null) {
       _setCards(const []);
@@ -65,6 +76,31 @@ class LibraryRepository extends ChangeNotifier {
       },
     );
   }
+
+  /// Copies cards up, then clears the old copy so nothing is left behind
+  /// on the phone. Keeps the old copy if the copy fails.
+  Future<void> _carry({
+    required LibraryBackend from,
+    required LibraryBackend to,
+  }) async {
+    try {
+      final cards = await from.watch().first;
+      if (cards.isEmpty) return;
+      // Oldest first, so backends that prepend keep newest-first order.
+      for (final card in cards.reversed) {
+        await to.put(card);
+      }
+      await from.deleteAll();
+    } catch (e) {
+      debugPrint('Could not move cards to the new account: $e');
+    } finally {
+      from.dispose();
+    }
+  }
+
+  /// Completes once cards from a "this phone only" session have moved.
+  Future<void> get carrying => _carrying;
+  Future<void> _carrying = Future<void>.value();
 
   void _setCards(List<SavedCard> cards) {
     _cards = cards;

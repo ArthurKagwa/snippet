@@ -7,6 +7,7 @@ class AppTheme {
   static const String appName = 'Snippet';
   static const String tagline = 'Bible verse quote cards';
   static const String version = '1.0.0';
+  static const String privacyPolicyUrl = 'https://snippetverses.app/privacy';
 
   /// The Cobalt swipe design is a single dark-chrome theme.
   static ThemeData cobaltSwipe() {

@@ -3,28 +3,33 @@
 _Last updated: 2026-10-15_
 
 Snippet ("the app") lets you browse Bible verses, turn them into shareable
-cards, and save them. This policy explains what data the app handles. Replace
-the bracketed placeholders before publishing.
+cards, and save them. This policy explains what data the app handles.
 
 ## What we collect
 
 **Nothing, if you stay signed out.** Without an account, your settings and
 saved cards stay on your device.
 
-**If you sign in with Google** (optional), Firebase Authentication receives
-your Google account ID, name and email address. We use them only to identify
-your account and show your name in the app.
+**"Keep cards on this phone only"** (optional). Firebase Authentication
+creates an anonymous account ID so you can link Google later. Your cards stay
+on your device; we receive no name, email address or cards.
 
-**Saved cards.** Cards you save while signed in (the verse text and a save
-timestamp) are stored in Google Cloud Firestore under your account, so they
-sync across devices. Only you can read or change them.
+**If you sign in with Google** (optional), Firebase Authentication receives
+your Google account ID, name, email address and profile photo link. We use
+them only to identify your account and show your name in the app.
+
+**Saved cards.** Cards you save while signed in with Google (the verse text
+and reference, the card style you chose, and a save timestamp) are stored in
+Google Cloud Firestore under your account, so they sync across devices. Cards
+you kept on this phone move to your account when you link Google. Only you can
+read or change them.
 
 **Remote Config.** The app fetches the verse of the day and announcements
 from Firebase Remote Config. Firebase generates an app installation
 identifier for this. We do not use it to identify you personally.
 
-**On-device only:** your reminder time and preferences, and the notifications
-the app schedules locally. Images you export are saved to your device gallery
+**On-device only:** your preferences, and the daily verse notifications the
+app schedules locally. Images you export are saved to your device gallery
 or shared through the app you choose. We do not receive them.
 
 We do not use advertising, analytics or crash-reporting SDKs, and we do not
@@ -32,7 +37,8 @@ sell your data.
 
 ## Permissions
 
-- **Notifications**: to remind you of the daily verse, if you turn it on.
+- **Notifications**: to send the daily verse, if you allow notifications when
+  the app asks.
 - **Storage / photos**: only to save an exported card image to your gallery.
 - **Run at startup**: to restore scheduled reminders after you restart your
   phone.

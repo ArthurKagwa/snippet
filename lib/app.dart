@@ -13,7 +13,8 @@ import 'services/export_service.dart';
 import 'services/services.dart';
 
 class SnippetApp extends StatelessWidget {
-  /// Without [libraryBackend], saved cards stay in a file on this device.
+  /// Without [libraryBackend], saved cards stay in a file on this device;
+  /// "this phone only" (anonymous) users' cards always do.
   SnippetApp({
     Key? key,
     BibleRepository? bible,
@@ -42,7 +43,9 @@ class SnippetApp extends StatelessWidget {
     LibraryBackendFactory? libraryBackend,
   }) : library = LibraryRepository(
          auth: auth,
-         backendFor: libraryBackend ?? (_) => JsonLibraryBackend(store),
+         backendFor: (user) => libraryBackend == null || user.isAnonymous
+             ? JsonLibraryBackend(store)
+             : libraryBackend(user),
        ),
        settings = AppSettings(store);
 

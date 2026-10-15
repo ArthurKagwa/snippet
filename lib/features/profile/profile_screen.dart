@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../cards/card_shape.dart';
 import '../../core/app_theme.dart';
@@ -67,6 +68,22 @@ class ProfileScreen extends StatelessWidget {
     } catch (e) {
       debugPrint('Invite failed: $e');
       showToast(messenger, 'Could not open sharing. Try again.');
+    }
+  }
+
+  Future<void> _openPrivacyPolicy(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    var opened = false;
+    try {
+      opened = await launchUrl(
+        Uri.parse(AppTheme.privacyPolicyUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      debugPrint('Could not open privacy policy: $e');
+    }
+    if (!opened) {
+      showToast(messenger, 'Could not open the privacy policy. Try again.');
     }
   }
 
@@ -207,6 +224,11 @@ class ProfileScreen extends StatelessWidget {
             const SettingsRow(
               label: 'Bible texts',
               value: 'KJV & WEB, public domain',
+            ),
+            SettingsRow(
+              key: const Key('profile-privacy'),
+              label: 'Privacy policy',
+              onTap: () => _openPrivacyPolicy(context),
             ),
             const SettingsRow(label: 'Version', value: AppTheme.version),
           ],

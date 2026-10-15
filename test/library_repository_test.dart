@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snippet/data/bible_models.dart';
 import 'package:snippet/data/json_library_backend.dart';
@@ -16,6 +18,44 @@ SavedCard _card(String id) => SavedCard(
   variantId: 'gilt',
   savedAt: DateTime.utc(2026, 1, int.parse(id)),
 );
+
+/// Anonymous sign-in that can be upgraded to Google, keeping the uid.
+class _LinkingAuth implements AuthService {
+  final _changes = StreamController<AppUser?>.broadcast();
+  AppUser? _user;
+
+  @override
+  AppUser? get currentUser => _user;
+
+  @override
+  Stream<AppUser?> get authStateChanges => _changes.stream;
+
+  @override
+  bool get supportsGoogleSignIn => true;
+
+  void _set(AppUser? user) {
+    _user = user;
+    _changes.add(user);
+  }
+
+  @override
+  Future<AppUser> signInAnonymously() async {
+    _set(const AppUser(id: 'u1', isAnonymous: true));
+    return _user!;
+  }
+
+  @override
+  Future<AppUser?> signInWithGoogle() async {
+    _set(const AppUser(id: 'u1', displayName: 'Ada'));
+    return _user;
+  }
+
+  @override
+  Future<void> signOut() async => _set(null);
+
+  @override
+  Future<void> deleteAccount() => signOut();
+}
 
 void main() {
   test('library follows the signed-in user', () async {
@@ -43,6 +83,37 @@ void main() {
     await auth.signOut();
     await settle();
     expect(library.cards, isEmpty);
+
+    library.dispose();
+  });
+
+  test('phone-only cards stay local, then move up on linking Google', () async {
+    final auth = _LinkingAuth();
+    final phone = MemoryJsonStore();
+    final cloud = MemoryJsonStore();
+    final library = LibraryRepository(
+      auth: auth,
+      backendFor: (user) => user.isAnonymous
+          ? JsonLibraryBackend(phone)
+          : JsonLibraryBackend(cloud),
+    );
+    Future<void> settle() => Future<void>.delayed(Duration.zero);
+
+    await library.load();
+    await auth.signInAnonymously();
+    await library.add(_card('1'));
+    await library.add(_card('2'));
+    await settle();
+    expect(await phone.read('library'), hasLength(2));
+    expect(await cloud.read('library'), isNull);
+
+    await auth.signInWithGoogle();
+    await settle();
+    await library.carrying;
+    await settle();
+    expect(await cloud.read('library'), hasLength(2));
+    expect(await phone.read('library'), isNull);
+    expect(library.cards.map((c) => c.id), ['2', '1']);
 
     library.dispose();
   });

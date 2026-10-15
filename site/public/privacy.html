@@ -19,19 +19,25 @@
     <h2>What we collect</h2>
     <p><strong>Nothing, if you stay signed out.</strong> Without an account,
       your settings and saved cards stay on your device.</p>
+    <p><strong>"Keep cards on this phone only"</strong> (optional). Firebase
+      Authentication creates an anonymous account ID so you can link Google
+      later. Your cards stay on your device; we receive no name, email address
+      or cards.</p>
     <p><strong>If you sign in with Google</strong> (optional), Firebase
-      Authentication receives your Google account ID, name and email address.
-      We use them only to identify your account and show your name in the app.</p>
-    <p><strong>Saved cards.</strong> Cards you save while signed in (the verse
-      text and a save timestamp) are stored in Google Cloud Firestore under
-      your account, so they sync across devices. Only you can read or change
-      them.</p>
+      Authentication receives your Google account ID, name, email address and
+      profile photo link. We use them only to identify your account and show
+      your name in the app.</p>
+    <p><strong>Saved cards.</strong> Cards you save while signed in with
+      Google (the verse text and reference, the card style you chose, and a
+      save timestamp) are stored in Google Cloud Firestore under your account,
+      so they sync across devices. Cards you kept on this phone move to your
+      account when you link Google. Only you can read or change them.</p>
     <p><strong>Remote Config.</strong> The app fetches the verse of the day
       and announcements from Firebase Remote Config. Firebase generates an app
       installation identifier for this. We do not use it to identify you
       personally.</p>
-    <p><strong>On-device only:</strong> your reminder time and preferences,
-      and the notifications the app schedules locally. Images you export are
+    <p><strong>On-device only:</strong> your preferences, and the daily verse
+      notifications the app schedules locally. Images you export are
       saved to your device gallery or shared through the app you choose. We do
       not receive them.</p>
     <p>We do not use advertising, analytics or crash-reporting SDKs, and we do
@@ -39,7 +45,7 @@
 
     <h2>Permissions</h2>
     <ul>
-      <li><strong>Notifications</strong>: to remind you of the daily verse, if you turn it on.</li>
+      <li><strong>Notifications</strong>: to send the daily verse, if you allow notifications when the app asks.</li>
       <li><strong>Storage / photos</strong>: only to save an exported card image to your gallery.</li>
       <li><strong>Run at startup</strong>: to restore scheduled reminders after you restart your phone.</li>
     </ul>

@@ -10,6 +10,8 @@ import 'package:snippet/features/library/saved_card_tile.dart';
 import 'package:snippet/services/content_config_service.dart';
 import 'package:snippet/services/export_service.dart';
 import 'package:snippet/widgets/snippet_switch.dart';
+import 'package:url_launcher_platform_interface/link.dart';
+import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
 
 class _FakeExport implements ExportService {
   final List<String> saved = [];
@@ -44,6 +46,19 @@ class _FakeExport implements ExportService {
 
   @override
   Future<void> shareText(String text) async => texts.add(text);
+}
+
+class _FakeLauncher extends UrlLauncherPlatform {
+  final opened = <String>[];
+
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    opened.add(url);
+    return true;
+  }
 }
 
 class _FakeContent implements ContentConfigService {
@@ -326,6 +341,23 @@ void main() {
     expect(find.byKey(const Key('sign-out')), findsNothing);
     expect(find.byKey(const Key('profile-delete-account')), findsNothing);
     expect(find.byKey(const Key('profile-clear-cards')), findsOneWidget);
+  });
+
+  testWidgets('profile links to the privacy policy', (tester) async {
+    await boot(tester);
+    await tester.tap(find.byKey(const Key('profile-button')));
+    await tester.pumpAndSettle();
+
+    final launcher = _FakeLauncher();
+    final original = UrlLauncherPlatform.instance;
+    UrlLauncherPlatform.instance = launcher;
+    addTearDown(() => UrlLauncherPlatform.instance = original);
+
+    final row = find.byKey(const Key('profile-privacy'));
+    await tester.scrollUntilVisible(row, 200);
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    expect(launcher.opened, ['https://snippetverses.app/privacy']);
   });
 
   testWidgets('empty library offers to pick a verse', (tester) async {

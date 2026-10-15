@@ -93,7 +93,7 @@ Android minSdk is 24 (required by the `gal` plugin).
 - [ ] Enroll in Play App Signing; upload the AAB signed with the upload key.
 - [ ] Bump `version:` in `pubspec.yaml` for each release (`name+buildNumber`).
 - [ ] `flutter build appbundle --release`; test the release build on a real device (gallery save, share sheet).
-- [ ] Privacy policy URL, Data safety form (no data collected until Firebase Auth is added), content rating, target audience.
+- [ ] Privacy policy URL (`https://snippetverses.app/privacy`), Data safety form (answers in [docs/play-data-safety.md](docs/play-data-safety.md)), content rating, target audience.
 - [ ] Internal testing track, then closed test (personal accounts need 12 testers for 14 days), then production.
 - [ ] Attribution: mention public domain texts (KJV, WEB) in the listing or About screen.
 
