@@ -1,0 +1,18 @@
+{
+  "parameters": {
+    "featured_verses": {
+      "defaultValue": {
+        "value": "[\"LAM 3:22-23\", \"PSA 46:10\", \"ISA 40:31\", \"MIC 6:8\", \"JOS 1:9\", \"JOH 3:16\", \"PSA 23:1-3\", \"PHI 4:13\", \"ROM 8:28\", \"PRO 3:5-6\", \"ISA 41:10\"]"
+      },
+      "valueType": "JSON",
+      "description": "Verse of the day rotation: references like \"PSA 46:10\" or \"LAM 3:22-23\" using the app's 3-letter book ids."
+    },
+    "announcement": {
+      "defaultValue": {
+        "value": ""
+      },
+      "valueType": "STRING",
+      "description": "Short message for users; empty means none."
+    }
+  }
+}

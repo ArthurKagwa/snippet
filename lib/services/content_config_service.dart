@@ -32,6 +32,25 @@ class FeaturedVerse {
   final int startVerse;
   final int? endVerse;
 
+  static final _refPattern = RegExp(
+    r'^([0-9A-Z]{3})\s+(\d+):(\d+)(?:-(\d+))?$',
+  );
+
+  /// Parses a reference like `PSA 46:10` or `LAM 3:22-23` (book ids as in
+  /// the Bible assets). Returns null when it doesn't match.
+  static FeaturedVerse? tryParse(String ref) {
+    final m = _refPattern.firstMatch(ref.trim().toUpperCase());
+    if (m == null) return null;
+    final start = int.parse(m[3]!);
+    final end = m[4] == null ? null : int.parse(m[4]!);
+    if (end != null && end < start) return null;
+    return FeaturedVerse(m[1]!, int.parse(m[2]!), start, end);
+  }
+
+  /// The reference [tryParse] reads back.
+  String get ref =>
+      '$bookId $chapter:$startVerse${endVerse == null ? '' : '-$endVerse'}';
+
   VerseRange get range => VerseRange(
     bookId: bookId,
     chapter: chapter,
@@ -42,29 +61,32 @@ class FeaturedVerse {
 
 /// Source of hot-updatable content.
 ///
-/// Swap [LocalContentConfigService] for a Firebase Remote Config / Firestore
-/// implementation later; callers only depend on this interface.
+/// [LocalContentConfigService] serves the bundled defaults;
+/// FirebaseContentConfigService serves Firebase Remote Config.
 abstract class ContentConfigService {
   Future<ContentConfig> load();
 }
+
+/// Bundled content, also the Remote Config defaults.
+const defaultContentConfig = ContentConfig(
+  featuredVerses: [
+    FeaturedVerse('LAM', 3, 22, 23),
+    FeaturedVerse('PSA', 46, 10),
+    FeaturedVerse('ISA', 40, 31),
+    FeaturedVerse('MIC', 6, 8),
+    FeaturedVerse('JOS', 1, 9),
+    FeaturedVerse('JOH', 3, 16),
+    FeaturedVerse('PSA', 23, 1, 3),
+    FeaturedVerse('PHI', 4, 13),
+    FeaturedVerse('ROM', 8, 28),
+    FeaturedVerse('PRO', 3, 5, 6),
+    FeaturedVerse('ISA', 41, 10),
+  ],
+);
 
 class LocalContentConfigService implements ContentConfigService {
   const LocalContentConfigService();
 
   @override
-  Future<ContentConfig> load() async => const ContentConfig(
-    featuredVerses: [
-      FeaturedVerse('LAM', 3, 22, 23),
-      FeaturedVerse('PSA', 46, 10),
-      FeaturedVerse('ISA', 40, 31),
-      FeaturedVerse('MIC', 6, 8),
-      FeaturedVerse('JOS', 1, 9),
-      FeaturedVerse('JOH', 3, 16),
-      FeaturedVerse('PSA', 23, 1, 3),
-      FeaturedVerse('PHI', 4, 13),
-      FeaturedVerse('ROM', 8, 28),
-      FeaturedVerse('PRO', 3, 5, 6),
-      FeaturedVerse('ISA', 41, 10),
-    ],
-  );
+  Future<ContentConfig> load() async => defaultContentConfig;
 }

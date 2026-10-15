@@ -6,6 +6,7 @@ import 'app.dart';
 import 'data/firestore_library_backend.dart';
 import 'firebase_options.dart';
 import 'services/firebase_auth_service.dart';
+import 'services/firebase_content_config_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,7 @@ Future<void> main() async {
   runApp(
     SnippetApp(
       auth: FirebaseAuthService(),
+      contentConfig: FirebaseContentConfigService(),
       libraryBackend: (user) =>
           FirestoreLibraryBackend(FirebaseFirestore.instance, user.id),
     ),

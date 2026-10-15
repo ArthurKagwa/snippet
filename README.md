@@ -45,7 +45,8 @@ lib/
   widgets/                        shared chrome: header, arch panel/sheet, pills, switch, icons
   services/
     auth_service.dart             AuthService + LocalAuthService (no Firebase yet)
-    content_config_service.dart   ContentConfigService + LocalContentConfigService
+    content_config_service.dart   ContentConfigService + LocalContentConfigService (bundled defaults)
+    firebase_content_config_service.dart  Remote Config: featured_verses, announcement
     export_service.dart           PNG capture, save to gallery (gal), share (share_plus)
     services.dart                 InheritedWidget container for the services above
 assets/bibles/{kjv,web}.json      66 books; {id,name,license,books:[{id,name,chapters:[[verse,...]]}]}
@@ -73,7 +74,10 @@ Android minSdk is 24 (required by the `gal` plugin).
 
 1. Create a Firebase project; register Android (`com.arthur.snippet`) and iOS apps.
 2. Enable Authentication providers: Anonymous and Google. Add your debug and release SHA-1/SHA-256 to the Android app.
-3. Enable Remote Config (and/or Firestore) for hot content (featured verses, announcements).
+3. Remote Config drives hot content. Parameters live in `remoteconfig.template.json`:
+   `featured_verses` (JSON array of refs like `"PSA 46:10"`, `"LAM 3:22-23"`) and `announcement` (text, empty = none).
+   Edit them in the console, or `firebase deploy --only remoteconfig` (this replaces the console template).
+   New values reach users on their next launch; bad refs are skipped, and an empty list falls back to the bundled verses.
 4. Run `flutterfire configure`; add `firebase_core`, `firebase_auth`, `google_sign_in`, `firebase_remote_config`.
 5. Implement `FirebaseAuthService implements AuthService` and `FirebaseContentConfigService implements ContentConfigService`;
    call `Firebase.initializeApp()` in `main.dart` and pass them into `SnippetApp(auth: ..., contentConfig: ...)`.
