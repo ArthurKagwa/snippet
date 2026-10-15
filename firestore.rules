@@ -1,0 +1,22 @@
+rules_version = '2';
+
+// Each user reads and writes only their own saved cards:
+//   users/{uid}/cards/{cardId}
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/cards/{cardId} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.id == cardId
+        && request.resource.data.text is string
+        && request.resource.data.text.size() <= 10000
+        && request.resource.data.savedAt is string;
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

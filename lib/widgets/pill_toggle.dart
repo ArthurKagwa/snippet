@@ -62,7 +62,7 @@ class PillToggle<T> extends StatelessWidget {
                     child: Text(
                       labelOf(o),
                       style: SnippetFonts.display(
-                        height * 0.31,
+                        height * 0.36,
                         weight: FontWeight.w700,
                         color: o == selected ? selectedText : text,
                       ),

@@ -82,7 +82,7 @@ class VersePickerPanel extends StatelessWidget {
                         track: c.stone2,
                         selectedFill: c.cobalt,
                         selectedText: c.white,
-                        text: c.inkDim,
+                        text: c.ink,
                       ),
                     ],
                   ),
@@ -129,9 +129,9 @@ class VersePickerPanel extends StatelessWidget {
                                 child: Text(
                                   'to',
                                   style: SnippetFonts.display(
-                                    12,
+                                    14,
                                     weight: FontWeight.w700,
-                                    color: c.inkDim,
+                                    color: c.ink,
                                   ),
                                 ),
                               ),
@@ -159,8 +159,8 @@ class VersePickerPanel extends StatelessWidget {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: SnippetFonts.serifText(
-                      15.5,
-                      color: c.inkDim,
+                      18,
+                      color: c.ink,
                       height: 1.25,
                     ),
                   ),
@@ -181,8 +181,8 @@ class VersePickerPanel extends StatelessWidget {
               width: double.infinity,
               child: PillButton(
                 key: const Key('swipe-styles'),
-                label: 'Swipe styles',
-                icon: Icons.arrow_upward_rounded,
+                label: 'Preview',
+                icon: Icons.arrow_forward_rounded,
                 onPressed: onSwipe,
                 background: c.cobalt,
                 foreground: c.white,

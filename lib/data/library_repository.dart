@@ -1,59 +1,99 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
-import 'json_store.dart';
+import '../services/auth_service.dart';
+import 'library_backend.dart';
 import 'saved_card.dart';
 
-/// Saved cards, newest first. Persists through [JsonStore].
+typedef LibraryBackendFactory = LibraryBackend Function(AppUser user);
+
+/// The signed-in user's saved cards, newest first. Empty when signed out.
 ///
-/// Local for now; a Firestore-backed version can replace this once
-/// Firebase is set up (cards are already plain JSON).
+/// Follows [AuthService]: each user gets their own [LibraryBackend]
+/// (Firestore when Firebase is set up, a local file otherwise).
 class LibraryRepository extends ChangeNotifier {
-  LibraryRepository(this._store);
+  LibraryRepository({required this._auth, required this.backendFor});
 
-  static const String _doc = 'library';
+  final AuthService _auth;
+  final LibraryBackendFactory backendFor;
 
-  final JsonStore _store;
+  String? _userId;
+  LibraryBackend? _backend;
+  StreamSubscription<List<SavedCard>>? _cardsSub;
+  StreamSubscription<AppUser?>? _authSub;
   List<SavedCard> _cards = const [];
   bool _loaded = false;
+  Object? _error;
 
   List<SavedCard> get cards => _cards;
   bool get isLoaded => _loaded;
 
+  /// Why the library could not be read (e.g. no network on first load).
+  Object? get error => _error;
+
+  /// Starts following the signed-in user. Safe to call repeatedly.
   Future<void> load() async {
-    if (_loaded) return;
-    Object? raw;
-    try {
-      raw = await _store.read(_doc);
-    } catch (e) {
-      debugPrint('Library unavailable: $e');
+    _authSub ??= _auth.authStateChanges.listen(_follow);
+    // Callers may be mid-build; notify listeners on the next microtask.
+    await Future<void>.value();
+    _follow(_auth.currentUser);
+  }
+
+  void _follow(AppUser? user) {
+    if (user?.id == _userId && (_backend != null || user == null)) {
+      if (user == null && !_loaded) _setCards(const []);
+      return;
     }
-    _cards = [
-      if (raw is List)
-        for (final j in raw) SavedCard.fromJson(j as Map<String, dynamic>),
-    ]..sort((a, b) => b.savedAt.compareTo(a.savedAt));
+    _cardsSub?.cancel();
+    _backend?.dispose();
+    _userId = user?.id;
+    _backend = user == null ? null : backendFor(user);
+    _error = null;
+    if (_backend == null) {
+      _setCards(const []);
+      return;
+    }
+    _loaded = false;
+    notifyListeners();
+    _cardsSub = _backend!.watch().listen(
+      _setCards,
+      onError: (Object e) {
+        debugPrint('Library unavailable: $e');
+        _error = e;
+        _setCards(const []);
+      },
+    );
+  }
+
+  void _setCards(List<SavedCard> cards) {
+    _cards = cards;
     _loaded = true;
     notifyListeners();
   }
 
-  Future<void> add(SavedCard card) async {
-    await load();
-    _cards = [card, ..._cards];
-    notifyListeners();
-    await _persist();
+  LibraryBackend get _current {
+    // Sign-in may have just happened; don't wait for the auth stream.
+    _follow(_auth.currentUser);
+    final backend = _backend;
+    if (backend == null) throw StateError('Sign in to use the library');
+    return backend;
   }
 
-  Future<void> remove(String id) async {
-    _cards = _cards.where((c) => c.id != id).toList();
-    notifyListeners();
-    await _persist();
-  }
+  Future<void> add(SavedCard card) => _current.put(card);
+
+  Future<void> remove(String id) => _current.delete(id);
 
   Future<void> clear() async {
-    _cards = const [];
-    notifyListeners();
-    await _store.delete(_doc);
+    if (_auth.currentUser == null) return;
+    await _current.deleteAll();
   }
 
-  Future<void> _persist() =>
-      _store.write(_doc, [for (final c in _cards) c.toJson()]);
+  @override
+  void dispose() {
+    _cardsSub?.cancel();
+    _authSub?.cancel();
+    _backend?.dispose();
+    super.dispose();
+  }
 }

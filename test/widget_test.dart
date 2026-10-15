@@ -64,6 +64,12 @@ void main() {
     await tester.tap(find.text('WEB'));
     await _settle(tester);
     expect(find.textContaining('among the nations'), findsOneWidget); // WEB
+
+    // The Styles tab previews whatever is picked on Home.
+    await tester.tap(find.byKey(const Key('nav-styles')));
+    await tester.pumpAndSettle();
+    expect(find.text('Vigil'), findsOneWidget);
+    expect(find.text('WEB'), findsOneWidget); // translation chip
   });
 
   testWidgets('swipe styles, export a story PNG', (tester) async {
@@ -104,9 +110,7 @@ void main() {
     expect(export.ratios.single, closeTo(1080, 0.5));
   });
 
-  testWidgets('saving asks to sign in; Not now keeps the card', (
-    tester,
-  ) async {
+  testWidgets('saving asks to sign in; Not now keeps the card', (tester) async {
     await boot(tester);
     await tester.tap(find.byKey(const Key('swipe-styles')));
     await tester.pumpAndSettle();
@@ -130,7 +134,7 @@ void main() {
 
   testWidgets('empty library offers to pick a verse', (tester) async {
     await boot(tester);
-    await tester.tap(find.byKey(const Key('library-button')));
+    await tester.tap(find.byKey(const Key('nav-saved')));
     await _settle(tester);
     expect(find.text('Nothing saved yet'), findsOneWidget);
 

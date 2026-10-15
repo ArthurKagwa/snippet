@@ -26,7 +26,14 @@ class BookButton extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                Text('Book', style: SnippetFonts.body(10, color: c.inkDim)),
+                Text(
+                  'Book',
+                  style: SnippetFonts.body(
+                    13,
+                    weight: FontWeight.w600,
+                    color: c.ink,
+                  ),
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

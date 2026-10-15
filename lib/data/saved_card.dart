@@ -86,6 +86,6 @@ class SavedCard {
     'text': text,
     'styleId': styleId,
     'variantId': variantId,
-    'savedAt': savedAt.toIso8601String(),
+    'savedAt': savedAt.toUtc().toIso8601String(),
   };
 }

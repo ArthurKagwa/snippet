@@ -4,14 +4,12 @@ import '../../core/theme/snippet_colors.dart';
 import '../../data/app_settings.dart';
 import '../../data/bible_models.dart';
 import '../../services/services.dart';
-import '../../widgets/circle_button.dart';
 import '../../widgets/cobalt_header.dart';
 import '../../widgets/profile_button.dart';
 import '../../widgets/snippet_wordmark.dart';
 import '../auth/sign_in_sheet.dart';
-import '../library/library_screen.dart';
 import '../profile/profile_screen.dart';
-import '../swipe/swipe_screen.dart';
+import '../shell/shell_controller.dart';
 import 'book_picker_sheet.dart';
 import 'verse_of_day.dart';
 import 'verse_picker_panel.dart';
@@ -80,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
       pull = last?.text ?? votd?.text ?? '';
     }
     if (!mounted) return;
+    _share(passage);
     setState(() {
       _books = books;
       _passage = passage;
@@ -108,7 +107,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final r = _clamp(range);
     setState(() => _range = r);
     final p = await _services.bible.passage(_translationId, r);
-    if (mounted && r == _range) setState(() => _passage = p);
+    if (mounted && r == _range) {
+      _share(p);
+      setState(() => _passage = p);
+    }
   }
 
   Future<void> _setTranslation(String id) async {
@@ -132,16 +134,23 @@ class _HomeScreenState extends State<HomeScreen> {
     _services.settings.addRecent(
       RecentVerse(range: p.range, label: p.reference),
     );
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => SwipeScreen(passage: p)));
+    ShellScope.read(context).preview(p);
+  }
+
+  /// Keeps the Styles tab on the verse picked here.
+  void _share(Passage? p) {
+    if (p != null) ShellScope.read(context).setPassage(p);
   }
 
   Future<void> _openProfile() async {
     final navigator = Navigator.of(context);
+    final shell = ShellScope.read(context);
     if (!await ensureSignedIn(context)) return;
     navigator.push(
-      MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            ProfileScreen(onShowSaved: () => shell.select(ShellTab.saved)),
+      ),
     );
   }
 
@@ -157,17 +166,6 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const SnippetWordmark(),
                 const Spacer(),
-                CircleButton(
-                  key: const Key('library-button'),
-                  tooltip: 'Library',
-                  icon: Icons.bookmark_border_rounded,
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const LibraryScreen(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
                 ProfileButton(onPressed: _openProfile),
               ],
             ),

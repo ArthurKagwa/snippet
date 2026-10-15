@@ -4,12 +4,11 @@ import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
 import '../../data/saved_card.dart';
 import '../../services/services.dart';
-import '../../widgets/circle_button.dart';
 import '../../widgets/cobalt_header.dart';
 import '../../widgets/profile_button.dart';
 import '../auth/sign_in_sheet.dart';
 import '../profile/profile_screen.dart';
-import '../swipe/swipe_screen.dart';
+import '../shell/shell_controller.dart';
 import 'library_empty.dart';
 import 'saved_card_tile.dart';
 
@@ -38,19 +37,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final navigator = Navigator.of(context);
     if (!await ensureSignedIn(context)) return;
     navigator.push(
-      MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
+      MaterialPageRoute<void>(
+        // Already on Saved; popping back is enough.
+        builder: (_) => ProfileScreen(onShowSaved: () {}),
+      ),
     );
   }
 
-  void _open(SavedCard card) => Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => SwipeScreen(
-        passage: card.passage,
-        initialStyleId: card.styleId,
-        initialVariantId: card.variantId,
-      ),
-    ),
-  );
+  void _open(SavedCard card) => ShellScope.read(
+    context,
+  ).preview(card.passage, styleId: card.styleId, variantId: card.variantId);
 
   Future<void> _confirmRemove(SavedCard card) async {
     final library = Services.of(context).library;
@@ -85,15 +81,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
           CobaltHeader(
             child: Row(
               children: [
-                CircleButton(
-                  tooltip: 'Back',
-                  icon: Icons.arrow_back_rounded,
-                  onPressed: () => Navigator.of(context).maybePop(),
-                ),
-                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Library',
+                    'Saved',
                     style: SnippetFonts.display(
                       21,
                       color: c.white,
@@ -114,14 +104,26 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     child: CircularProgressIndicator(color: c.lime),
                   );
                 }
+                if (library.error != null && library.cards.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(36),
+                      child: Text(
+                        'Your library could not be loaded. Check your '
+                        'connection and try again.',
+                        textAlign: TextAlign.center,
+                        style: SnippetFonts.body(13.3, color: c.mist),
+                      ),
+                    ),
+                  );
+                }
                 final cards = _newestFirst
                     ? library.cards
                     : library.cards.reversed.toList();
                 if (cards.isEmpty) {
                   return LibraryEmpty(
-                    onPickVerse: () => Navigator.of(
-                      context,
-                    ).popUntil((route) => route.isFirst),
+                    onPickVerse: () =>
+                        ShellScope.read(context).select(ShellTab.home),
                   );
                 }
                 return _grid(cards);

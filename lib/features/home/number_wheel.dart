@@ -95,9 +95,11 @@ class _NumberWheelState extends State<NumberWheel> {
                       child: Text(
                         '$n',
                         style: SnippetFonts.display(
-                          selected ? 24 : 13,
+                          selected ? 24 : 16,
                           weight: selected ? FontWeight.w800 : FontWeight.w700,
-                          color: selected ? c.white : c.inkDim,
+                          color: selected
+                              ? c.white
+                              : c.ink.withValues(alpha: 0.7),
                           height: 1,
                         ),
                       ),

@@ -21,7 +21,10 @@ class WheelBox extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(label, style: SnippetFonts.body(10, color: c.inkDim)),
+          Text(
+            label,
+            style: SnippetFonts.body(13, weight: FontWeight.w600, color: c.ink),
+          ),
           const SizedBox(height: 2),
           child,
         ],

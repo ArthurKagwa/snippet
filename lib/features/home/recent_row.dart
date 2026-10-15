@@ -18,7 +18,10 @@ class RecentRow extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       child: Row(
         children: [
-          Text('Recent', style: SnippetFonts.body(9.5, color: c.inkDim)),
+          Text(
+            'Recent',
+            style: SnippetFonts.body(13, weight: FontWeight.w600, color: c.ink),
+          ),
           for (final r in recent) ...[
             const SizedBox(width: 6),
             Material(
@@ -29,13 +32,13 @@ class RecentRow extends StatelessWidget {
                 onTap: () => onTap(r),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 7,
+                    horizontal: 12,
+                    vertical: 9,
                   ),
                   child: Text(
                     r.label,
                     style: SnippetFonts.body(
-                      9.5,
+                      13,
                       weight: FontWeight.w600,
                       color: c.ink,
                     ),

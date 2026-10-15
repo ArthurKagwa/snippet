@@ -10,22 +10,25 @@ class ArchPanel extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.fromLTRB(24, 50, 24, 24),
     this.color,
+    this.archDepth = 50,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
   final Color? color;
 
-  static const BorderRadius radius = BorderRadius.vertical(
-    top: Radius.elliptical(180, 50),
-  );
+  /// How far the curved top dips at the edges.
+  final double archDepth;
+
+  static BorderRadius radiusFor(double depth) =>
+      BorderRadius.vertical(top: Radius.elliptical(180, depth));
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     return Material(
       color: color ?? c.stone,
-      borderRadius: radius,
+      borderRadius: radiusFor(archDepth),
       clipBehavior: Clip.antiAlias,
       child: DefaultTextStyle.merge(
         style: TextStyle(color: c.ink),

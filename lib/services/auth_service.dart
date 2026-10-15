@@ -37,6 +37,9 @@ abstract class AuthService {
   Future<AppUser> signInAnonymously();
   Future<AppUser?> signInWithGoogle();
   Future<void> signOut();
+
+  /// Permanently deletes the account (its data should be removed first).
+  Future<void> deleteAccount();
 }
 
 /// Offline stand-in: anonymous sign-in works locally, Google is unavailable.
@@ -75,4 +78,7 @@ class LocalAuthService implements AuthService {
     _user = null;
     _controller.add(null);
   }
+
+  @override
+  Future<void> deleteAccount() => signOut(); // nothing stored remotely
 }

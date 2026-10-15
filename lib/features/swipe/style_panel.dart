@@ -29,11 +29,12 @@ class StylePanel extends StatelessWidget {
     final c = context.colors;
     final variant = style.variants[variantIndex];
     return ArchPanel(
+      archDepth: 30,
       padding: EdgeInsets.fromLTRB(
         24,
-        46,
+        28,
         24,
-        MediaQuery.paddingOf(context).bottom + 20,
+        MediaQuery.paddingOf(context).bottom + 14,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -69,7 +70,7 @@ class StylePanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 14),
           Row(
             children: [
               for (var i = 0; i < style.variants.length; i++) ...[
@@ -90,7 +91,7 @@ class StylePanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 26),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -101,7 +102,7 @@ class StylePanel extends StatelessWidget {
                   icon: Icons.bookmark_border_rounded,
                   onPressed: onSave,
                   foreground: c.ink,
-                  height: 52,
+                  height: 48,
                   fontSize: 12.7,
                 ),
               ),
@@ -115,7 +116,7 @@ class StylePanel extends StatelessWidget {
                   onPressed: onExport,
                   background: c.cobalt,
                   foreground: c.white,
-                  height: 52,
+                  height: 48,
                   fontSize: 14,
                 ),
               ),

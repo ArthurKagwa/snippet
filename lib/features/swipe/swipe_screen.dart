@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../cards/card_catalog.dart';
@@ -12,12 +10,10 @@ import '../../services/services.dart';
 import '../all_styles/all_styles_screen.dart';
 import '../auth/sign_in_sheet.dart';
 import '../export/export_sheet.dart';
-import '../library/library_screen.dart';
-import 'style_page.dart';
+import '../shell/shell_controller.dart';
 import 'style_panel.dart';
-import 'style_track.dart';
 import 'swipe_header.dart';
-import 'swipe_hint.dart';
+import 'swipe_stage.dart';
 
 /// Swipe up for the next style, sideways for the next colourway.
 class SwipeScreen extends StatefulWidget {
@@ -48,7 +44,8 @@ class _SwipeScreenState extends State<SwipeScreen> {
   final Map<int, PageController> _variantControllers = {};
   bool _sideways = false;
 
-  late final CardContent _content = CardContent(
+  /// Follows the passage, so a new verse keeps the current style.
+  CardContent get _content => CardContent(
     text: widget.passage.text,
     reference: widget.passage.reference,
     translation: BibleRepository.shortNames[widget.passage.translationId] ?? '',
@@ -101,7 +98,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
   Future<void> _save() async {
     final services = Services.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
+    final shell = ShellScope.read(context);
     if (!await ensureSignedIn(context)) return;
     final style = _styles[_styleIndex];
     try {
@@ -123,9 +120,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
           content: const Text('Saved to your library'),
           action: SnackBarAction(
             label: 'View',
-            onPressed: () => navigator.push(
-              MaterialPageRoute<void>(builder: (_) => const LibraryScreen()),
-            ),
+            onPressed: () => shell.select(ShellTab.saved),
           ),
         ),
       );
@@ -157,7 +152,6 @@ class _SwipeScreenState extends State<SwipeScreen> {
     final c = context.colors;
     final top = MediaQuery.paddingOf(context).top;
     final style = _styles[_styleIndex];
-    final hints = Services.of(context).settings;
     return Scaffold(
       body: Stack(
         children: [
@@ -176,84 +170,26 @@ class _SwipeScreenState extends State<SwipeScreen> {
                 child: SwipeHeader(
                   reference: widget.passage.reference,
                   translation: _content.translation,
-                  onBack: () => Navigator.of(context).maybePop(),
+                  onBack: () => ShellScope.read(context).select(ShellTab.home),
                   onAllStyles: _openAllStyles,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               Expanded(
-                child: LayoutBuilder(
-                  builder: (context, box) {
-                    const hintSpace = 40.0;
-                    var h = math.min(
-                      380.0,
-                      box.maxHeight - StylePage.peekDepth - hintSpace,
-                    );
-                    var w = h * 0.8;
-                    if (w > box.maxWidth - 56) {
-                      w = box.maxWidth - 56;
-                      h = w / 0.8;
-                    }
-                    final cardSize = Size(w, h);
-                    return Stack(
-                      children: [
-                        NotificationListener<ScrollNotification>(
-                          onNotification: _onScroll,
-                          child: PageView.builder(
-                            key: const Key('style-pager'),
-                            controller: _styleController,
-                            scrollDirection: Axis.vertical,
-                            itemCount: _styles.length,
-                            onPageChanged: (i) => setState(() {
-                              _styleIndex = i;
-                              _sideways = false;
-                            }),
-                            itemBuilder: (context, i) => StylePage(
-                              style: _styles[i],
-                              nextStyle: i + 1 < _styles.length
-                                  ? _styles[i + 1]
-                                  : null,
-                              content: _content,
-                              controller: _variantController(i),
-                              cardSize: cardSize,
-                              onVariantChanged: (v) =>
-                                  setState(() => _variantOf[i] = v),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: 9,
-                          top: h * 0.14,
-                          child: AnimatedBuilder(
-                            animation: _styleController,
-                            builder: (context, _) => StyleTrack(
-                              count: _styles.length,
-                              height: h * 0.74,
-                              position:
-                                  _styleController.hasClients &&
-                                      _styleController.position.haveDimensions
-                                  ? _styleController.page ?? 0
-                                  : _styleIndex.toDouble(),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          top: h + StylePage.peekDepth + 12,
-                          child: ListenableBuilder(
-                            listenable: hints,
-                            builder: (context, _) => hints.swipeHints
-                                ? SwipeHint(
-                                    sideways: _sideways,
-                                    isLast: _styleIndex == _styles.length - 1,
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
+                child: SwipeStage(
+                  styles: _styles,
+                  styleIndex: _styleIndex,
+                  content: _content,
+                  styleController: _styleController,
+                  variantController: _variantController,
+                  sideways: _sideways,
+                  onScroll: _onScroll,
+                  onStyleChanged: (i) => setState(() {
+                    _styleIndex = i;
+                    _sideways = false;
+                  }),
+                  onVariantChanged: (style, v) =>
+                      setState(() => _variantOf[style] = v),
                 ),
               ),
               StylePanel(

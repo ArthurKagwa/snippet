@@ -13,14 +13,16 @@ import '../../widgets/cobalt_header.dart';
 import '../../widgets/pill_button.dart';
 import '../../widgets/pill_toggle.dart';
 import '../../widgets/snippet_switch.dart';
-import '../library/library_screen.dart';
 import 'profile_card.dart';
 import 'settings_row.dart';
 import 'settings_section.dart';
 
 /// Account, preferences and about.
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({super.key, required this.onShowSaved});
+
+  /// Switches the app to the Saved tab (Profile sits above the tabs).
+  final VoidCallback onShowSaved;
 
   Future<void> _pickShape(BuildContext context) async {
     final settings = Services.of(context).settings;
@@ -58,6 +60,7 @@ class ProfileScreen extends StatelessWidget {
   Future<void> _deleteAll(BuildContext context) async {
     final s = Services.of(context);
     final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -79,8 +82,15 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
     if (!(ok ?? false)) return;
-    await s.library.clear();
-    await s.auth.signOut();
+    try {
+      await s.library.clear();
+      await s.auth.deleteAccount();
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not delete account: $e')),
+      );
+      return;
+    }
     navigator.popUntil((r) => r.isFirst);
   }
 
@@ -147,9 +157,10 @@ class ProfileScreen extends StatelessWidget {
             SettingsRow(
               label: 'Saved cards',
               value: s.library.isLoaded ? '${s.library.cards.length}' : '',
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const LibraryScreen()),
-              ),
+              onTap: () {
+                Navigator.of(context).popUntil((r) => r.isFirst);
+                onShowSaved();
+              },
             ),
           ],
         ),

@@ -25,13 +25,14 @@ class StylePage extends StatelessWidget {
   final Size cardSize;
   final ValueChanged<int> onVariantChanged;
 
-  static const double peekDepth = 12;
+  /// How far the next style's edge shows under the card.
+  static const double peekDepth = 6;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
     return Align(
-      alignment: Alignment.topCenter,
+      alignment: Alignment.center,
       child: SizedBox(
         height: cardSize.height + peekDepth,
         child: Stack(
