@@ -126,26 +126,48 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('creating an account checks the password length first', (
+  testWidgets('creating an account needs a strong, confirmed password', (
     tester,
   ) async {
     await openEmailForm(tester);
     await tester.tap(find.text('New here? Create an account'));
     await tester.pumpAndSettle();
+    expect(find.text('At least 8 characters'), findsOneWidget);
+    expect(find.byKey(const Key('confirm-field')), findsOneWidget);
+
     await tester.enterText(find.byKey(const Key('email-field')), 'a@b.co');
-    await tester.enterText(find.byKey(const Key('password-field')), '123');
+    await tester.enterText(find.byKey(const Key('password-field')), 'abc123');
     await tester.tap(find.byKey(const Key('email-submit')));
     await tester.pumpAndSettle();
     expect(
-      find.text('Use a password of at least 6 characters.'),
+      find.text('Choose a password that ticks every point above.'),
       findsOneWidget,
     );
     expect(auth.accounts.containsKey('a@b.co'), isFalse);
 
-    await tester.enterText(find.byKey(const Key('password-field')), '123456');
+    await tester.enterText(
+      find.byKey(const Key('password-field')),
+      'Psalm4610',
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Icon && w.icon == Icons.check_circle_rounded,
+      ),
+      findsNWidgets(3),
+    );
+    await tester.enterText(find.byKey(const Key('confirm-field')), 'Psalm461');
+    await tester.pump();
+    expect(find.text('Passwords do not match'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('email-submit')));
+    await tester.pumpAndSettle();
+    expect(find.text('The passwords do not match.'), findsOneWidget);
+    expect(auth.accounts.containsKey('a@b.co'), isFalse);
+
+    await tester.enterText(find.byKey(const Key('confirm-field')), 'Psalm4610');
     await tester.tap(find.byKey(const Key('email-submit')));
     await _settle(tester);
-    expect(auth.accounts['a@b.co'], '123456');
+    expect(auth.accounts['a@b.co'], 'Psalm4610');
     expect(auth.currentUser?.email, 'a@b.co');
     await tester.pump(const Duration(seconds: 5));
     await tester.pumpAndSettle();

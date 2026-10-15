@@ -6,10 +6,12 @@ import '../../services/auth_service.dart';
 import '../../services/services.dart';
 import '../../widgets/overlay_toast.dart';
 import '../../widgets/pill_button.dart';
+import 'auth_field_decoration.dart';
+import 'password_guide.dart';
 
 /// Email and password sign-in for the sign-in sheet, with a switch to
-/// create an account and a password reset link. Errors show under the
-/// fields, since toasts would sit behind the sheet.
+/// create an account (password rules checklist and a confirm field) and a
+/// password reset link. Errors show under the fields.
 class EmailSignInForm extends StatefulWidget {
   const EmailSignInForm({super.key, required this.onSignedIn, this.onBack});
 
@@ -25,6 +27,7 @@ class EmailSignInForm extends StatefulWidget {
 class _EmailSignInFormState extends State<EmailSignInForm> {
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _confirm = TextEditingController();
   bool _create = false;
   bool _obscure = true;
   String? _error;
@@ -40,6 +43,7 @@ class _EmailSignInFormState extends State<EmailSignInForm> {
   void dispose() {
     _email.dispose();
     _password.dispose();
+    _confirm.dispose();
     super.dispose();
   }
 
@@ -49,9 +53,11 @@ class _EmailSignInFormState extends State<EmailSignInForm> {
     }
     if (!needPassword) return null;
     if (_password.text.isEmpty) return 'Enter your password.';
-    if (_create && _password.text.length < 6) {
-      return 'Use a password of at least 6 characters.';
+    if (!_create) return null;
+    if (!meetsPasswordRules(_password.text)) {
+      return 'Choose a password that ticks every point above.';
     }
+    if (_confirm.text != _password.text) return 'The passwords do not match.';
     return null;
   }
 
@@ -105,23 +111,14 @@ class _EmailSignInFormState extends State<EmailSignInForm> {
     });
   }
 
-  InputDecoration _field(SnippetColors c, String label, {Widget? suffix}) {
-    OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: color, width: width),
-    );
-    return InputDecoration(
-      labelText: label,
-      labelStyle: SnippetFonts.body(14, color: c.inkDim),
-      floatingLabelStyle: SnippetFonts.body(13, color: c.cobalt),
-      filled: true,
-      fillColor: c.white,
-      suffixIcon: suffix,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      enabledBorder: border(c.stone2, 1.4),
-      focusedBorder: border(c.cobalt, 1.6),
-    );
-  }
+  Widget _visibility(SnippetColors c) => IconButton(
+    tooltip: _obscure ? 'Show password' : 'Hide password',
+    icon: Icon(
+      _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+      color: c.inkDim,
+    ),
+    onPressed: () => setState(() => _obscure = !_obscure),
+  );
 
   Widget _link(SnippetColors c, String label, VoidCallback? onPressed) =>
       TextButton(
@@ -155,7 +152,7 @@ class _EmailSignInFormState extends State<EmailSignInForm> {
             autofillHints: const [AutofillHints.email],
             style: SnippetFonts.body(15, color: c.ink),
             cursorColor: c.cobalt,
-            decoration: _field(c, 'Email'),
+            decoration: authFieldDecoration(c, 'Email'),
           ),
           const SizedBox(height: 10),
           TextField(
@@ -165,28 +162,53 @@ class _EmailSignInFormState extends State<EmailSignInForm> {
             obscureText: _obscure,
             autocorrect: false,
             enableSuggestions: false,
-            textInputAction: TextInputAction.done,
+            textInputAction: _create
+                ? TextInputAction.next
+                : TextInputAction.done,
             autofillHints: [
               _create ? AutofillHints.newPassword : AutofillHints.password,
             ],
-            onSubmitted: (_) => _submit(),
+            onSubmitted: _create ? null : (_) => _submit(),
             style: SnippetFonts.body(15, color: c.ink),
             cursorColor: c.cobalt,
-            decoration: _field(
+            decoration: authFieldDecoration(
               c,
               'Password',
-              suffix: IconButton(
-                tooltip: _obscure ? 'Show password' : 'Hide password',
-                icon: Icon(
-                  _obscure
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
-                  color: c.inkDim,
-                ),
-                onPressed: () => setState(() => _obscure = !_obscure),
-              ),
+              suffix: _visibility(c),
             ),
           ),
+          if (_create) ...[
+            ListenableBuilder(
+              listenable: _password,
+              builder: (_, _) => PasswordGuide(password: _password.text),
+            ),
+            const SizedBox(height: 12),
+            ListenableBuilder(
+              listenable: Listenable.merge([_password, _confirm]),
+              builder: (_, _) => TextField(
+                key: const Key('confirm-field'),
+                controller: _confirm,
+                enabled: !_busy,
+                obscureText: _obscure,
+                autocorrect: false,
+                enableSuggestions: false,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.newPassword],
+                onSubmitted: (_) => _submit(),
+                style: SnippetFonts.body(15, color: c.ink),
+                cursorColor: c.cobalt,
+                decoration: authFieldDecoration(
+                  c,
+                  'Confirm password',
+                  errorText:
+                      _confirm.text.isNotEmpty &&
+                          _confirm.text != _password.text
+                      ? 'Passwords do not match'
+                      : null,
+                ),
+              ),
+            ),
+          ],
           if (error != null) ...[
             const SizedBox(height: 10),
             Semantics(
@@ -218,6 +240,7 @@ class _EmailSignInFormState extends State<EmailSignInForm> {
                     : 'New here? Create an account',
                 () => setState(() {
                   _create = !_create;
+                  _confirm.clear();
                   _error = null;
                 }),
               ),

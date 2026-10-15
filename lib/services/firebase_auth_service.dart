@@ -38,7 +38,8 @@ class FirebaseAuthService implements AuthService {
         'missing-password' => 'Enter your password.',
         'email-already-in-use' =>
           'That email already has an account. Sign in instead.',
-        'weak-password' => 'Use a password of at least 6 characters.',
+        'weak-password' || 'password-does-not-meet-requirements' =>
+          'Use 8+ characters with upper and lowercase letters and a number.',
         'user-disabled' => 'This account has been turned off.',
         'too-many-requests' => 'Too many tries. Wait a moment and try again.',
         'network-request-failed' => 'No connection. Check your internet.',
