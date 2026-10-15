@@ -99,14 +99,14 @@ class _ExportSheetState extends State<ExportSheet> {
     showToast(messenger, 'Saved to Photos');
   });
 
-  Future<void> _share() => _run(
-    'share',
-    (s, png) => s.export.share(
+  Future<void> _share() => _run('share', (s, png) async {
+    final config = await s.contentConfig.load();
+    await s.export.share(
       png,
       name: _fileName,
-      text: widget.content.referenceLine,
-    ),
-  );
+      text: config.captionFor(widget.content),
+    );
+  });
 
   @override
   Widget build(BuildContext context) {

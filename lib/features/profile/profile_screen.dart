@@ -12,6 +12,7 @@ import '../../widgets/circle_button.dart';
 import '../../widgets/cobalt_header.dart';
 import '../../widgets/pill_toggle.dart';
 import '../../widgets/snippet_switch.dart';
+import '../../widgets/toast.dart';
 import 'account_actions.dart';
 import 'profile_card.dart';
 import 'settings_row.dart';
@@ -55,6 +56,18 @@ class ProfileScreen extends StatelessWidget {
       },
     );
     if (shape != null) settings.defaultShape = shape;
+  }
+
+  Future<void> _invite(BuildContext context) async {
+    final s = Services.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final config = await s.contentConfig.load();
+      await s.export.shareText(config.inviteMessage);
+    } catch (e) {
+      debugPrint('Invite failed: $e');
+      showToast(messenger, 'Could not open sharing. Try again.');
+    }
   }
 
   @override
@@ -174,14 +187,19 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 22),
-        const SettingsSection(
+        SettingsSection(
           title: 'About',
           children: [
             SettingsRow(
+              key: const Key('profile-invite'),
+              label: 'Invite a friend',
+              onTap: () => _invite(context),
+            ),
+            const SettingsRow(
               label: 'Bible texts',
               value: 'KJV & WEB, public domain',
             ),
-            SettingsRow(label: 'Version', value: AppTheme.version),
+            const SettingsRow(label: 'Version', value: AppTheme.version),
           ],
         ),
         const SizedBox(height: 32),

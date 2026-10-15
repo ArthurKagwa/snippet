@@ -13,6 +13,8 @@ import 'package:snippet/services/export_service.dart';
 class _FakeExport implements ExportService {
   final List<String> saved = [];
   final List<double> ratios = [];
+  final List<String?> captions = [];
+  final List<String> texts = [];
 
   /// When set, saving waits on it, so a test can tap while work is pending.
   Completer<void>? gate;
@@ -37,18 +39,29 @@ class _FakeExport implements ExportService {
     Uint8List png, {
     required String name,
     String? text,
-  }) async {}
+  }) async => captions.add(text);
+
+  @override
+  Future<void> shareText(String text) async => texts.add(text);
 }
 
 class _FakeContent implements ContentConfigService {
-  _FakeContent(this.announcement);
+  _FakeContent(
+    this.announcement, {
+    this.inviteMessage = defaultInviteMessage,
+    this.shareCaption = defaultShareCaption,
+  });
 
-  final String announcement;
+  final String? announcement;
+  final String inviteMessage;
+  final String shareCaption;
 
   @override
   Future<ContentConfig> load() async => ContentConfig(
     featuredVerses: defaultContentConfig.featuredVerses,
     announcement: announcement,
+    inviteMessage: inviteMessage,
+    shareCaption: shareCaption,
   );
 }
 
@@ -142,6 +155,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(export.saved, ['snippet_psalm_46_10_story']);
     expect(export.ratios.single, closeTo(1080, 0.5));
+
+    await tester.tap(find.byKey(const Key('share-image')));
+    await tester.pumpAndSettle();
+    expect(export.captions, ['PSALM 46:10 · KJV']);
+  });
+
+  testWidgets('share caption and invite text come from content config', (
+    tester,
+  ) async {
+    await boot(
+      tester,
+      contentConfig: _FakeContent(
+        null,
+        inviteMessage: 'Come make cards with me',
+        shareCaption: '{reference} ({translation}) via Snippet',
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('profile-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile-invite')));
+    await tester.pumpAndSettle();
+    expect(export.texts, ['Come make cards with me']);
+
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('swipe-styles')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('export-card')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('share-image')));
+    await tester.pumpAndSettle();
+    expect(export.captions, ['Psalm 46:10 (KJV) via Snippet']);
   });
 
   testWidgets('saving asks to sign in; Not now keeps the card', (tester) async {

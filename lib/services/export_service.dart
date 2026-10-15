@@ -7,7 +7,8 @@ import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-/// Renders a [RepaintBoundary] to PNG and saves or shares it.
+/// Renders a [RepaintBoundary] to PNG and saves or shares it; also shares
+/// plain text through the system share sheet.
 abstract class ExportService {
   Future<Uint8List> capturePng(
     RenderRepaintBoundary boundary, {
@@ -15,6 +16,7 @@ abstract class ExportService {
   });
   Future<void> saveToGallery(Uint8List png, {required String name});
   Future<void> share(Uint8List png, {required String name, String? text});
+  Future<void> shareText(String text);
 }
 
 class DeviceExportService implements ExportService {
@@ -58,4 +60,8 @@ class DeviceExportService implements ExportService {
       ),
     );
   }
+
+  @override
+  Future<void> shareText(String text) =>
+      SharePlus.instance.share(ShareParams(text: text));
 }

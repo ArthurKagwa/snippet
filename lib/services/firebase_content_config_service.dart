@@ -14,6 +14,9 @@ import 'content_config_service.dart';
 /// - `announcement`: plain text; empty means none.
 /// - `card_styles`: JSON changes to the card styles; see
 ///   [CardStyleOverrides]. `{}` means as bundled.
+/// - `invite_message`: text for "Invite a friend"; empty means bundled.
+/// - `share_caption`: caption sent with a shared card, with placeholders
+///   (see [ContentConfig.shareCaption]); empty means bundled.
 ///
 /// The first launch waits briefly for a fetch. After that the values
 /// fetched on the previous launch are applied right away and a new fetch
@@ -25,6 +28,8 @@ class FirebaseContentConfigService implements ContentConfigService {
   static const featuredVersesKey = 'featured_verses';
   static const announcementKey = 'announcement';
   static const cardStylesKey = 'card_styles';
+  static const inviteMessageKey = 'invite_message';
+  static const shareCaptionKey = 'share_caption';
 
   final FirebaseRemoteConfig _remoteConfig;
   Future<ContentConfig>? _loaded;
@@ -49,6 +54,8 @@ class FirebaseContentConfigService implements ContentConfigService {
         ]),
         announcementKey: '',
         cardStylesKey: '{}',
+        inviteMessageKey: defaultInviteMessage,
+        shareCaptionKey: defaultShareCaption,
       });
       if (rc.lastFetchStatus == RemoteConfigFetchStatus.noFetchYet) {
         try {
@@ -68,6 +75,8 @@ class FirebaseContentConfigService implements ContentConfigService {
         featuredVersesJson: rc.getString(featuredVersesKey),
         announcement: rc.getString(announcementKey),
         cardStylesJson: rc.getString(cardStylesKey),
+        inviteMessage: rc.getString(inviteMessageKey),
+        shareCaption: rc.getString(shareCaptionKey),
       );
     } catch (e) {
       debugPrint('Remote Config unavailable, using bundled content: $e');
@@ -78,10 +87,13 @@ class FirebaseContentConfigService implements ContentConfigService {
 
 /// Builds a [ContentConfig] from raw parameter values. Unreadable verse
 /// references are skipped; if none are left the bundled verses are used.
+/// An empty invite message or share caption falls back to the bundled one.
 ContentConfig parseRemoteContent({
   required String featuredVersesJson,
   required String announcement,
   String cardStylesJson = '',
+  String inviteMessage = '',
+  String shareCaption = '',
 }) {
   var verses = <FeaturedVerse>[];
   try {
@@ -96,11 +108,15 @@ ContentConfig parseRemoteContent({
     debugPrint('Remote Config featured_verses is not JSON: $e');
   }
   final text = announcement.trim();
+  final invite = inviteMessage.trim();
+  final caption = shareCaption.trim();
   return ContentConfig(
     featuredVerses: verses.isEmpty
         ? defaultContentConfig.featuredVerses
         : verses,
     announcement: text.isEmpty ? null : text,
     cardStyles: CardStyleOverrides.parse(cardStylesJson),
+    inviteMessage: invite.isEmpty ? defaultInviteMessage : invite,
+    shareCaption: caption.isEmpty ? defaultShareCaption : caption,
   );
 }

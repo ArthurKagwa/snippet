@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snippet/cards/card_content.dart';
 import 'package:snippet/services/content_config_service.dart';
 import 'package:snippet/services/firebase_content_config_service.dart';
 
@@ -58,6 +59,42 @@ void main() {
         expect(c.announcement, isNull);
       }
     });
+
+    test('uses remote invite message and share caption', () {
+      final c = parseRemoteContent(
+        featuredVersesJson: '[]',
+        announcement: '',
+        inviteMessage: ' Join me on Snippet ',
+        shareCaption: '{reference}',
+      );
+      expect(c.inviteMessage, 'Join me on Snippet');
+      expect(c.shareCaption, '{reference}');
+    });
+
+    test('falls back to bundled invite and caption when empty', () {
+      final c = parseRemoteContent(
+        featuredVersesJson: '[]',
+        announcement: '',
+        inviteMessage: '  ',
+      );
+      expect(c.inviteMessage, defaultInviteMessage);
+      expect(c.shareCaption, defaultShareCaption);
+    });
+  });
+
+  test('captionFor fills in the placeholders', () {
+    const content = CardContent(
+      text: 'Be still, and know that I am God',
+      reference: 'Psalm 46:10',
+      translation: 'KJV',
+    );
+    expect(const ContentConfig().captionFor(content), 'PSALM 46:10 · KJV');
+    expect(
+      const ContentConfig(
+        shareCaption: '"{verse}" {reference} ({translation})\n#snippet',
+      ).captionFor(content),
+      '"Be still, and know that I am God" Psalm 46:10 (KJV)\n#snippet',
+    );
   });
 
   test('remoteconfig.template.json matches the bundled defaults', () {
@@ -74,5 +111,15 @@ void main() {
         template['parameters'][FirebaseContentConfigService
             .cardStylesKey]['defaultValue']['value'];
     expect(jsonDecode(styles as String), <String, dynamic>{});
+    String text(String key) =>
+        template['parameters'][key]['defaultValue']['value'] as String;
+    expect(
+      text(FirebaseContentConfigService.inviteMessageKey),
+      defaultInviteMessage,
+    );
+    expect(
+      text(FirebaseContentConfigService.shareCaptionKey),
+      defaultShareCaption,
+    );
   });
 }

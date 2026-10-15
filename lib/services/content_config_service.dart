@@ -1,3 +1,4 @@
+import '../cards/card_content.dart';
 import '../cards/card_style_overrides.dart';
 import '../data/bible_models.dart';
 
@@ -7,6 +8,8 @@ class ContentConfig {
     this.featuredVerses = const [],
     this.announcement,
     this.cardStyles = CardStyleOverrides.none,
+    this.inviteMessage = defaultInviteMessage,
+    this.shareCaption = defaultShareCaption,
   });
 
   /// Suggested verses; one is shown each day as the verse of the day.
@@ -15,6 +18,21 @@ class ContentConfig {
 
   /// Changes to the bundled card styles; see CardCatalog.apply.
   final CardStyleOverrides cardStyles;
+
+  /// Text sent by "Invite a friend".
+  final String inviteMessage;
+
+  /// Caption sent with a shared card. `{reference}` (Psalm 46:10),
+  /// `{translation}` (KJV), `{verse}` (the verse text) and
+  /// `{reference_line}` (PSALM 46:10 · KJV) are filled in.
+  final String shareCaption;
+
+  String captionFor(CardContent content) => shareCaption
+      .replaceAll('{reference_line}', content.referenceLine)
+      .replaceAll('{reference}', content.reference)
+      .replaceAll('{translation}', content.translation)
+      .replaceAll('{verse}', content.text)
+      .trim();
 
   FeaturedVerse? verseOfTheDay(DateTime day) {
     if (featuredVerses.isEmpty) return null;
@@ -74,6 +92,12 @@ class FeaturedVerse {
 abstract class ContentConfigService {
   Future<ContentConfig> load();
 }
+
+const defaultInviteMessage =
+    "I've been turning Bible verses into quote cards with Snippet. "
+    'Try it: https://snippetverses.app';
+
+const defaultShareCaption = '{reference_line}';
 
 /// Bundled content, also the Remote Config defaults.
 const defaultContentConfig = ContentConfig(
