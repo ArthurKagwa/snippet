@@ -45,6 +45,7 @@ class AppSettings extends ChangeNotifier {
   bool _showMark = true;
   bool _hdExport = false;
   bool _swipeHints = true;
+  bool _reminderPrompted = false;
   List<RecentVerse> _recent = const [];
   String? _dismissedAnnouncement;
 
@@ -55,6 +56,9 @@ class AppSettings extends ChangeNotifier {
   /// Export at [CardShape.hdScale] times the base resolution.
   bool get hdExport => _hdExport;
   bool get swipeHints => _swipeHints;
+
+  /// Whether the one-time notification permission prompt has been shown.
+  bool get reminderPrompted => _reminderPrompted;
   List<RecentVerse> get recent => _recent;
 
   /// The last announcement the user closed; a different one shows again.
@@ -75,6 +79,7 @@ class AppSettings extends ChangeNotifier {
     _showMark = raw['showMark'] as bool? ?? _showMark;
     _hdExport = raw['hdExport'] as bool? ?? _hdExport;
     _swipeHints = raw['swipeHints'] as bool? ?? _swipeHints;
+    _reminderPrompted = raw['reminderPrompted'] as bool? ?? _reminderPrompted;
     _dismissedAnnouncement = raw['dismissedAnnouncement'] as String?;
     _recent = [
       for (final r in raw['recent'] as List<dynamic>? ?? const [])
@@ -88,6 +93,8 @@ class AppSettings extends ChangeNotifier {
   set showMark(bool v) => _update(() => _showMark = v);
   set hdExport(bool v) => _update(() => _hdExport = v);
   set swipeHints(bool v) => _update(() => _swipeHints = v);
+
+  set reminderPrompted(bool v) => _update(() => _reminderPrompted = v);
 
   set dismissedAnnouncement(String? v) =>
       _update(() => _dismissedAnnouncement = v);
@@ -109,6 +116,7 @@ class AppSettings extends ChangeNotifier {
           'showMark': _showMark,
           'hdExport': _hdExport,
           'swipeHints': _swipeHints,
+          'reminderPrompted': _reminderPrompted,
           'recent': [for (final r in _recent) r.toJson()],
           'dismissedAnnouncement': _dismissedAnnouncement,
         })

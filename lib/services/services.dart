@@ -6,6 +6,7 @@ import '../data/library_repository.dart';
 import 'auth_service.dart';
 import 'content_config_service.dart';
 import 'export_service.dart';
+import 'verse_reminder_service.dart';
 
 /// Dependency container exposed through the widget tree so tests (and the
 /// future Firebase wiring) can swap implementations.
@@ -16,6 +17,7 @@ class Services extends InheritedWidget {
     required this.auth,
     required this.contentConfig,
     required this.export,
+    required this.reminders,
     required this.library,
     required this.settings,
     required super.child,
@@ -25,6 +27,7 @@ class Services extends InheritedWidget {
   final AuthService auth;
   final ContentConfigService contentConfig;
   final ExportService export;
+  final VerseReminderService reminders;
   final LibraryRepository library;
   final AppSettings settings;
 
@@ -40,6 +43,7 @@ class Services extends InheritedWidget {
       auth != old.auth ||
       contentConfig != old.contentConfig ||
       export != old.export ||
+      reminders != old.reminders ||
       library != old.library ||
       settings != old.settings;
 }

@@ -11,6 +11,7 @@ import 'services/auth_service.dart';
 import 'services/content_config_service.dart';
 import 'services/export_service.dart';
 import 'services/services.dart';
+import 'services/verse_reminder_service.dart';
 
 class SnippetApp extends StatelessWidget {
   /// Without [libraryBackend], saved cards stay in a file on this device;
@@ -21,6 +22,7 @@ class SnippetApp extends StatelessWidget {
     AuthService? auth,
     ContentConfigService? contentConfig,
     ExportService? export,
+    VerseReminderService? reminders,
     JsonStore? store,
     LibraryBackendFactory? libraryBackend,
   }) : this._(
@@ -28,6 +30,7 @@ class SnippetApp extends StatelessWidget {
          auth: auth ?? LocalAuthService(),
          contentConfig: contentConfig ?? const LocalContentConfigService(),
          export: export ?? const DeviceExportService(),
+         reminders: reminders ?? const NoopVerseReminderService(),
          store: store ?? FileJsonStore(),
          libraryBackend: libraryBackend,
          key: key,
@@ -39,6 +42,7 @@ class SnippetApp extends StatelessWidget {
     required this.auth,
     required this.contentConfig,
     required this.export,
+    required this.reminders,
     required JsonStore store,
     LibraryBackendFactory? libraryBackend,
   }) : library = LibraryRepository(
@@ -53,6 +57,7 @@ class SnippetApp extends StatelessWidget {
   final AuthService auth;
   final ContentConfigService contentConfig;
   final ExportService export;
+  final VerseReminderService reminders;
   final LibraryRepository library;
   final AppSettings settings;
 
@@ -63,6 +68,7 @@ class SnippetApp extends StatelessWidget {
       auth: auth,
       contentConfig: contentConfig,
       export: export,
+      reminders: reminders,
       library: library,
       settings: settings,
       child: MaterialApp(

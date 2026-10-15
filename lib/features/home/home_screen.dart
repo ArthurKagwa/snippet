@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../cards/card_catalog.dart';
@@ -5,6 +7,7 @@ import '../../core/theme/snippet_colors.dart';
 import '../../data/app_settings.dart';
 import '../../data/bible_models.dart';
 import '../../services/services.dart';
+import '../../services/verse_reminder_sync.dart';
 import '../../widgets/cobalt_header.dart';
 import '../../widgets/profile_button.dart';
 import '../../widgets/snippet_wordmark.dart';
@@ -56,6 +59,14 @@ class _HomeScreenState extends State<HomeScreen> {
       await s.settings.load();
       _translationId = s.settings.defaultTranslationId;
       await _loadTranslation();
+      unawaited(
+        syncVerseReminders(
+          reminders: s.reminders,
+          settings: s.settings,
+          contentConfig: s.contentConfig,
+          bible: s.bible,
+        ),
+      );
       if (mounted) setState(() => _loading = false);
     } catch (e) {
       if (mounted) setState(() => _error = e);
