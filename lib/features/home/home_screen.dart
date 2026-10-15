@@ -7,7 +7,6 @@ import '../../services/services.dart';
 import '../../widgets/cobalt_header.dart';
 import '../../widgets/profile_button.dart';
 import '../../widgets/snippet_wordmark.dart';
-import '../auth/sign_in_sheet.dart';
 import '../profile/profile_screen.dart';
 import '../shell/shell_controller.dart';
 import 'book_picker_sheet.dart';
@@ -142,10 +141,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (p != null) ShellScope.read(context).setPassage(p);
   }
 
-  Future<void> _openProfile() async {
+  void _openProfile() {
     final navigator = Navigator.of(context);
     final shell = ShellScope.read(context);
-    if (!await ensureSignedIn(context)) return;
     navigator.push(
       MaterialPageRoute<void>(
         builder: (_) =>

@@ -181,7 +181,7 @@ class VersePickerPanel extends StatelessWidget {
               width: double.infinity,
               child: PillButton(
                 key: const Key('swipe-styles'),
-                label: 'Preview',
+                label: 'Make a card',
                 icon: Icons.arrow_forward_rounded,
                 onPressed: onSwipe,
                 background: c.cobalt,

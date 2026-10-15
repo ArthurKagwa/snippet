@@ -6,7 +6,6 @@ import '../../data/saved_card.dart';
 import '../../services/services.dart';
 import '../../widgets/cobalt_header.dart';
 import '../../widgets/profile_button.dart';
-import '../auth/sign_in_sheet.dart';
 import '../profile/profile_screen.dart';
 import '../shell/shell_controller.dart';
 import 'library_empty.dart';
@@ -33,9 +32,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
-  Future<void> _openProfile() async {
+  void _openProfile() {
     final navigator = Navigator.of(context);
-    if (!await ensureSignedIn(context)) return;
     navigator.push(
       MaterialPageRoute<void>(
         // Already on Saved; popping back is enough.

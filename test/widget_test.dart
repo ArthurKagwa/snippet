@@ -132,6 +132,40 @@ void main() {
     expect(await store.read('library'), hasLength(1));
   });
 
+  testWidgets('home has one main action, distinct from the daily verse', (
+    tester,
+  ) async {
+    await boot(tester);
+    expect(find.text('Make a card'), findsOneWidget);
+    expect(find.text('Use this verse'), findsOneWidget);
+    expect(find.text('Preview'), findsNothing);
+  });
+
+  testWidgets('profile offers sign-in, never sign-out, without an account', (
+    tester,
+  ) async {
+    await boot(tester);
+    await tester.tap(find.byKey(const Key('profile-button')));
+    await tester.pumpAndSettle();
+
+    // Signed out.
+    expect(find.text('Not signed in'), findsOneWidget);
+    expect(find.byKey(const Key('profile-sign-in')), findsOneWidget);
+    expect(find.byKey(const Key('sign-out')), findsNothing);
+    expect(find.byKey(const Key('profile-delete-account')), findsNothing);
+
+    // "This phone only": no account to sign out of or delete.
+    await tester.tap(find.byKey(const Key('profile-sign-in')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('local-sign-in')));
+    await _settle(tester);
+    expect(find.text('On this phone'), findsOneWidget);
+    expect(find.byKey(const Key('profile-sign-in')), findsNothing);
+    expect(find.byKey(const Key('sign-out')), findsNothing);
+    expect(find.byKey(const Key('profile-delete-account')), findsNothing);
+    expect(find.byKey(const Key('profile-clear-cards')), findsOneWidget);
+  });
+
   testWidgets('empty library offers to pick a verse', (tester) async {
     await boot(tester);
     await tester.tap(find.byKey(const Key('nav-saved')));

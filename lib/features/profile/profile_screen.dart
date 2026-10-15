@@ -10,9 +10,9 @@ import '../../services/services.dart';
 import '../../widgets/arch_sheet.dart';
 import '../../widgets/circle_button.dart';
 import '../../widgets/cobalt_header.dart';
-import '../../widgets/pill_button.dart';
 import '../../widgets/pill_toggle.dart';
 import '../../widgets/snippet_switch.dart';
+import 'account_actions.dart';
 import 'profile_card.dart';
 import 'settings_row.dart';
 import 'settings_section.dart';
@@ -55,43 +55,6 @@ class ProfileScreen extends StatelessWidget {
       },
     );
     if (shape != null) settings.defaultShape = shape;
-  }
-
-  Future<void> _deleteAll(BuildContext context) async {
-    final s = Services.of(context);
-    final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete account and data?'),
-        content: const Text(
-          'This removes every saved card and signs you out. It cannot be '
-          'undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    if (!(ok ?? false)) return;
-    try {
-      await s.library.clear();
-      await s.auth.deleteAccount();
-    } catch (e) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Could not delete account: $e')),
-      );
-      return;
-    }
-    navigator.popUntil((r) => r.isFirst);
   }
 
   @override
@@ -149,7 +112,7 @@ class ProfileScreen extends StatelessWidget {
         MediaQuery.paddingOf(context).bottom + 24,
       ),
       children: [
-        if (user != null) ProfileCard(user: user),
+        ProfileCard(user: user),
         const SizedBox(height: 28),
         SettingsSection(
           title: 'Your cards',
@@ -222,36 +185,7 @@ class ProfileScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 32),
-        if (user != null) ...[
-          PillButton(
-            key: const Key('sign-out'),
-            label: 'Sign out',
-            icon: Icons.logout_rounded,
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              await s.auth.signOut();
-              navigator.popUntil((r) => r.isFirst);
-            },
-            foreground: c.white,
-            height: 50,
-            fontSize: 12.7,
-            borderWidth: 1,
-          ),
-          const SizedBox(height: 4),
-          Center(
-            child: TextButton(
-              onPressed: () => _deleteAll(context),
-              child: Text(
-                'Delete account and data',
-                style: SnippetFonts.body(
-                  10.7,
-                  color: c.mist,
-                  decoration: TextDecoration.underline,
-                ),
-              ),
-            ),
-          ),
-        ],
+        AccountActions(user: user),
       ],
     );
   }

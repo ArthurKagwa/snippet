@@ -86,13 +86,12 @@ class VerseOfDay extends StatelessWidget {
                   style: SnippetFonts.body(12.5, color: c.mist, height: 1.35),
                 ),
                 const SizedBox(height: 10),
+                // Outlined so it stays secondary to "Make a card" below.
                 PillButton(
                   key: const Key('votd-swipe'),
-                  label: 'Preview',
-                  icon: Icons.arrow_forward_rounded,
+                  label: 'Use this verse',
                   onPressed: onSwipe,
-                  background: c.lime,
-                  foreground: c.ink,
+                  foreground: c.lime,
                   height: 40,
                   fontSize: 13,
                 ),

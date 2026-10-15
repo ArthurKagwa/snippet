@@ -5,19 +5,29 @@ import '../../core/theme/snippet_fonts.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/icons/google_logo.dart';
 
-/// Avatar, name, email and how the user signed in.
+/// Avatar, name, email and how the user signed in; a plain
+/// "Not signed in" when [user] is null.
 class ProfileCard extends StatelessWidget {
   const ProfileCard({super.key, required this.user});
 
-  final AppUser user;
+  final AppUser? user;
 
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final initials = user.initials;
-    final name = user.isAnonymous
+    final u = user;
+    final google = u != null && !u.isAnonymous;
+    final initials = u?.initials ?? '';
+    final name = u == null
+        ? 'Not signed in'
+        : u.isAnonymous
         ? 'On this phone'
-        : (user.displayName ?? 'Signed in');
+        : (u.displayName ?? 'Signed in');
+    final status = u == null
+        ? 'Swiping and exporting never need an account'
+        : u.isAnonymous
+        ? 'Cards stay on this device'
+        : 'Signed in with Google';
     return Row(
       children: [
         Container(
@@ -45,10 +55,10 @@ class ProfileCard extends StatelessWidget {
                   height: 1,
                 ),
               ),
-              if (user.email != null) ...[
+              if (u?.email != null) ...[
                 const SizedBox(height: 4),
                 Text(
-                  user.email!,
+                  u!.email!,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: SnippetFonts.body(10, color: c.mist),
@@ -57,15 +67,15 @@ class ProfileCard extends StatelessWidget {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  if (!user.isAnonymous) ...[
+                  if (google) ...[
                     const GoogleLogo(size: 11),
                     const SizedBox(width: 4),
                   ],
-                  Text(
-                    user.isAnonymous
-                        ? 'Cards stay on this device'
-                        : 'Signed in with Google',
-                    style: SnippetFonts.body(8.7, color: c.mist),
+                  Flexible(
+                    child: Text(
+                      status,
+                      style: SnippetFonts.body(8.7, color: c.mist),
+                    ),
                   ),
                 ],
               ),
