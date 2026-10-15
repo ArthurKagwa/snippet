@@ -369,8 +369,10 @@ void main() {
     await tester.tap(find.byKey(const Key('swipe-styles')));
     await tester.pumpAndSettle();
     expect(find.text('Vigil'), findsOneWidget);
+    expect(find.byKey(const Key('all-styles')), findsNothing);
+    expect(find.byKey(const Key('profile-button')), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('all-styles')));
+    await tester.tap(find.byKey(const Key('nav-styles')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('style-tile-riso')));
     // Mid-flight: the tile is on its way into the swipe card.

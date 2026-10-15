@@ -11,6 +11,7 @@ import '../../widgets/toast.dart';
 import '../all_styles/all_styles_screen.dart';
 import '../auth/sign_in_sheet.dart';
 import '../export/export_sheet.dart';
+import '../profile/profile_screen.dart';
 import '../shell/shell_controller.dart';
 import 'style_panel.dart';
 import 'swipe_header.dart';
@@ -121,6 +122,16 @@ class _SwipeScreenState extends State<SwipeScreen> {
     }
   }
 
+  Future<void> _openProfile() {
+    final navigator = Navigator.of(context);
+    return navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            ProfileScreen(onShowSaved: () => _shell.select(ShellTab.saved)),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     if (_saving || _askingSignIn) return;
     final services = Services.of(context);
@@ -212,7 +223,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
                   reference: widget.passage.reference,
                   translation: _content.translation,
                   onBack: () => ShellScope.read(context).select(ShellTab.home),
-                  onAllStyles: _openAllStyles,
+                  onProfile: _openProfile,
                 ),
               ),
               const SizedBox(height: 10),

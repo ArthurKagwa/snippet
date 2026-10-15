@@ -4,22 +4,22 @@ import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
 import '../../widgets/async_tap.dart';
 import '../../widgets/circle_button.dart';
-import '../../widgets/icons/arch_icon.dart';
+import '../../widgets/profile_button.dart';
 
-/// Back, the current reference (tap to change verse), and All styles.
+/// Back, the current reference (tap to change verse), and Profile.
 class SwipeHeader extends StatelessWidget {
   const SwipeHeader({
     super.key,
     required this.reference,
     required this.translation,
     required this.onBack,
-    required this.onAllStyles,
+    required this.onProfile,
   });
 
   final String reference;
   final String translation;
   final VoidCallback onBack;
-  final TapAction onAllStyles;
+  final TapAction onProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -85,12 +85,7 @@ class SwipeHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        CircleButton(
-          key: const Key('all-styles'),
-          tooltip: 'See every style at once',
-          onPressed: onAllStyles,
-          child: const ArchIcon(),
-        ),
+        ProfileButton(onPressed: onProfile),
       ],
     );
   }
