@@ -116,6 +116,8 @@ void main() {
     // The Styles tab previews whatever is picked on Home.
     await tester.tap(find.byKey(const Key('nav-styles')));
     await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Back to swiping'));
+    await tester.pumpAndSettle();
     expect(find.text('Vigil'), findsOneWidget);
     expect(find.text('WEB'), findsOneWidget); // translation chip
   });
@@ -335,6 +337,31 @@ void main() {
     await tester.tap(find.byKey(const Key('pick-a-verse')));
     await tester.pumpAndSettle();
     expect(find.text('Pick a verse'), findsOneWidget);
+  });
+
+  testWidgets('Styles in the nav always opens All styles', (tester) async {
+    await boot(tester);
+    await tester.tap(find.byKey(const Key('nav-styles')));
+    await tester.pumpAndSettle();
+    expect(find.text('All styles'), findsOneWidget);
+
+    // Back goes to swiping; Styles again reopens All styles.
+    await tester.tap(find.byTooltip('Back to swiping'));
+    await tester.pumpAndSettle();
+    expect(find.text('All styles'), findsNothing);
+    expect(find.byKey(const Key('style-pager')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('nav-styles')));
+    await tester.pumpAndSettle();
+    expect(find.text('All styles'), findsOneWidget);
+
+    // From another tab too.
+    await tester.tap(find.byTooltip('Back to swiping'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-home')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('nav-styles')));
+    await tester.pumpAndSettle();
+    expect(find.text('All styles'), findsOneWidget);
   });
 
   testWidgets('picking in All styles lands on that style', (tester) async {

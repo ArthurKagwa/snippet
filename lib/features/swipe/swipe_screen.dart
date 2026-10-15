@@ -47,6 +47,8 @@ class _SwipeScreenState extends State<SwipeScreen> {
   bool _saving = false;
   bool _exportOpen = false;
   bool _askingSignIn = false;
+  bool _allStylesOpen = false;
+  late final ShellController _shell = ShellScope.read(context);
 
   /// Follows the passage, so a new verse keeps the current style.
   CardContent get _content => CardContent(
@@ -64,7 +66,20 @@ class _SwipeScreenState extends State<SwipeScreen> {
       );
 
   @override
+  void initState() {
+    super.initState();
+    _shell.addListener(_onShell);
+    // The nav may have asked before this screen existed.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onShell());
+  }
+
+  void _onShell() {
+    if (mounted && _shell.takeAllStylesRequest()) _openAllStyles();
+  }
+
+  @override
   void dispose() {
+    _shell.removeListener(_onShell);
     _styleController.dispose();
     for (final c in _variantControllers.values) {
       c.dispose();
@@ -85,19 +100,25 @@ class _SwipeScreenState extends State<SwipeScreen> {
   }
 
   Future<void> _openAllStyles() async {
-    await Navigator.of(context).push<int>(
-      MaterialPageRoute(
-        builder: (_) => AllStylesScreen(
-          content: _content,
-          selectedIndex: _styleIndex,
-          variantOf: _variantIndex,
-          // Jump before the pop so the picked card is there to land on.
-          onPick: (i) {
-            if (_styleController.hasClients) _styleController.jumpToPage(i);
-          },
+    if (_allStylesOpen) return;
+    _allStylesOpen = true;
+    try {
+      await Navigator.of(context).push<int>(
+        MaterialPageRoute(
+          builder: (_) => AllStylesScreen(
+            content: _content,
+            selectedIndex: _styleIndex,
+            variantOf: _variantIndex,
+            // Jump before the pop so the picked card is there to land on.
+            onPick: (i) {
+              if (_styleController.hasClients) _styleController.jumpToPage(i);
+            },
+          ),
         ),
-      ),
-    );
+      );
+    } finally {
+      _allStylesOpen = false;
+    }
   }
 
   Future<void> _save() async {

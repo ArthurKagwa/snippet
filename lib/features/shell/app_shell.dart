@@ -48,7 +48,9 @@ class _AppShellState extends State<AppShell> {
             ),
             bottomNavigationBar: SnippetNavBar(
               tab: _shell.tab,
-              onTab: _shell.select,
+              onTab: (t) => t == ShellTab.styles
+                  ? _shell.openAllStyles()
+                  : _shell.select(t),
             ),
           ),
         ),

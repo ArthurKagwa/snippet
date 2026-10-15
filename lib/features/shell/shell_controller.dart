@@ -11,6 +11,7 @@ class ShellController extends ChangeNotifier {
   String? _styleId;
   String? _variantId;
   int _openCount = 0;
+  bool _allStylesRequested = false;
 
   ShellTab get tab => _tab;
   Passage? get passage => _passage;
@@ -24,6 +25,20 @@ class ShellController extends ChangeNotifier {
     if (tab == _tab) return;
     _tab = tab;
     notifyListeners();
+  }
+
+  /// Styles in the nav: show the Styles tab with All styles on top.
+  void openAllStyles() {
+    _tab = ShellTab.styles;
+    _allStylesRequested = true;
+    notifyListeners();
+  }
+
+  /// Whether All styles was asked for since the last call.
+  bool takeAllStylesRequest() {
+    final requested = _allStylesRequested;
+    _allStylesRequested = false;
+    return requested;
   }
 
   /// The verse picked on Home; Styles follows it without switching tabs.
