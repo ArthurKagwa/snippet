@@ -1,17 +1,27 @@
+<p align="center">
+  <img src="docs/images/icon.png" alt="Snippet app icon" width="96">
+</p>
+
+<p align="center">
+  <img src="docs/images/feature-graphic.png" alt="Snippet: Bible verses, made into cards worth sharing. Pick, swipe, share." width="720">
+</p>
+
 # Snippet
 
 Bible verse quote cards. Pick a verse, style it, export a PNG, save or share.
 
-- Offline: KJV and WEB texts are bundled as assets (no network needed).
-- Pick any book, chapter, and verse range; toggle KJV / WEB.
-- "Cobalt swipe" design: swipe up through 6 card styles (Vigil, Riso Loud, Dawn, Swiss,
-  Night Watch, Cobalt Arch), sideways through each style's colourways.
-- Export in three shapes (Feed 1:1, Portrait 4:5, Story 9:16), each laid out natively.
-- Optional sign-in only gates the Library; picking, swiping and exporting never need it.
-- Export as PNG (`RepaintBoundary` + `toImage`), save to gallery or share.
-- Optional login and hot content updates are stubbed behind interfaces, ready for Firebase.
+Built with Flutter for Android and iOS (`com.arthur.snippet`). Website: [snippetverses.app](https://snippetverses.app).
 
-Package `snippet`, Android applicationId `com.arthur.snippet`, iOS bundle id `com.arthur.snippet`.
+## Features
+
+- **Offline Bible**: KJV and WEB are bundled as assets, so picking a verse never needs a network.
+- **Pick any passage**: any book, chapter and verse range, with a KJV / WEB toggle.
+- **Cobalt swipe design**: swipe up through 6 card styles (Vigil, Riso Loud, Dawn, Swiss, Night Watch, Cobalt Arch) and sideways through each style's colourways.
+- **Three export shapes**: Feed 1:1, Portrait 4:5 and Story 9:16, each laid out natively. Exported as PNG, saved to the gallery or shared.
+- **Optional account**: email and password or Google sign-in only gates the Library. Picking, swiping and exporting never need it.
+- **Library**: saved cards sync to your account through Firestore.
+- **Hot content**: featured verses and an announcement banner come from Firebase Remote Config, with bundled fallbacks.
+- **Verse reminders**: local notifications, no server involved.
 
 ## Bible texts: public domain
 
@@ -29,7 +39,7 @@ The app code is MIT licensed (see `LICENSE`).
 
 ```
 lib/
-  main.dart                       entry point (Firebase.initializeApp goes here later)
+  main.dart                       entry point (Firebase init, falls back to offline services)
   app.dart                        MaterialApp + dependency wiring
   core/                           app theme; theme/ holds color tokens + font styles
   cards/                          card design system: shapes, palettes/, styles/, QuoteCard
@@ -44,7 +54,8 @@ lib/
     profile/                      account, preferences, about
   widgets/                        shared chrome: header, arch panel/sheet, pills, switch, icons
   services/
-    auth_service.dart             AuthService + LocalAuthService (no Firebase yet)
+    auth_service.dart             AuthService + LocalAuthService (offline fallback)
+    firebase_auth_service.dart    Firebase email/password + Google sign-in
     content_config_service.dart   ContentConfigService + LocalContentConfigService (bundled defaults)
     firebase_content_config_service.dart  Remote Config: featured_verses, announcement
     export_service.dart           PNG capture, save to gallery (gal), share (share_plus)
@@ -68,23 +79,29 @@ flutter run
 Requires the Flutter stable SDK (developed on 3.47) and, for device builds, the Android SDK / Xcode.
 Android minSdk is 24 (required by the `gal` plugin).
 
-## Next steps
+## Firebase
 
-### Firebase setup (not done yet)
+The app runs fully offline if Firebase is unavailable (local auth, cards kept on the device).
 
-1. Create a Firebase project; register Android (`com.arthur.snippet`) and iOS apps.
-2. Enable Authentication providers: Anonymous and Google. Add your debug and release SHA-1/SHA-256 to the Android app.
-3. Remote Config drives hot content. Parameters live in `remoteconfig.template.json`:
-   `featured_verses` (JSON array of refs like `"PSA 46:10"`, `"LAM 3:22-23"`) and `announcement` (text, empty = none).
-   Edit them in the console, or `firebase deploy --only remoteconfig` (this replaces the console template).
-   New values reach users on their next launch; bad refs are skipped, and an empty list falls back to the bundled verses.
-4. Run `flutterfire configure`; add `firebase_core`, `firebase_auth`, `google_sign_in`, `firebase_remote_config`.
-5. Implement `FirebaseAuthService implements AuthService` and `FirebaseContentConfigService implements ContentConfigService`;
-   call `Firebase.initializeApp()` in `main.dart` and pass them into `SnippetApp(auth: ..., contentConfig: ...)`.
-6. `google-services.json` and `GoogleService-Info.plist` are git-ignored; do not commit them.
-   Keep them in CI secrets or each developer's machine.
+- Services used: Authentication (email/password, Google), Firestore (Library), Remote Config.
+- Remote Config parameters live in `remoteconfig.template.json`:
+  `featured_verses` (JSON array of refs like `"PSA 46:10"`, `"LAM 3:22-23"`) and `announcement` (text, empty = none).
+  Edit them in the console, or `firebase deploy --only remoteconfig` (this replaces the console template).
+  New values reach users on their next launch; bad refs are skipped, and an empty list falls back to the bundled verses.
+- Security rules are in `firestore.rules`.
+- `google-services.json` and `GoogleService-Info.plist` are git-ignored; do not commit them.
+  Keep them in CI secrets or each developer's machine.
+- To point a fork at your own project: create a Firebase project, register `com.arthur.snippet` (or your own id) for Android and iOS,
+  add your debug and release SHA-1/SHA-256 to the Android app, then run `flutterfire configure`.
 
-### Play Store signing / release checklist
+## Contributing
+
+1. Branch from `main`; direct pushes to `main` are blocked.
+2. Run `flutter analyze` and `flutter test` before opening a pull request.
+3. Fill in the pull request template.
+4. Conventions: theme tokens only (no hardcoded colours), one component per file, split any file nearing 300 lines.
+
+## Release checklist
 
 - [ ] Final app name, short and full description, tagline (store listing name must be unique on Play).
 - [ ] App icon (`flutter_launcher_icons`) and a feature graphic, 2+ phone screenshots.
