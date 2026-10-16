@@ -69,6 +69,13 @@ test/                             repository, export, and widget tests
 
 ## Develop
 
+Requires the Flutter stable SDK (developed on 3.47) and, for device builds, the Android SDK / Xcode.
+Android minSdk is 24 (required by the `gal` plugin).
+
+Set up Firebase first (see [Firebase setup](#firebase-setup) below). A fresh clone does not include
+`lib/firebase_options.dart`; without it, `flutter analyze` reports a missing import until you generate
+or copy that file.
+
 ```
 flutter pub get
 flutter analyze
@@ -76,10 +83,40 @@ flutter test
 flutter run
 ```
 
-Requires the Flutter stable SDK (developed on 3.47) and, for device builds, the Android SDK / Xcode.
-Android minSdk is 24 (required by the `gal` plugin).
+## Firebase setup
 
-## Firebase
+Sign-in and cloud library sync use Firebase. Configuration files are **gitignored on purpose** so API keys
+and app IDs are not committed.
+
+1. Create a [Firebase](https://console.firebase.google.com/) project and register the Android app
+   (`com.arthur.snippet`) and iOS app (`com.arthur.snippet`).
+2. In the Firebase console, enable **Authentication** → sign-in methods **Google** and **Anonymous**.
+3. Enable **Cloud Firestore** (start in test mode or add rules from `firestore.rules` as you prefer).
+4. On your machine, install the FlutterFire CLI and generate config:
+
+   ```bash
+   dart pub global activate flutterfire_cli
+   flutterfire configure
+   ```
+
+   This writes `lib/firebase_options.dart`, `android/app/google-services.json`, and
+   `ios/Runner/GoogleService-Info.plist` (and macOS equivalents if you enable that platform).
+
+   **Or** copy the template and fill in your project values:
+
+   ```bash
+   cp lib/firebase_options.dart.example lib/firebase_options.dart
+   ```
+
+   Then add `google-services.json` / `GoogleService-Info.plist` from the Firebase console if you build
+   native Android or iOS targets.
+
+5. Run `flutter pub get`, then `flutter analyze` and `flutter test`.
+
+Do not commit `lib/firebase_options.dart`, `google-services.json`, `GoogleService-Info.plist`, or
+`firebase_app_id_file.json`. Keep them on each developer machine or in CI secrets.
+
+## Firebase services
 
 The app runs fully offline if Firebase is unavailable (local auth, cards kept on the device).
 
@@ -89,10 +126,7 @@ The app runs fully offline if Firebase is unavailable (local auth, cards kept on
   Edit them in the console, or `firebase deploy --only remoteconfig` (this replaces the console template).
   New values reach users on their next launch; bad refs are skipped, and an empty list falls back to the bundled verses.
 - Security rules are in `firestore.rules`.
-- `google-services.json` and `GoogleService-Info.plist` are git-ignored; do not commit them.
-  Keep them in CI secrets or each developer's machine.
-- To point a fork at your own project: create a Firebase project, register `com.arthur.snippet` (or your own id) for Android and iOS,
-  add your debug and release SHA-1/SHA-256 to the Android app, then run `flutterfire configure`.
+- Add your debug and release SHA-1/SHA-256 to the Android app for Google sign-in.
 
 ## Contributing
 
