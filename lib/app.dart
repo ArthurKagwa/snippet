@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'core/app_theme.dart';
 import 'data/app_settings.dart';
 import 'data/bible_repository.dart';
+import 'data/daily_verse_store.dart';
 import 'data/json_library_backend.dart';
 import 'data/json_store.dart';
 import 'data/library_repository.dart';
@@ -25,6 +26,7 @@ class SnippetApp extends StatelessWidget {
     VerseReminderService? reminders,
     JsonStore? store,
     LibraryBackendFactory? libraryBackend,
+    DateTime Function()? now,
   }) : this._(
          bible: bible ?? BibleRepository(),
          auth: auth ?? LocalAuthService(),
@@ -33,6 +35,7 @@ class SnippetApp extends StatelessWidget {
          reminders: reminders ?? const NoopVerseReminderService(),
          store: store ?? FileJsonStore(),
          libraryBackend: libraryBackend,
+         now: now ?? DateTime.now,
          key: key,
        );
 
@@ -45,13 +48,15 @@ class SnippetApp extends StatelessWidget {
     required this.reminders,
     required JsonStore store,
     LibraryBackendFactory? libraryBackend,
+    required this.now,
   }) : library = LibraryRepository(
          auth: auth,
          backendFor: (user) => libraryBackend == null || user.isAnonymous
              ? JsonLibraryBackend(store)
              : libraryBackend(user),
        ),
-       settings = AppSettings(store);
+       settings = AppSettings(store),
+       dailyVerses = DailyVerseStore(store);
 
   final BibleRepository bible;
   final AuthService auth;
@@ -60,6 +65,8 @@ class SnippetApp extends StatelessWidget {
   final VerseReminderService reminders;
   final LibraryRepository library;
   final AppSettings settings;
+  final DailyVerseStore dailyVerses;
+  final DateTime Function() now;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +78,8 @@ class SnippetApp extends StatelessWidget {
       reminders: reminders,
       library: library,
       settings: settings,
+      dailyVerses: dailyVerses,
+      now: now,
       child: MaterialApp(
         title: AppTheme.appName,
         debugShowCheckedModeBanner: false,

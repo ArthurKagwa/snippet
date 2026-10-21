@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../data/app_settings.dart';
 import '../data/bible_repository.dart';
+import '../data/daily_verse_store.dart';
 import '../data/library_repository.dart';
 import 'auth_service.dart';
 import 'content_config_service.dart';
@@ -20,6 +21,8 @@ class Services extends InheritedWidget {
     required this.reminders,
     required this.library,
     required this.settings,
+    required this.dailyVerses,
+    this.now = DateTime.now,
     required super.child,
   });
 
@@ -30,6 +33,8 @@ class Services extends InheritedWidget {
   final VerseReminderService reminders;
   final LibraryRepository library;
   final AppSettings settings;
+  final DailyVerseStore dailyVerses;
+  final DateTime Function() now;
 
   static Services of(BuildContext context) {
     final s = context.dependOnInheritedWidgetOfExactType<Services>();
@@ -45,5 +50,7 @@ class Services extends InheritedWidget {
       export != old.export ||
       reminders != old.reminders ||
       library != old.library ||
-      settings != old.settings;
+      settings != old.settings ||
+      dailyVerses != old.dailyVerses ||
+      now != old.now;
 }

@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 import '../data/app_settings.dart';
 import '../data/bible_repository.dart';
+import '../data/daily_verse_store.dart';
 import 'content_config_service.dart';
+import 'services.dart';
 import 'verse_reminder_service.dart';
 
 /// Days of verses scheduled ahead; the app refills the window on launch.
@@ -19,6 +23,7 @@ Future<void> syncVerseReminders({
   required AppSettings settings,
   required ContentConfigService contentConfig,
   required BibleRepository bible,
+  required DailyVerseStore dailyVerses,
   DateTime? now,
 }) async {
   try {
@@ -35,18 +40,37 @@ Future<void> syncVerseReminders({
     }
     final config = await contentConfig.load();
     final today = now ?? DateTime.now();
+    final todayAtReminder = DateTime(
+      today.year,
+      today.month,
+      today.day,
+      reminderMinutesAfterMidnight ~/ 60,
+      reminderMinutesAfterMidnight % 60,
+    );
+    final firstDayOffset = todayAtReminder.isAfter(today) ? 0 : 1;
     final verses = <ReminderVerse>[];
     for (var i = 0; i < reminderWindowDays; i++) {
-      final featured = config.verseOfTheDay(
-        DateTime(today.year, today.month, today.day + i),
+      final day = DateTime(
+        today.year,
+        today.month,
+        today.day + firstDayOffset + i,
       );
-      if (featured == null) continue;
-      final p = await bible.passage(
-        settings.defaultTranslationId,
-        featured.range,
+      final p = await dailyVerses.resolve(
+        bible: bible,
+        config: config,
+        translationId: settings.defaultTranslationId,
+        day: day,
       );
       if (p != null) {
-        verses.add(ReminderVerse(reference: p.reference, text: p.text));
+        verses.add(
+          ReminderVerse(
+            day: day,
+            range: p.range,
+            translationId: p.translationId,
+            reference: p.reference,
+            text: p.text,
+          ),
+        );
       }
     }
     if (verses.isEmpty) return;
@@ -58,3 +82,16 @@ Future<void> syncVerseReminders({
     debugPrint('Could not sync verse reminders: $e');
   }
 }
+
+/// Fire-and-forget sync with the app's services, so reminders and Home always
+/// share the pinned [DailyVerseStore] and clock.
+void syncAppVerseReminders(Services s) => unawaited(
+  syncVerseReminders(
+    reminders: s.reminders,
+    settings: s.settings,
+    contentConfig: s.contentConfig,
+    bible: s.bible,
+    dailyVerses: s.dailyVerses,
+    now: s.now(),
+  ),
+);

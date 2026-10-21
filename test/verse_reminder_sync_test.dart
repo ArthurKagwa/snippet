@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snippet/data/app_settings.dart';
 import 'package:snippet/data/bible_repository.dart';
+import 'package:snippet/data/daily_verse_store.dart';
 import 'package:snippet/data/json_store.dart';
 import 'package:snippet/services/content_config_service.dart';
 import 'package:snippet/services/verse_reminder_service.dart';
@@ -50,13 +51,15 @@ class _Recorder extends NoopVerseReminderService {
   Future<void> cancel() async => cancelled = true;
 }
 
-Future<void> _sync(_Recorder rec, AppSettings settings) => syncVerseReminders(
-  reminders: rec,
-  settings: settings,
-  contentConfig: const LocalContentConfigService(),
-  bible: BibleRepository(),
-  now: DateTime(2026, 10, 15),
-);
+Future<void> _sync(_Recorder rec, AppSettings settings, {DateTime? now}) =>
+    syncVerseReminders(
+      reminders: rec,
+      settings: settings,
+      contentConfig: const LocalContentConfigService(),
+      bible: BibleRepository(),
+      dailyVerses: DailyVerseStore(_MemoryStore()),
+      now: now ?? DateTime(2026, 10, 15),
+    );
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -78,4 +81,29 @@ void main() {
     expect(rec.cancelled, isTrue);
     expect(rec.scheduled, isNull);
   });
+
+  for (final hour in [7, 8, 15, 23]) {
+    test(
+      'at $hour:00 each reminder matches its scheduled day and version',
+      () async {
+        final settings = AppSettings(_MemoryStore())
+          ..defaultTranslationId = 'web';
+        final rec = _Recorder();
+        await _sync(rec, settings, now: DateTime(2026, 10, 31, hour));
+        final bible = BibleRepository();
+        final firstDay = DateTime(2026, 10, hour < 8 ? 31 : 32);
+        for (var i = 0; i < reminderWindowDays; i++) {
+          final day = DateTime(firstDay.year, firstDay.month, firstDay.day + i);
+          final expected = await bible.passage(
+            'web',
+            defaultContentConfig.verseOfTheDay(day)!.range,
+          );
+          final reminder = rec.scheduled![i];
+          expect(reminder.day, day);
+          expect(reminder.reference, expected!.reference);
+          expect(reminder.text, expected.text);
+        }
+      },
+    );
+  }
 }

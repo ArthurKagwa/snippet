@@ -11,13 +11,13 @@ class SwipeHeader extends StatelessWidget {
   const SwipeHeader({
     super.key,
     required this.reference,
-    required this.translation,
+    required this.translationToggle,
     required this.onBack,
     required this.onProfile,
   });
 
   final String reference;
-  final String translation;
+  final Widget translationToggle;
   final VoidCallback onBack;
   final TapAction onProfile;
 
@@ -57,24 +57,6 @@ class SwipeHeader extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: ShapeDecoration(
-                          color: c.lime,
-                          shape: const StadiumBorder(),
-                        ),
-                        child: Text(
-                          translation,
-                          style: SnippetFonts.display(
-                            8,
-                            weight: FontWeight.w700,
-                            color: c.ink,
-                          ),
-                        ),
-                      ),
                       const SizedBox(width: 2),
                       Icon(Icons.expand_more_rounded, color: c.white, size: 18),
                     ],
@@ -84,6 +66,8 @@ class SwipeHeader extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(width: 6),
+        translationToggle,
         const SizedBox(width: 6),
         ProfileButton(onPressed: onProfile),
       ],

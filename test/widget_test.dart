@@ -74,7 +74,7 @@ class _FakeContent implements ContentConfigService {
 
   @override
   Future<ContentConfig> load() async => ContentConfig(
-    featuredVerses: defaultContentConfig.featuredVerses,
+    featuredVerses: const [FeaturedVerse('PSA', 46, 10)],
     announcement: announcement,
     inviteMessage: inviteMessage,
     shareCaption: shareCaption,
@@ -110,7 +110,7 @@ void main() {
         key: UniqueKey(),
         export: export,
         store: store,
-        contentConfig: contentConfig,
+        contentConfig: contentConfig ?? _FakeContent(null),
       ),
     );
     await _settle(tester);
@@ -279,12 +279,11 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
-  testWidgets('home has one main action, distinct from the daily verse', (
-    tester,
-  ) async {
+  testWidgets('home keeps Today and one main card action', (tester) async {
     await boot(tester);
     expect(find.text('Make a card'), findsOneWidget);
-    expect(find.text('Use this verse'), findsOneWidget);
+    expect(find.text('TODAY'), findsOneWidget);
+    expect(find.byKey(const Key('today-verse')), findsOneWidget);
     expect(find.text('Preview'), findsNothing);
   });
 

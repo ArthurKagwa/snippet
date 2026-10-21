@@ -46,7 +46,18 @@ class ProfileButton extends StatelessWidget {
           borderColor: c.lime,
           child: initials.isEmpty
               ? const Icon(Icons.person_rounded)
-              : Text(initials, style: SnippetFonts.display(14, color: c.ink)),
+              : Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      initials,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: SnippetFonts.display(14, color: c.ink),
+                    ),
+                  ),
+                ),
         );
       },
     );

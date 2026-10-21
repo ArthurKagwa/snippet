@@ -156,8 +156,6 @@ class VersePickerPanel extends StatelessWidget {
                         ? 'No text for this selection.'
                         : '“${passage!.text}”',
                     key: const Key('passage-text'),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
                     style: SnippetFonts.serifText(
                       18,
                       color: c.ink,

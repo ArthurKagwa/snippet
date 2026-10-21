@@ -16,6 +16,7 @@ import '../shell/shell_controller.dart';
 import 'style_panel.dart';
 import 'swipe_header.dart';
 import 'swipe_stage.dart';
+import 'swipe_translation_toggle.dart';
 
 /// Swipe up for the next style, sideways for the next colourway.
 class SwipeScreen extends StatefulWidget {
@@ -123,7 +124,7 @@ class _SwipeScreenState extends State<SwipeScreen> {
   }
 
   Future<void> _openProfile() {
-    final navigator = Navigator.of(context);
+    final navigator = Navigator.of(context, rootNavigator: true);
     return navigator.push(
       MaterialPageRoute<void>(
         builder: (_) =>
@@ -226,7 +227,9 @@ class _SwipeScreenState extends State<SwipeScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: SwipeHeader(
                   reference: widget.passage.reference,
-                  translation: _content.translation,
+                  translationToggle: SwipeTranslationToggle(
+                    passage: widget.passage,
+                  ),
                   onBack: () => ShellScope.read(context).select(ShellTab.home),
                   onProfile: _openProfile,
                 ),

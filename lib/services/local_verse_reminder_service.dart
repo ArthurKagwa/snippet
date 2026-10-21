@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -13,6 +15,19 @@ class LocalVerseReminderService implements VerseReminderService {
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   Future<void>? _ready;
+  final _opens = StreamController<ReminderVerse?>.broadcast();
+
+  @override
+  Stream<ReminderVerse?> get notificationOpens => _opens.stream;
+
+  @override
+  Future<ReminderVerse?> launchVerse() async {
+    await _init();
+    final details = await _plugin.getNotificationAppLaunchDetails();
+    return details?.didNotificationLaunchApp == true
+        ? ReminderVerse.fromPayload(details?.notificationResponse?.payload)
+        : null;
+  }
 
   static const _channelId = 'verse_of_the_day';
   static const _firstId = 1000;
@@ -27,13 +42,15 @@ class LocalVerseReminderService implements VerseReminderService {
     }
     await _plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('ic_notification'),
         iOS: DarwinInitializationSettings(
           requestAlertPermission: false,
           requestBadgePermission: false,
           requestSoundPermission: false,
         ),
       ),
+      onDidReceiveNotificationResponse: (response) =>
+          _opens.add(ReminderVerse.fromPayload(response.payload)),
     );
   }();
 
@@ -79,39 +96,33 @@ class LocalVerseReminderService implements VerseReminderService {
     await _init();
     await _plugin.cancelAllPendingNotifications();
     final now = tz.TZDateTime.now(tz.local);
-    var first = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      minutesAfterMidnight ~/ 60,
-      minutesAfterMidnight % 60,
-    );
-    if (!first.isAfter(now)) first = first.add(const Duration(days: 1));
     const details = NotificationDetails(
       android: AndroidNotificationDetails(
         _channelId,
         'Verse of the day',
         channelDescription: 'A daily verse to turn into a card',
+        icon: 'ic_notification',
         importance: Importance.defaultImportance,
       ),
       iOS: DarwinNotificationDetails(),
     );
     for (var i = 0; i < verses.length; i++) {
       final v = verses[i];
+      final scheduled = tz.TZDateTime(
+        tz.local,
+        v.day.year,
+        v.day.month,
+        v.day.day,
+        minutesAfterMidnight ~/ 60,
+        minutesAfterMidnight % 60,
+      );
+      if (!scheduled.isAfter(now)) continue;
       await _plugin.zonedSchedule(
         id: _firstId + i,
         title: v.reference,
         body: v.text,
-        // TZDateTime(...) handles DST; Duration.add would drift an hour.
-        scheduledDate: tz.TZDateTime(
-          tz.local,
-          first.year,
-          first.month,
-          first.day + i,
-          first.hour,
-          first.minute,
-        ),
+        payload: v.payload,
+        scheduledDate: scheduled,
         notificationDetails: details,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
