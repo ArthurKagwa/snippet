@@ -22,21 +22,23 @@ class _MemoryStore implements JsonStore {
 }
 
 class _Recorder extends NoopVerseReminderService {
-  _Recorder({this.allowed = true});
+  _Recorder({this.answer = true});
 
-  final bool allowed;
+  /// What the user picks when the prompt is shown; null means it never shows.
+  final bool? answer;
+  bool granted = false;
   int asked = 0;
   List<ReminderVerse>? scheduled;
   int? minutes;
   bool cancelled = false;
 
   @override
-  Future<bool> hasPermission() async => allowed;
+  Future<bool> hasPermission() async => granted;
 
   @override
   Future<bool> requestPermission() async {
     asked++;
-    return allowed;
+    return granted = answer ?? false;
   }
 
   @override
@@ -71,22 +73,36 @@ Future<void> _sync(_Recorder rec, AppSettings settings, {DateTime? now}) =>
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('asks once, then schedules a window at 8am', () async {
-    final settings = AppSettings(_MemoryStore());
-    final rec = _Recorder();
-    await _sync(rec, settings);
-    await _sync(rec, settings);
-    expect(rec.asked, 1);
-    expect(rec.scheduled, hasLength(reminderWindowDays));
-    expect(rec.minutes, 480);
-    expect(rec.scheduled!.first.text, isNotEmpty);
-  });
+  test(
+    'asks only while notifications are off, then schedules at 8am',
+    () async {
+      final settings = AppSettings(_MemoryStore());
+      final rec = _Recorder();
+      await _sync(rec, settings);
+      await _sync(rec, settings);
+      expect(rec.asked, 1);
+      expect(rec.scheduled, hasLength(reminderWindowDays));
+      expect(rec.minutes, 480);
+      expect(rec.scheduled!.first.text, isNotEmpty);
+    },
+  );
 
   test('schedules nothing when permission is denied', () async {
-    final rec = _Recorder(allowed: false);
+    final rec = _Recorder(answer: false);
     await _sync(rec, AppSettings(_MemoryStore()));
     expect(rec.cancelled, isTrue);
     expect(rec.scheduled, isNull);
+  });
+
+  test('a prompt that never appeared is shown again next launch', () async {
+    final settings = AppSettings(_MemoryStore());
+    final missed = _Recorder(answer: null);
+    await _sync(missed, settings);
+    expect(missed.scheduled, isNull);
+    final rec = _Recorder();
+    await _sync(rec, settings);
+    expect(rec.asked, 1);
+    expect(rec.scheduled, hasLength(reminderWindowDays));
   });
 
   for (final hour in [7, 8, 15, 23]) {

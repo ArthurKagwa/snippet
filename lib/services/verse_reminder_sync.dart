@@ -16,8 +16,9 @@ const int reminderWindowDays = 14;
 const int reminderMinutesAfterMidnight = 8 * 60;
 
 /// Keeps the verse-of-the-day notification in step with the OS permission.
-/// The first call asks for permission (the user opts in through the system
-/// prompt); afterwards it only schedules while notifications stay allowed.
+/// Asks whenever notifications are off: Android stops showing the prompt after
+/// two refusals and iOS after one, while a prompt that never appeared (say the
+/// app was backgrounded) is shown again on a later launch.
 Future<void> syncVerseReminders({
   required VerseReminderService reminders,
   required AppSettings settings,
@@ -26,13 +27,8 @@ Future<void> syncVerseReminders({
   DateTime? now,
 }) async {
   try {
-    final bool allowed;
-    if (settings.reminderPrompted) {
-      allowed = await reminders.hasPermission();
-    } else {
-      settings.reminderPrompted = true;
-      allowed = await reminders.requestPermission();
-    }
+    final allowed =
+        await reminders.hasPermission() || await reminders.requestPermission();
     if (!allowed) {
       await reminders.cancel();
       return;
