@@ -6,6 +6,7 @@ import '../../cards/card_catalog.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../data/app_settings.dart';
 import '../../data/bible_models.dart';
+import '../../services/content_config_service.dart';
 import '../../services/daily_verse.dart';
 import '../../services/services.dart';
 import '../../services/verse_reminder_sync.dart';
@@ -29,7 +30,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _translationId = 'kjv';
   List<Book> _books = const [];
-  VerseRange _range = genesisFallbackRange;
+  VerseRange _range = genesisFallback.range;
   Passage? _passage;
   Passage? _votd;
   String? _announcement;
@@ -39,6 +40,10 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _today = DateUtils.dateOnly(DateTime.now());
   int _request = 0;
   ShellController? _shell;
+
+  /// Today's tapped notification; it was scheduled from an older config, so
+  /// it outranks a calendar edit made since, until the day ends.
+  ReminderVerse? _tapped;
 
   Services get _services => Services.of(context);
 
@@ -86,7 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     final passage = await s.bible.passage(verse.translationId, verse.range);
     if (passage == null || !mounted) return;
-    if (_isToday(verse)) await s.dailyVerses.remember(verse.day, verse.range);
+    if (_isToday(verse)) _tapped = verse;
     _range = passage.range;
     _translationId = passage.translationId;
   }
@@ -131,13 +136,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final books = await s.bible.books(id);
     final config = await s.contentConfig.load();
     CardCatalog.apply(config.cardStyles);
-    final votd = await s.dailyVerses.resolve(
-      bible: s.bible,
-      config: config,
-      translationId: id,
-      day: day,
-    );
-    final range = selectDaily ? votd?.range ?? genesisFallbackRange : _range;
+    final tapped = _tapped;
+    final votd =
+        (tapped != null && DateUtils.isSameDay(tapped.day, day)
+            ? await s.bible.passage(id, tapped.range)
+            : null) ??
+        await loadDailyVerse(
+          bible: s.bible,
+          config: config,
+          translationId: id,
+          day: day,
+        );
+    final range = selectDaily ? votd?.range ?? genesisFallback.range : _range;
     final passage = await s.bible.passage(id, range);
     if (!mounted || request != _request) return;
     setState(() {

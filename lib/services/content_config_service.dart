@@ -5,15 +5,19 @@ import '../data/bible_models.dart';
 /// Remotely updatable content (verse suggestions, announcements, styles).
 class ContentConfig {
   const ContentConfig({
-    this.featuredVerses = const [],
+    this.verseCalendar = const {},
+    this.fallbackVerse = genesisFallback,
     this.announcement,
     this.cardStyles = CardStyleOverrides.none,
     this.inviteMessage = defaultInviteMessage,
     this.shareCaption = defaultShareCaption,
   });
 
-  /// Suggested verses; one is shown each day as the verse of the day.
-  final List<FeaturedVerse> featuredVerses;
+  /// Verse of the day by local date key (see [localDateKey]).
+  final Map<String, FeaturedVerse> verseCalendar;
+
+  /// The verse for days missing from [verseCalendar].
+  final FeaturedVerse fallbackVerse;
   final String? announcement;
 
   /// Changes to the bundled card styles; see CardCatalog.apply.
@@ -34,16 +38,15 @@ class ContentConfig {
       .replaceAll('{verse}', content.text)
       .trim();
 
-  FeaturedVerse? verseOfTheDay(DateTime day) {
-    if (featuredVerses.isEmpty) return null;
-    final dayIndex = DateTime.utc(
-      day.year,
-      day.month,
-      day.day,
-    ).difference(DateTime.utc(2024)).inDays;
-    return featuredVerses[dayIndex % featuredVerses.length];
-  }
+  FeaturedVerse? verseOfTheDay(DateTime day) =>
+      verseCalendar[localDateKey(day)];
 }
+
+/// `2026-10-21` for the phone's local calendar day of [day].
+String localDateKey(DateTime day) =>
+    '${day.year.toString().padLeft(4, '0')}-'
+    '${day.month.toString().padLeft(2, '0')}-'
+    '${day.day.toString().padLeft(2, '0')}';
 
 class FeaturedVerse {
   const FeaturedVerse(
@@ -99,22 +102,12 @@ const defaultInviteMessage =
 
 const defaultShareCaption = '{reference_line}';
 
-/// Bundled content, also the Remote Config defaults.
-const defaultContentConfig = ContentConfig(
-  featuredVerses: [
-    FeaturedVerse('LAM', 3, 22, 23),
-    FeaturedVerse('PSA', 46, 10),
-    FeaturedVerse('ISA', 40, 31),
-    FeaturedVerse('MIC', 6, 8),
-    FeaturedVerse('JOS', 1, 9),
-    FeaturedVerse('JOH', 3, 16),
-    FeaturedVerse('PSA', 23, 1, 3),
-    FeaturedVerse('PHI', 4, 13),
-    FeaturedVerse('ROM', 8, 28),
-    FeaturedVerse('PRO', 3, 5, 6),
-    FeaturedVerse('ISA', 41, 10),
-  ],
-);
+/// Used when the calendar and the configured fallback both miss.
+const genesisFallback = FeaturedVerse('GEN', 1, 1);
+
+/// Bundled content, also the Remote Config defaults. The calendar is empty,
+/// so until Remote Config arrives every day is the fallback, Genesis 1:1.
+const defaultContentConfig = ContentConfig();
 
 class LocalContentConfigService implements ContentConfigService {
   const LocalContentConfigService();

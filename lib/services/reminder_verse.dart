@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../data/bible_models.dart';
+import 'content_config_service.dart';
 
 /// The dated passage carried by a notification, including after a cold launch.
 class ReminderVerse {
@@ -19,8 +20,7 @@ class ReminderVerse {
   final String text;
 
   String get payload => jsonEncode({
-    'day':
-        '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}',
+    'day': localDateKey(day),
     'bookId': range.bookId,
     'chapter': range.chapter,
     'startVerse': range.startVerse,

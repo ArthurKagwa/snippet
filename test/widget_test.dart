@@ -74,7 +74,7 @@ class _FakeContent implements ContentConfigService {
 
   @override
   Future<ContentConfig> load() async => ContentConfig(
-    featuredVerses: const [FeaturedVerse('PSA', 46, 10)],
+    fallbackVerse: const FeaturedVerse('PSA', 46, 10),
     announcement: announcement,
     inviteMessage: inviteMessage,
     shareCaption: shareCaption,

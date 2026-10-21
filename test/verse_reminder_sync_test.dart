@@ -1,11 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snippet/data/app_settings.dart';
 import 'package:snippet/data/bible_repository.dart';
-import 'package:snippet/data/daily_verse_store.dart';
 import 'package:snippet/data/json_store.dart';
 import 'package:snippet/services/content_config_service.dart';
 import 'package:snippet/services/verse_reminder_service.dart';
 import 'package:snippet/services/verse_reminder_sync.dart';
+
+import 'support/verse_calendar.dart';
 
 class _MemoryStore implements JsonStore {
   final Map<String, Object?> docs = {};
@@ -51,13 +52,19 @@ class _Recorder extends NoopVerseReminderService {
   Future<void> cancel() async => cancelled = true;
 }
 
+/// Rotating entries with Nov 5 left out, so that day uses the fallback.
+final _calendar = rotatingCalendar(const [
+  FeaturedVerse('PSA', 46, 10),
+  FeaturedVerse('ISA', 40, 31),
+  FeaturedVerse('LAM', 3, 22, 23),
+], from: DateTime(2026, 10, 31))..remove('2026-11-05');
+
 Future<void> _sync(_Recorder rec, AppSettings settings, {DateTime? now}) =>
     syncVerseReminders(
       reminders: rec,
       settings: settings,
-      contentConfig: const LocalContentConfigService(),
+      contentConfig: CalendarContent(_calendar),
       bible: BibleRepository(),
-      dailyVerses: DailyVerseStore(_MemoryStore()),
       now: now ?? DateTime(2026, 10, 15),
     );
 
@@ -94,10 +101,8 @@ void main() {
         final firstDay = DateTime(2026, 10, hour < 8 ? 31 : 32);
         for (var i = 0; i < reminderWindowDays; i++) {
           final day = DateTime(firstDay.year, firstDay.month, firstDay.day + i);
-          final expected = await bible.passage(
-            'web',
-            defaultContentConfig.verseOfTheDay(day)!.range,
-          );
+          final verse = _calendar[localDateKey(day)] ?? genesisFallback;
+          final expected = await bible.passage('web', verse.range);
           final reminder = rec.scheduled![i];
           expect(reminder.day, day);
           expect(reminder.reference, expected!.reference);

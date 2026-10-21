@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 
 import '../data/app_settings.dart';
 import '../data/bible_repository.dart';
-import '../data/daily_verse_store.dart';
 import 'content_config_service.dart';
+import 'daily_verse.dart';
 import 'services.dart';
 import 'verse_reminder_service.dart';
 
@@ -23,7 +23,6 @@ Future<void> syncVerseReminders({
   required AppSettings settings,
   required ContentConfigService contentConfig,
   required BibleRepository bible,
-  required DailyVerseStore dailyVerses,
   DateTime? now,
 }) async {
   try {
@@ -55,7 +54,7 @@ Future<void> syncVerseReminders({
         today.month,
         today.day + firstDayOffset + i,
       );
-      final p = await dailyVerses.resolve(
+      final p = await loadDailyVerse(
         bible: bible,
         config: config,
         translationId: settings.defaultTranslationId,
@@ -83,15 +82,14 @@ Future<void> syncVerseReminders({
   }
 }
 
-/// Fire-and-forget sync with the app's services, so reminders and Home always
-/// share the pinned [DailyVerseStore] and clock.
+/// Fire-and-forget sync with the app's services, so reminders and Home share
+/// one config and clock.
 void syncAppVerseReminders(Services s) => unawaited(
   syncVerseReminders(
     reminders: s.reminders,
     settings: s.settings,
     contentConfig: s.contentConfig,
     bible: s.bible,
-    dailyVerses: s.dailyVerses,
     now: s.now(),
   ),
 );

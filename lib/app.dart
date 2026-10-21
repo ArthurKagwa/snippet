@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'core/app_theme.dart';
 import 'data/app_settings.dart';
 import 'data/bible_repository.dart';
-import 'data/daily_verse_store.dart';
 import 'data/json_library_backend.dart';
 import 'data/json_store.dart';
 import 'data/library_repository.dart';
@@ -55,8 +54,7 @@ class SnippetApp extends StatelessWidget {
              ? JsonLibraryBackend(store)
              : libraryBackend(user),
        ),
-       settings = AppSettings(store),
-       dailyVerses = DailyVerseStore(store);
+       settings = AppSettings(store);
 
   final BibleRepository bible;
   final AuthService auth;
@@ -65,7 +63,6 @@ class SnippetApp extends StatelessWidget {
   final VerseReminderService reminders;
   final LibraryRepository library;
   final AppSettings settings;
-  final DailyVerseStore dailyVerses;
   final DateTime Function() now;
 
   @override
@@ -78,7 +75,6 @@ class SnippetApp extends StatelessWidget {
       reminders: reminders,
       library: library,
       settings: settings,
-      dailyVerses: dailyVerses,
       now: now,
       child: MaterialApp(
         title: AppTheme.appName,

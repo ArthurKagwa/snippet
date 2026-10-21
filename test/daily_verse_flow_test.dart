@@ -14,12 +14,17 @@ import 'package:snippet/features/shell/shell_controller.dart';
 import 'package:snippet/services/content_config_service.dart';
 import 'package:snippet/services/verse_reminder_service.dart';
 
+import 'support/verse_calendar.dart';
+
 class _Content implements ContentConfigService {
   const _Content([this.verses = const [FeaturedVerse('LAM', 3, 22, 23)]]);
 
   final List<FeaturedVerse> verses;
   @override
-  Future<ContentConfig> load() async => ContentConfig(featuredVerses: verses);
+  Future<ContentConfig> load() async => ContentConfig(
+    verseCalendar: rotatingCalendar(verses, from: DateTime(2026, 10, 21))
+      ..addAll(rotatingCalendar(verses, from: DateTime.now())),
+  );
 }
 
 class _Reminders extends NoopVerseReminderService {

@@ -28,41 +28,50 @@ void main() {
     });
 
     test('ref round-trips', () {
-      for (final v in defaultContentConfig.featuredVerses) {
-        final back = FeaturedVerse.tryParse(v.ref)!;
-        expect(back.ref, v.ref);
+      for (final ref in ['PSA 46:10', 'LAM 3:22-23', '1CO 13:4-7']) {
+        expect(FeaturedVerse.tryParse(ref)!.ref, ref);
       }
     });
   });
 
   group('parseRemoteContent', () {
-    test('uses remote verses and announcement', () {
+    test('reads the dated calendar, fallback verse and announcement', () {
       final c = parseRemoteContent(
-        featuredVersesJson: '["JOH 3:16", "bad", 7, "ROM 8:28"]',
+        verseCalendarJson:
+            '{"2026-10-21": "ISA 40:31", "2026-10-22": "bad", '
+            '"2026-13-01": "JOH 3:16", "Oct 23": "ROM 8:28", '
+            '"2026-10-24": 7, "2026-10-25": "lam 3:22-23"}',
+        fallbackVerse: ' psa 46:10 ',
         announcement: '  New styles this week  ',
       );
-      expect(c.featuredVerses.map((v) => v.ref), ['JOH 3:16', 'ROM 8:28']);
+      expect(c.verseCalendar.map((k, v) => MapEntry(k, v.ref)), {
+        '2026-10-21': 'ISA 40:31',
+        '2026-10-25': 'LAM 3:22-23',
+      });
+      expect(c.verseOfTheDay(DateTime(2026, 10, 21, 23, 59))!.ref, 'ISA 40:31');
+      expect(c.verseOfTheDay(DateTime(2026, 10, 22)), isNull);
+      expect(c.fallbackVerse.ref, 'PSA 46:10');
       expect(c.announcement, 'New styles this week');
     });
 
-    test('falls back to bundled verses on bad or empty input', () {
-      for (final json in ['not json', '{}', '[]', '["nope"]']) {
-        final c = parseRemoteContent(
-          featuredVersesJson: json,
-          announcement: '   ',
-        );
-        expect(
-          c.featuredVerses,
-          defaultContentConfig.featuredVerses,
-          reason: json,
-        );
-        expect(c.announcement, isNull);
+    test('bad or empty input leaves an empty calendar and Genesis 1:1', () {
+      for (final json in ['not json', '{}', '[]', '["JOH 3:16"]']) {
+        for (final fallback in ['', 'nope']) {
+          final c = parseRemoteContent(
+            verseCalendarJson: json,
+            fallbackVerse: fallback,
+            announcement: '   ',
+          );
+          expect(c.verseCalendar, isEmpty, reason: json);
+          expect(c.fallbackVerse.ref, 'GEN 1:1', reason: fallback);
+          expect(c.announcement, isNull);
+        }
       }
     });
 
     test('uses remote invite message and share caption', () {
       final c = parseRemoteContent(
-        featuredVersesJson: '[]',
+        verseCalendarJson: '{}',
         announcement: '',
         inviteMessage: ' Join me on Snippet ',
         shareCaption: '{reference}',
@@ -73,7 +82,7 @@ void main() {
 
     test('falls back to bundled invite and caption when empty', () {
       final c = parseRemoteContent(
-        featuredVersesJson: '[]',
+        verseCalendarJson: '{}',
         announcement: '',
         inviteMessage: '  ',
       );
@@ -97,22 +106,27 @@ void main() {
     );
   });
 
-  test('remoteconfig.template.json matches the bundled defaults', () {
+  test('remoteconfig.template.json has a readable calendar and fallback', () {
     final template = jsonDecode(
       File('remoteconfig.template.json').readAsStringSync(),
     );
-    final value =
-        template['parameters'][FirebaseContentConfigService
-            .featuredVersesKey]['defaultValue']['value'];
-    expect(jsonDecode(value as String), [
-      for (final v in defaultContentConfig.featuredVerses) v.ref,
-    ]);
+    String text(String key) =>
+        template['parameters'][key]['defaultValue']['value'] as String;
+    final calendar =
+        jsonDecode(text(FirebaseContentConfigService.verseCalendarKey))
+            as Map<String, dynamic>;
+    final parsed = parseRemoteContent(
+      verseCalendarJson: text(FirebaseContentConfigService.verseCalendarKey),
+      fallbackVerse: text(FirebaseContentConfigService.fallbackVerseKey),
+      announcement: '',
+    );
+    expect(calendar, isNotEmpty);
+    expect(parsed.verseCalendar.keys, calendar.keys);
+    expect(parsed.fallbackVerse.ref, defaultContentConfig.fallbackVerse.ref);
     final styles =
         template['parameters'][FirebaseContentConfigService
             .cardStylesKey]['defaultValue']['value'];
     expect(jsonDecode(styles as String), <String, dynamic>{});
-    String text(String key) =>
-        template['parameters'][key]['defaultValue']['value'] as String;
     expect(
       text(FirebaseContentConfigService.inviteMessageKey),
       defaultInviteMessage,

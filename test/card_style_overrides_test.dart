@@ -89,7 +89,7 @@ void main() {
 
   test('parseRemoteContent carries card_styles', () {
     final c = parseRemoteContent(
-      featuredVersesJson: '[]',
+      verseCalendarJson: '{}',
       announcement: '',
       cardStylesJson: '{"hidden": ["swiss"]}',
     );
