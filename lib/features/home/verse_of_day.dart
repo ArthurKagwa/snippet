@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/local_date_format.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
 import '../../data/bible_models.dart';
@@ -52,7 +53,7 @@ class VerseOfDay extends StatelessWidget {
             ],
           ),
           Text(
-            MaterialLocalizations.of(context).formatFullDate(day),
+            localFullDate(day),
             key: const Key('today-date'),
             style: SnippetFonts.body(12, color: c.mist),
           ),
