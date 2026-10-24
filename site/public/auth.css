@@ -1,0 +1,47 @@
+/* Account action page (/auth/action): password reset, email verification. */
+.auth [hidden] { display: none !important; }
+.auth { display: flex; flex-direction: column; align-items: center; padding: 3.5rem 0 4rem; min-height: calc(100vh - 4.25rem); }
+.auth-card {
+  width: 100%; max-width: 30rem; background: var(--stone); color: var(--ink);
+  border-radius: 1.75rem; padding: 2.5rem clamp(1.25rem, 5vw, 2.5rem) 2.25rem;
+  box-shadow: 0 2rem 4.5rem var(--shadow);
+}
+.auth-card h1 { font-size: clamp(2.2rem, 7vw, 3rem); margin-bottom: 0.75rem; color: var(--ink); }
+.auth-msg { margin: 0; color: var(--ink-dim); }
+.auth-msg strong { color: var(--ink); overflow-wrap: anywhere; }
+.auth-card[data-state="error"] .pill { background: var(--ink); color: var(--stone); }
+
+.auth-form { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1.75rem; }
+.auth-form label { font-weight: 600; font-size: 0.95rem; }
+.auth-form input {
+  width: 100%; font: inherit; color: var(--ink); background: var(--stone);
+  border: 2px solid var(--rule); border-radius: 0.9rem; padding: 0.75rem 0.95rem;
+}
+.auth-form input:focus { outline: none; border-color: var(--cobalt); }
+.auth-field { position: relative; }
+.auth-field input { padding-right: 4.75rem; }
+.auth-show {
+  position: absolute; right: 0.4rem; top: 50%; transform: translateY(-50%);
+  font: inherit; font-size: 0.85rem; font-weight: 600; color: var(--cobalt);
+  background: none; border: 0; padding: 0.5rem 0.65rem; border-radius: 0.6rem; cursor: pointer;
+}
+.auth-show:focus-visible { outline: 3px solid var(--cobalt); }
+
+.auth-rules { list-style: none; margin: 0.25rem 0 0.9rem; padding: 0; font-size: 0.92rem; color: var(--ink-dim); }
+.auth-rules li { position: relative; padding-left: 1.6rem; margin: 0.2rem 0; }
+.auth-rules li::before {
+  content: ""; position: absolute; left: 0; top: 0.3em; width: 1rem; height: 1rem;
+  border-radius: 50%; box-shadow: inset 0 0 0 2px var(--rule);
+}
+.auth-rules li.met { color: var(--ink); }
+.auth-rules li.met::before { background: var(--lime); box-shadow: inset 0 0 0 2px var(--ink); }
+
+.auth-error { margin: 0.25rem 0 0; padding: 0.65rem 0.9rem; border-radius: 0.8rem; background: var(--ink); color: var(--stone); font-size: 0.95rem; }
+.auth-submit { justify-content: center; margin-top: 0.75rem; border: 0; font: inherit; font-weight: 600; cursor: pointer; }
+.auth-submit:disabled { opacity: 0.6; cursor: progress; }
+.auth-submit:focus-visible, .auth-actions .btn:focus-visible { outline: 3px solid var(--cobalt); outline-offset: 3px; }
+
+.auth-actions { margin: 1.75rem 0 0; }
+.auth-actions .btn { border: 0; font: inherit; font-weight: 600; cursor: pointer; }
+.auth-help { margin: 1.5rem 0 0; color: var(--stone-dim); font-size: 0.95rem; text-align: center; }
+.auth-help a { color: var(--stone); }

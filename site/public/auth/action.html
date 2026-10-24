@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Your account · Snippet Verses</title>
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/auth.css">
+  <script src="/auth.js" defer></script>
+</head>
+<body>
+  <svg class="sym-sprite" aria-hidden="true" focusable="false">
+    <symbol id="mark" viewBox="0 0 64 80">
+      <path style="fill: var(--stone)" d="M4 80 V32 A28 28 0 0 1 60 32 V80 Z"/>
+      <circle style="fill: var(--lime)" cx="32" cy="32" r="13"/>
+    </symbol>
+  </svg>
+
+  <header class="bar">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="Snippet Verses home">
+        <svg aria-hidden="true"><use href="#mark"/></svg>
+        <span class="wordmark">snippet</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <main class="auth">
+      <section class="auth-card" aria-live="polite">
+        <span class="pill" id="pill">YOUR ACCOUNT</span>
+        <h1 id="title">One moment…</h1>
+        <p class="auth-msg" id="message">Checking your link.</p>
+
+        <form id="reset" class="auth-form" hidden novalidate>
+          <label for="password">New password</label>
+          <div class="auth-field">
+            <input id="password" type="password" autocomplete="new-password" required>
+            <button type="button" class="auth-show" id="show" aria-controls="password confirm">Show</button>
+          </div>
+          <ul class="auth-rules" aria-label="Password requirements">
+            <li data-rule="length">At least 8 characters</li>
+            <li data-rule="case">Upper and lowercase letters</li>
+            <li data-rule="number">At least one number</li>
+          </ul>
+          <label for="confirm">Confirm new password</label>
+          <input id="confirm" type="password" autocomplete="new-password" required>
+          <p class="auth-error" id="form-error" role="alert" hidden></p>
+          <button type="submit" class="cta auth-submit" id="save">Save new password</button>
+        </form>
+
+        <p class="auth-actions" id="actions" hidden>
+          <button type="button" class="btn" id="secondary" hidden></button>
+        </p>
+      </section>
+      <p class="auth-help">Need a hand? <a href="mailto:support@snippetverses.app">support@snippetverses.app</a></p>
+    </main>
+  </div>
+</body>
+</html>

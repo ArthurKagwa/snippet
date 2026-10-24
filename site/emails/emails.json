@@ -1,0 +1,26 @@
+{
+  "verifyEmailTemplate": {
+    "subject": "Verify your email for Snippet",
+    "pill": "VERIFY YOUR EMAIL",
+    "title": "Confirm it’s you",
+    "body": "<p style=\"margin:0 0 12px;\">Tap the button to verify <strong>%EMAIL%</strong> for Snippet. Your saved cards start syncing as soon as it’s done.</p>",
+    "button": "Verify email",
+    "footnote": "Didn’t sign up for Snippet? You can ignore this email."
+  },
+  "resetPasswordTemplate": {
+    "subject": "Reset your Snippet password",
+    "pill": "PASSWORD RESET",
+    "title": "Choose a new password",
+    "body": "<p style=\"margin:0 0 12px;\">We got a request to reset the password for <strong>%EMAIL%</strong>. Tap the button to choose a new one. The link works for one hour.</p>",
+    "button": "Reset password",
+    "footnote": "Didn’t ask for this? Ignore this email and your password stays the same."
+  },
+  "changeEmailTemplate": {
+    "subject": "Your Snippet sign-in email was changed",
+    "pill": "ACCOUNT CHANGE",
+    "title": "Your sign-in email changed",
+    "body": "<p style=\"margin:0 0 12px;\">Your Snippet sign-in email was changed from <strong>%EMAIL%</strong> to <strong>%NEW_EMAIL%</strong>.</p><p style=\"margin:0 0 12px;\">If you made this change, you’re all set. If not, undo it now and then reset your password.</p>",
+    "button": "Undo this change",
+    "footnote": "We sent this to your previous address so you can spot changes you didn’t make."
+  }
+}
