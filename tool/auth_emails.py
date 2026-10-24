@@ -136,19 +136,20 @@ def patch(fields, body):
 
 
 def publish():
-    """Links first, then each email on its own: Firebase refuses some body
-    edits (EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED), and one refusal rejects the
-    whole update, so a refused body falls back to subject and sender only."""
+    """Each change is its own update: Firebase refuses some of them
+    (EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED) and a refusal rejects the whole
+    update. A refused styled email falls back to subject and sender only."""
     domains = api("GET", CONFIG_URL).get("authorizedDomains", [])
-    result = patch(
-        ["notification.sendEmail.callbackUri", "authorizedDomains"],
-        {
-            "notification": {"sendEmail": {"callbackUri": ACTION_URL}},
-            "authorizedDomains": domains + [d for d in DOMAINS if d not in domains],
-        },
+    step(
+        "authorizedDomains",
+        ["authorizedDomains"],
+        {"authorizedDomains": domains + [d for d in DOMAINS if d not in domains]},
     )
-    print("callbackUri:", result["notification"]["sendEmail"]["callbackUri"])
-    print("authorizedDomains:", ", ".join(result["authorizedDomains"]))
+    step(
+        "callbackUri",
+        ["notification.sendEmail.callbackUri"],
+        {"notification": {"sendEmail": {"callbackUri": ACTION_URL}}},
+    )
 
     for name, email in render().items():
         template = {
@@ -158,18 +159,23 @@ def publish():
             "bodyFormat": "HTML",
         }
         prefix = f"notification.sendEmail.{name}"
-        try:
-            patch([f"{prefix}.{f}" for f in template], {"notification": {"sendEmail": {name: template}}})
-            print(f"{name}: styled body, subject '{email['subject']}'")
-        except ApiError as e:
-            if "EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED" not in str(e):
-                raise
-            del template["body"], template["bodyFormat"]
-            try:
-                patch([f"{prefix}.{f}" for f in template], {"notification": {"sendEmail": {name: template}}})
-                print(f"{name}: body locked by Firebase; subject '{email['subject']}' only")
-            except ApiError as e2:
-                print(f"{name}: not changed ({str(e2).strip()})")
+        body = lambda t: {"notification": {"sendEmail": {name: t}}}
+        if step(f"{name} (styled)", [f"{prefix}.{f}" for f in template], body(template)):
+            continue
+        del template["body"], template["bodyFormat"]
+        step(f"{name} (subject only)", [f"{prefix}.{f}" for f in template], body(template))
+
+
+def step(label, fields, body):
+    """One update; prints whether Firebase took it, so later steps still run."""
+    try:
+        patch(fields, body)
+        print(f"ok       {label}")
+        return True
+    except ApiError as e:
+        reason = re.search(r'"message":\s*"([^"]+)"', str(e))
+        print(f"refused  {label}: {reason.group(1) if reason else str(e).strip()}")
+        return False
 
 
 if __name__ == "__main__":
