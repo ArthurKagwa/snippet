@@ -21,7 +21,6 @@ import pathlib
 import re
 import subprocess
 import sys
-import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 EMAILS = ROOT / "site" / "emails"
@@ -107,21 +106,25 @@ def preview(folder):
 
 
 def api(method, url, body=None):
+    # curl uses the system certificate store; python.org builds of Python
+    # often ship without one, which breaks urllib over HTTPS.
     token = subprocess.run(
         ["gcloud", "auth", "print-access-token"], capture_output=True, text=True, check=True
     ).stdout.strip()
-    req = urllib.request.Request(
-        url,
-        method=method,
-        data=None if body is None else json.dumps(body).encode(),
-        headers={
-            "Authorization": f"Bearer {token}",
-            "x-goog-user-project": PROJECT,
-            "Content-Type": "application/json",
-        },
+    cmd = [
+        "curl", "-sS", "--fail-with-body", "-X", method, url,
+        "-H", f"Authorization: Bearer {token}",
+        "-H", f"x-goog-user-project: {PROJECT}",
+        "-H", "Content-Type: application/json",
+    ]
+    if body is not None:
+        cmd += ["--data-binary", "@-"]
+    res = subprocess.run(
+        cmd, input=None if body is None else json.dumps(body), capture_output=True, text=True
     )
-    with urllib.request.urlopen(req) as res:
-        return json.load(res)
+    if res.returncode:
+        sys.exit(f"{method} failed: {res.stdout or res.stderr}")
+    return json.loads(res.stdout)
 
 
 def publish():
