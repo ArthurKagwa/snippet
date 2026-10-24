@@ -123,37 +123,53 @@ def api(method, url, body=None):
         cmd, input=None if body is None else json.dumps(body), capture_output=True, text=True
     )
     if res.returncode:
-        sys.exit(f"{method} failed: {res.stdout or res.stderr}")
+        raise ApiError(res.stdout or res.stderr)
     return json.loads(res.stdout)
 
 
+class ApiError(Exception):
+    pass
+
+
+def patch(fields, body):
+    return api("PATCH", f"{CONFIG_URL}?updateMask={','.join(fields)}", body)
+
+
 def publish():
-    current = api("GET", CONFIG_URL)
-    domains = current.get("authorizedDomains", [])
-    send = {"callbackUri": ACTION_URL}
+    """Links first, then each email on its own: Firebase refuses some body
+    edits (EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED), and one refusal rejects the
+    whole update, so a refused body falls back to subject and sender only."""
+    domains = api("GET", CONFIG_URL).get("authorizedDomains", [])
+    result = patch(
+        ["notification.sendEmail.callbackUri", "authorizedDomains"],
+        {
+            "notification": {"sendEmail": {"callbackUri": ACTION_URL}},
+            "authorizedDomains": domains + [d for d in DOMAINS if d not in domains],
+        },
+    )
+    print("callbackUri:", result["notification"]["sendEmail"]["callbackUri"])
+    print("authorizedDomains:", ", ".join(result["authorizedDomains"]))
+
     for name, email in render().items():
-        send[name] = {
-            "senderLocalPart": "noreply",
+        template = {
             "senderDisplayName": "Snippet",
-            "replyTo": "noreply",
             "subject": email["subject"],
             "body": email["body"],
             "bodyFormat": "HTML",
         }
-    mask = ["notification.sendEmail.callbackUri", "authorizedDomains"] + [
-        f"notification.sendEmail.{name}" for name in send if name != "callbackUri"
-    ]
-    body = {
-        "notification": {"sendEmail": send},
-        "authorizedDomains": domains + [d for d in DOMAINS if d not in domains],
-    }
-    result = api("PATCH", f"{CONFIG_URL}?updateMask={','.join(mask)}", body)
-    sent = result["notification"]["sendEmail"]
-    print("callbackUri:", sent["callbackUri"])
-    for name in send:
-        if name != "callbackUri":
-            print(f"{name}: {sent[name]['subject']}")
-    print("authorizedDomains:", ", ".join(result["authorizedDomains"]))
+        prefix = f"notification.sendEmail.{name}"
+        try:
+            patch([f"{prefix}.{f}" for f in template], {"notification": {"sendEmail": {name: template}}})
+            print(f"{name}: styled body, subject '{email['subject']}'")
+        except ApiError as e:
+            if "EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED" not in str(e):
+                raise
+            del template["body"], template["bodyFormat"]
+            try:
+                patch([f"{prefix}.{f}" for f in template], {"notification": {"sendEmail": {name: template}}})
+                print(f"{name}: body locked by Firebase; subject '{email['subject']}' only")
+            except ApiError as e2:
+                print(f"{name}: not changed ({str(e2).strip()})")
 
 
 if __name__ == "__main__":
