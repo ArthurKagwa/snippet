@@ -7,6 +7,7 @@ import 'package:snippet/cards/card_content.dart';
 import 'package:snippet/cards/card_palette.dart';
 import 'package:snippet/cards/card_shape.dart';
 import 'package:snippet/cards/card_style_overrides.dart';
+import 'package:snippet/cards/marked_text.dart';
 import 'package:snippet/cards/quote_card.dart';
 import 'package:snippet/cards/remote/layout_values.dart';
 
@@ -104,6 +105,36 @@ void main() {
     final swiss = CardCatalog.byId('swiss');
     expect(swiss.builder, isNot(same(bundled.builder)));
     expect(swiss.variants, bundled.variants);
+  });
+
+  testWidgets('a text highlight draws a marker band per line', (tester) async {
+    Future<void> pump(String text) async {
+      CardCatalog.apply(
+        CardStyleOverrides.parse(
+          _withStyle('{"type": "text", "size": 14, "height": 1.8, $text}'),
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: QuoteCard(
+            content: _content,
+            style: CardCatalog.byId('new'),
+            variant: CardCatalog.byId('new').variants.single,
+          ),
+        ),
+      );
+    }
+
+    await pump('"highlight": "accent@0.4", "highlightPadding": 3');
+    expect(tester.takeException(), isNull);
+    expect(find.byType(MarkedText), findsOneWidget);
+
+    await pump('"fit": true, "highlight": "#FADCE0"');
+    expect(tester.takeException(), isNull);
+    expect(find.byType(MarkedText), findsOneWidget);
+
+    await pump('"highlight": "nope"');
+    expect(find.byType(MarkedText), findsNothing);
   });
 
   test('colour refs read palette slots, hex and opacity', () {
