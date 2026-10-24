@@ -29,10 +29,10 @@ void main() {
 
   final example = File('remote_card_styles.example.json').readAsStringSync();
 
-  test('the example adds Psalter and Marquee in front', () {
+  test('the example adds Psalter, Marquee and Highlight in front', () {
     CardCatalog.apply(CardStyleOverrides.parse(example));
     final styles = CardCatalog.styles;
-    expect(styles.length, CardCatalog.bundled.length + 2);
+    expect(styles.length, CardCatalog.bundled.length + 3);
     expect(styles[0].name, 'Psalter');
     expect(
       [for (final v in styles[0].variants) v.id],
@@ -40,13 +40,14 @@ void main() {
     );
     expect(styles[1].name, 'Marquee');
     expect(styles[1].tags.map((t) => t.name), ['bold']);
+    expect(styles[2].name, 'Highlight');
   });
 
   testWidgets('example styles draw in every shape and colourway', (
     tester,
   ) async {
     CardCatalog.apply(CardStyleOverrides.parse(example));
-    for (final id in ['psalter', 'marquee']) {
+    for (final id in ['psalter', 'marquee', 'highlight']) {
       final style = CardCatalog.byId(id);
       for (final variant in style.variants) {
         for (final shape in CardShape.values) {
