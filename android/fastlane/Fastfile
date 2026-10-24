@@ -1,0 +1,29 @@
+default_platform(:android)
+
+ROOT = File.expand_path("../..", __dir__)
+AAB = File.join(ROOT, "build/app/outputs/bundle/release/app-release.aab")
+
+platform :android do
+  desc "Build the release bundle and upload it to Play."
+  desc "Options: track (alpha = closed testing, internal, production), status (completed, draft), skip_build"
+  lane :release do |options|
+    unless options[:skip_build]
+      Dir.chdir(ROOT) { sh("flutter", "build", "appbundle", "--release") }
+    end
+    upload_to_play_store(
+      aab: AAB,
+      track: options[:track] || "alpha",
+      release_status: options[:status] || "completed",
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true
+    )
+  end
+
+  desc "Check that the service account key can reach Play."
+  lane :check_key do
+    validate_play_store_json_key
+  end
+end
