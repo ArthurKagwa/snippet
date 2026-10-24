@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import 'auth_service.dart';
+import 'firebase_auth_error.dart';
 
 /// [AuthService] backed by Firebase Auth, with Google and email/password
 /// as sign-in providers. Client IDs come from google-services.json /
@@ -23,28 +24,11 @@ class FirebaseAuthService implements AuthService {
           displayName: u.displayName,
           email: u.email,
           isAnonymous: u.isAnonymous,
+          emailVerified: u.emailVerified,
           usesPassword: u.providerData.any(
             (p) => p.providerId == EmailAuthProvider.PROVIDER_ID,
           ),
         );
-
-  /// Firebase error codes as messages people can act on.
-  static AuthException _friendly(FirebaseAuthException e) =>
-      AuthException(switch (e.code) {
-        'invalid-credential' ||
-        'wrong-password' ||
-        'user-not-found' => 'That email and password do not match.',
-        'invalid-email' => 'Check the email address.',
-        'missing-password' => 'Enter your password.',
-        'email-already-in-use' =>
-          'That email already has an account. Sign in instead.',
-        'weak-password' || 'password-does-not-meet-requirements' =>
-          'Use 8+ characters with upper and lowercase letters and a number.',
-        'user-disabled' => 'This account has been turned off.',
-        'too-many-requests' => 'Too many tries. Wait a moment and try again.',
-        'network-request-failed' => 'No connection. Check your internet.',
-        _ => 'Could not sign in. Try again.',
-      });
 
   /// Runs [action], turning Firebase errors into [AuthException]s.
   static Future<T> _guard<T>(Future<T> Function() action) async {
@@ -52,7 +36,7 @@ class FirebaseAuthService implements AuthService {
       return await action();
     } on FirebaseAuthException catch (e) {
       debugPrint('Firebase auth error: ${e.code}');
-      throw _friendly(e);
+      throw firebaseAuthError(e);
     }
   }
 
@@ -147,8 +131,87 @@ class FirebaseAuthService implements AuthService {
       });
 
   @override
-  Future<void> sendPasswordReset(String email) =>
-      _guard(() => _auth.sendPasswordResetEmail(email: email.trim()));
+  Future<void> sendPasswordReset(String email) => _guard(() async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e) {
+      // Match Firebase's enumeration-protected response on older projects.
+      if (e.code != 'user-not-found') rethrow;
+    }
+  });
+
+  User _emailUser() {
+    final user = _auth.currentUser;
+    if (user == null || user.isAnonymous || user.email == null) {
+      throw const AuthException('Sign in to manage your email.');
+    }
+    return user;
+  }
+
+  @override
+  Future<void> sendEmailVerification() => _guard(() async {
+    final user = _emailUser();
+    if (!user.emailVerified) await user.sendEmailVerification();
+  });
+
+  @override
+  Future<void> changeEmail(String email, {String? password}) =>
+      _guard(() async {
+        final user = _emailUser();
+        final address = email.trim();
+        if (address.toLowerCase() == user.email!.toLowerCase()) {
+          throw const AuthException('Enter a different email address.');
+        }
+        final usesPassword = user.providerData.any(
+          (p) => p.providerId == EmailAuthProvider.PROVIDER_ID,
+        );
+        final AuthCredential credential;
+        if (usesPassword) {
+          if (password == null || password.isEmpty) {
+            throw const AuthException('Enter your current password.');
+          }
+          credential = EmailAuthProvider.credential(
+            email: user.email!,
+            password: password,
+          );
+        } else {
+          final googleCredential = await _googleCredential();
+          if (googleCredential == null) {
+            throw const AuthException(
+              'Confirm with Google to change your email.',
+            );
+          }
+          credential = googleCredential;
+        }
+        await user.reauthenticateWithCredential(credential);
+        await user.verifyBeforeUpdateEmail(address);
+      });
+
+  @override
+  Future<AppUser?> refreshUser() => _guard(() async {
+    final user = _auth.currentUser;
+    if (user == null) return null;
+    try {
+      // Refresh claims before reload publishes a verified profile. Library
+      // listeners can then sync immediately with an email_verified token.
+      await user.getIdToken(true);
+      await user.reload();
+    } on FirebaseAuthException catch (e) {
+      if ({
+        'user-disabled',
+        'user-not-found',
+        'user-token-expired',
+        'invalid-user-token',
+      }.contains(e.code)) {
+        await signOut();
+        throw const AuthException(
+          'Your session ended. Sign in again to continue.',
+        );
+      }
+      rethrow;
+    }
+    return currentUser;
+  });
 
   @override
   Future<void> confirmPassword(String password) => _guard(() async {

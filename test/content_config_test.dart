@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:snippet/cards/card_style_overrides.dart';
 import 'package:snippet/cards/card_content.dart';
 import 'package:snippet/services/content_config_service.dart';
 import 'package:snippet/services/firebase_content_config_service.dart';
@@ -123,10 +124,19 @@ void main() {
     expect(calendar, isNotEmpty);
     expect(parsed.verseCalendar.keys, calendar.keys);
     expect(parsed.fallbackVerse.ref, defaultContentConfig.fallbackVerse.ref);
-    final styles =
-        template['parameters'][FirebaseContentConfigService
-            .cardStylesKey]['defaultValue']['value'];
-    expect(jsonDecode(styles as String), <String, dynamic>{});
+    final cardStyles =
+        template['parameters'][FirebaseContentConfigService.cardStylesKey]
+            as Map<String, dynamic>;
+    for (final value in [
+      cardStyles['defaultValue'],
+      ...((cardStyles['conditionalValues'] as Map?)?.values ?? const []),
+    ]) {
+      final styles = CardStyleOverrides.parse(
+        (value as Map)['value'] as String,
+      );
+      expect(styles.styles, isNotEmpty);
+      expect(styles.styles.values.every((s) => s.layout != null), isTrue);
+    }
     expect(
       text(FirebaseContentConfigService.inviteMessageKey),
       defaultInviteMessage,

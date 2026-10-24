@@ -12,6 +12,7 @@ import '../../widgets/toast.dart';
 import '../profile/profile_screen.dart';
 import '../shell/shell_controller.dart';
 import 'library_empty.dart';
+import 'library_verification_notice.dart';
 import 'saved_card_tile.dart';
 
 /// Saved cards in a two-column grid.
@@ -138,6 +139,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
   /// cross-fades (removing the last card fades into the empty state).
   Widget _body(LibraryRepository library) {
     final c = context.colors;
+    if (Services.of(context).auth.currentUser?.requiresEmailVerification ??
+        false) {
+      return const LibraryVerificationNotice(key: ValueKey('verification'));
+    }
     if (!library.isLoaded) {
       return Center(
         key: const ValueKey('loading'),

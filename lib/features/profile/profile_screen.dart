@@ -15,6 +15,7 @@ import '../../widgets/pill_toggle.dart';
 import '../../widgets/snippet_switch.dart';
 import '../../widgets/toast.dart';
 import 'account_actions.dart';
+import 'account_email_settings.dart';
 import 'profile_card.dart';
 import 'settings_row.dart';
 import 'settings_section.dart';
@@ -143,6 +144,10 @@ class ProfileScreen extends StatelessWidget {
       ),
       children: [
         ProfileCard(user: user),
+        if (user != null && !user.isAnonymous && user.email != null) ...[
+          const SizedBox(height: 22),
+          AccountEmailSettings(key: ValueKey(user.id), user: user),
+        ],
         const SizedBox(height: 28),
         SettingsSection(
           title: 'Your cards',

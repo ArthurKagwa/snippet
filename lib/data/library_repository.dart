@@ -21,6 +21,7 @@ class LibraryRepository extends ChangeNotifier {
 
   String? _userId;
   bool _anonymous = false;
+  bool _verificationPending = false;
   LibraryBackend? _backend;
   StreamSubscription<List<SavedCard>>? _cardsSub;
   StreamSubscription<AppUser?>? _authSub;
@@ -43,8 +44,29 @@ class LibraryRepository extends ChangeNotifier {
   }
 
   void _follow(AppUser? user) {
+    if (user != null && user.requiresEmailVerification) {
+      if (_verificationPending && _userId == user.id) return;
+      _verificationPending = true;
+      _cardsSub?.cancel();
+      _cardsSub = null;
+      // Keep phone-only cards ready to migrate after verification. Opening
+      // the cloud backend now would start syncing before setup is complete.
+      if (!_anonymous || _userId != user.id) {
+        _backend?.dispose();
+        _backend = null;
+        _anonymous = false;
+      }
+      _userId = user.id;
+      _error = null;
+      _setCards(const []);
+      return;
+    }
+    final wasPending = _verificationPending;
+    _verificationPending = false;
     final sameUser =
-        user?.id == _userId && (user?.isAnonymous ?? false) == _anonymous;
+        !wasPending &&
+        user?.id == _userId &&
+        (user?.isAnonymous ?? false) == _anonymous;
     if (sameUser && (_backend != null || user == null)) {
       if (user == null && !_loaded) _setCards(const []);
       return;
@@ -111,6 +133,9 @@ class LibraryRepository extends ChangeNotifier {
   LibraryBackend get _current {
     // Sign-in may have just happened; don't wait for the auth stream.
     _follow(_auth.currentUser);
+    if (_auth.currentUser?.requiresEmailVerification ?? false) {
+      throw const AuthException('Verify your email to finish account setup.');
+    }
     final backend = _backend;
     if (backend == null) throw StateError('Sign in to use the library');
     return backend;
@@ -121,7 +146,19 @@ class LibraryRepository extends ChangeNotifier {
   Future<void> remove(String id) => _current.delete(id);
 
   Future<void> clear() async {
-    if (_auth.currentUser == null) return;
+    final user = _auth.currentUser;
+    if (user == null) return;
+    if (user.requiresEmailVerification) {
+      // Account deletion must remain available while setup is pending.
+      final backend = backendFor(user);
+      try {
+        await backend.deleteAll();
+        if (_anonymous && _userId == user.id) await _backend?.deleteAll();
+      } finally {
+        backend.dispose();
+      }
+      return;
+    }
     await _current.deleteAll();
   }
 

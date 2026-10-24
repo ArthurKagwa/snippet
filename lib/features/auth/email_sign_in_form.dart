@@ -88,10 +88,21 @@ class _EmailSignInFormState extends State<EmailSignInForm> {
       final password = _password.text;
       if (_create) {
         await auth.createAccountWithEmail(email, password);
+        // Keep the created account so delivery can be retried in the
+        // verification step without attempting registration again.
+        var message =
+            'Account created. Check your email for a verification link.';
+        try {
+          await auth.sendEmailVerification();
+        } catch (e) {
+          debugPrint('Verification email failed: $e');
+          message = 'Account created. Use Resend email to try again.';
+        }
+        if (mounted) showOverlayToast(context, message);
       } else {
         await auth.signInWithEmail(email, password);
       }
-      widget.onSignedIn();
+      if (mounted) widget.onSignedIn();
     });
   }
 
