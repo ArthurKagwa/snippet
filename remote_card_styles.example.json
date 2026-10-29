@@ -190,10 +190,10 @@
                 "text": "{reference}",
                 "upper": true,
                 "fit": true,
-                "minSize": 16,
+                "minSize": 10,
                 "font": "cormorant",
                 "weight": 700,
-                "size": 31,
+                "size": 26,
                 "height": 1.05,
                 "color": "ink"
               }
