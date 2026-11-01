@@ -5,6 +5,8 @@ import '../auto_fit_text.dart';
 import '../card_content.dart';
 import '../card_palette.dart';
 import '../card_shape.dart';
+import '../verse_reference.dart';
+import '../verse_scale.dart';
 
 /// Vigil: illuminated-manuscript feel. Fleuron, italic Cormorant, inset rule.
 class VigilCard extends StatelessWidget {
@@ -13,15 +15,17 @@ class VigilCard extends StatelessWidget {
     required this.content,
     required this.palette,
     required this.shape,
+    required this.reading,
   });
 
   final CardContent content;
   final CardPalette palette;
   final CardShape shape;
+  final VerseReading reading;
 
   @override
   Widget build(BuildContext context) {
-    final vertical = shape == CardShape.feed ? 32.0 : 44.0;
+    final vertical = shape == CardShape.feed ? reading.pad * 0.72 : reading.pad;
     return ColoredBox(
       color: palette.background,
       child: Stack(
@@ -45,30 +49,33 @@ class VigilCard extends StatelessWidget {
                   textScaler: TextScaler.noScaling,
                   style: SnippetFonts.cormorantText(24, color: palette.accent),
                 ),
-                const SizedBox(height: 18),
+                SizedBox(height: reading.gap),
                 Flexible(
                   child: AutoFitText(
                     content.text,
-                    maxSize: 25,
+                    maxSize: reading.size,
+                    minSize: reading.minSize,
                     textAlign: TextAlign.center,
                     styleFor: (s) => SnippetFonts.cormorantText(
                       s,
                       italic: true,
                       weight: FontWeight.w400,
                       color: palette.ink,
-                      height: 1.18,
+                      height: reading.height,
                     ),
                   ),
                 ),
-                const SizedBox(height: 18),
-                Text(
-                  content.referenceLine,
+                SizedBox(height: reading.gap),
+                VerseReference(
+                  reference: content.reference,
+                  translation: content.translation,
+                  upper: true,
+                  size: 8.5,
                   textAlign: TextAlign.center,
-                  textScaler: TextScaler.noScaling,
-                  style: SnippetFonts.monoText(
-                    8.5,
+                  styleFor: (s) => SnippetFonts.monoText(
+                    s,
                     color: palette.accent,
-                    letterSpacing: 1.7,
+                    letterSpacing: s * 0.2,
                   ),
                 ),
               ],

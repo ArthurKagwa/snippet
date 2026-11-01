@@ -5,6 +5,8 @@ import '../auto_fit_text.dart';
 import '../card_content.dart';
 import '../card_palette.dart';
 import '../card_shape.dart';
+import '../verse_reference.dart';
+import '../verse_scale.dart';
 
 /// Night Watch: deep gradient, short rule, upright Instrument Serif.
 class NightWatchCard extends StatelessWidget {
@@ -13,11 +15,13 @@ class NightWatchCard extends StatelessWidget {
     required this.content,
     required this.palette,
     required this.shape,
+    required this.reading,
   });
 
   final CardContent content;
   final CardPalette palette;
   final CardShape shape;
+  final VerseReading reading;
 
   @override
   Widget build(BuildContext context) {
@@ -33,33 +37,36 @@ class NightWatchCard extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 36),
+        padding: EdgeInsets.symmetric(horizontal: 32, vertical: reading.pad),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(width: 40, height: 2, color: palette.accent),
-            const SizedBox(height: 20),
+            SizedBox(height: reading.gap),
             Flexible(
               child: AutoFitText(
                 content.text,
-                maxSize: 29,
+                maxSize: reading.size,
+                minSize: reading.minSize,
                 styleFor: (s) => SnippetFonts.serifText(
                   s,
                   italic: false,
                   color: palette.ink,
-                  height: 1.06,
+                  height: reading.height,
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              content.referenceLine,
-              textScaler: TextScaler.noScaling,
-              style: SnippetFonts.monoText(
-                9.3,
+            SizedBox(height: reading.gap),
+            VerseReference(
+              reference: content.reference,
+              translation: content.translation,
+              upper: true,
+              size: 9.3,
+              styleFor: (s) => SnippetFonts.monoText(
+                s,
                 color: palette.accent,
-                letterSpacing: 1.3,
+                letterSpacing: s * 0.14,
               ),
             ),
           ],

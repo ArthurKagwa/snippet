@@ -184,7 +184,7 @@
             },
             {
               "type": "box",
-              "height": 34,
+              "minHeight": 34,
               "child": {
                 "type": "text",
                 "text": "{reference}",

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../cards/card_catalog.dart';
 import '../../cards/quote_card.dart';
+import '../../cards/verse_scale.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
 import '../../data/saved_card.dart';
@@ -41,6 +42,7 @@ class SavedCardTile extends StatelessWidget {
                 content: card.content,
                 style: style,
                 variant: variant,
+                shape: VerseScales.previewShape(card.content.text),
                 radius: 8,
               ),
               const SizedBox(height: 7),

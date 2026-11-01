@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../cards/card_catalog.dart';
 import '../../cards/card_content.dart';
 import '../../cards/card_style_spec.dart';
+import '../../cards/verse_scale.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
 import '../../core/theme/snippet_motion.dart';
@@ -50,7 +51,10 @@ class _AllStylesScreenState extends State<AllStylesScreen> {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    final styles = CardCatalog.styles;
+    final styles = VerseScales.stylesForVerse(
+      CardCatalog.styles,
+      widget.content.text,
+    );
     // The outgoing grid of a filter fade keeps its own filter, so only the
     // current grid can offer a hero.
     final filter = _filter;

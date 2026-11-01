@@ -5,6 +5,8 @@ import '../auto_fit_text.dart';
 import '../card_content.dart';
 import '../card_palette.dart';
 import '../card_shape.dart';
+import '../verse_reference.dart';
+import '../verse_scale.dart';
 
 /// Swiss: flush-left grotesk, one colour bar, mono reference.
 class SwissCard extends StatelessWidget {
@@ -13,44 +15,49 @@ class SwissCard extends StatelessWidget {
     required this.content,
     required this.palette,
     required this.shape,
+    required this.reading,
   });
 
   final CardContent content;
   final CardPalette palette;
   final CardShape shape;
+  final VerseReading reading;
 
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
       color: palette.background,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+        padding: EdgeInsets.symmetric(horizontal: 28, vertical: reading.pad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(width: 72, height: 8, color: palette.accent),
-            const SizedBox(height: 20),
+            SizedBox(height: reading.gap),
             Expanded(
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: AutoFitText(
                   content.text,
-                  maxSize: 30,
+                  maxSize: reading.size,
+                  minSize: reading.minSize,
                   styleFor: (s) => SnippetFonts.grotesk(
                     s,
                     weight: FontWeight.w700,
                     color: palette.ink,
-                    height: 0.98,
+                    height: reading.height,
                     letterSpacing: -s * 0.034,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              content.referenceLine,
-              textScaler: TextScaler.noScaling,
-              style: SnippetFonts.monoText(9.3, color: palette.ink),
+            SizedBox(height: reading.gap),
+            VerseReference(
+              reference: content.reference,
+              translation: content.translation,
+              upper: true,
+              size: 9.3,
+              styleFor: (s) => SnippetFonts.monoText(s, color: palette.ink),
             ),
           ],
         ),

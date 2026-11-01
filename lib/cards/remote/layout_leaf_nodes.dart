@@ -45,17 +45,50 @@ final class _TextNode extends LayoutNode {
     return upper ? s.toUpperCase() : s;
   }
 
+  bool get _isVerse {
+    final token = text.trim();
+    return token.isEmpty || token == '{verse}';
+  }
+
+  /// The reference itself, so its chapter and verse can take their own line.
+  bool get _isReference {
+    final token = text.trim();
+    return token == '{reference}' || token == '{referenceLine}';
+  }
+
   @override
   Widget build(LayoutScope s) {
-    final value = _fill(s.content);
     final ink = (color ?? ColorRef.parse('ink')!).resolve(s.palette);
-    TextStyle styleFor(double size) =>
-        font.style(size, color: ink, height: height, tracking: tracking);
+    final reading = _isVerse ? s.reading : null;
+    final maxSize = reading?.size ?? size;
+    final floor = math.min(reading?.minSize ?? minSize, maxSize);
+    final lineHeight = reading?.height ?? height;
+    TextStyle styleFor(double fontSize) => font.style(
+      fontSize,
+      color: ink,
+      height: lineHeight,
+      tracking: tracking,
+    );
+    if (_isReference) {
+      final content = s.content;
+      return VerseReference(
+        reference: content.reference,
+        translation: text.trim() == '{referenceLine}'
+            ? content.translation
+            : '',
+        upper: upper,
+        size: size,
+        minSize: math.min(minSize, size),
+        textAlign: align,
+        styleFor: styleFor,
+      );
+    }
+    final value = _fill(s.content);
     if (fit) {
       return AutoFitText(
         value,
-        maxSize: size,
-        minSize: math.min(minSize, size),
+        maxSize: maxSize,
+        minSize: floor,
         textAlign: align,
         styleFor: styleFor,
         highlight: highlight?.resolve(s.palette),
