@@ -40,7 +40,12 @@ class SwipeScreen extends StatefulWidget {
 class _SwipeScreenState extends State<SwipeScreen> {
   late final List<CardStyleSpec> _styles = VerseScales.stylesForVerse(
     CardCatalog.styles,
-    widget.passage.text,
+    CardContent(
+      text: widget.passage.text,
+      reference: widget.passage.reference,
+      translation:
+          BibleRepository.shortNames[widget.passage.translationId] ?? '',
+    ),
   );
   late int _styleIndex = VerseScales.indexOfStyle(
     _styles,

@@ -38,12 +38,34 @@ class SavedCardTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              QuoteCard(
-                content: card.content,
-                style: style,
-                variant: variant,
-                shape: VerseScales.previewShape(card.content.text),
-                radius: 8,
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final shape = VerseScales.previewShape(style, card.content);
+                    final aspect = shape.aspectRatio;
+                    var width = constraints.maxWidth;
+                    var height = width / aspect;
+                    if (height > constraints.maxHeight &&
+                        constraints.maxHeight.isFinite) {
+                      height = constraints.maxHeight;
+                      width = height * aspect;
+                    }
+                    return Align(
+                      alignment: Alignment.topLeft,
+                      child: SizedBox(
+                        width: width,
+                        height: height,
+                        child: QuoteCard(
+                          content: card.content,
+                          style: style,
+                          variant: variant,
+                          shape: shape,
+                          radius: 8,
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: 7),
               Text(
