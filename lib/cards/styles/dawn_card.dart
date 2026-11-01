@@ -5,6 +5,8 @@ import '../auto_fit_text.dart';
 import '../card_content.dart';
 import '../card_palette.dart';
 import '../card_shape.dart';
+import '../verse_reference.dart';
+import '../verse_scale.dart';
 
 /// Dawn: warm gradient, big hanging quote mark, Cormorant upright.
 class DawnCard extends StatelessWidget {
@@ -13,15 +15,17 @@ class DawnCard extends StatelessWidget {
     required this.content,
     required this.palette,
     required this.shape,
+    required this.reading,
   });
 
   final CardContent content;
   final CardPalette palette;
   final CardShape shape;
+  final VerseReading reading;
 
   @override
   Widget build(BuildContext context) {
-    final top = shape == CardShape.feed ? 34.0 : 48.0;
+    final top = shape == CardShape.feed ? reading.pad * 0.7 : reading.pad;
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -54,30 +58,33 @@ class DawnCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: reading.gap * 0.7),
             Expanded(
               child: Center(
                 child: AutoFitText(
                   content.text,
-                  maxSize: 24,
+                  maxSize: reading.size,
+                  minSize: reading.minSize,
                   textAlign: TextAlign.center,
                   styleFor: (s) => SnippetFonts.cormorantText(
                     s,
                     color: palette.ink,
-                    height: 1.15,
+                    height: reading.height,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Text(
-              content.referenceLine,
+            SizedBox(height: reading.gap),
+            VerseReference(
+              reference: content.reference,
+              translation: content.translation,
+              upper: true,
+              size: 8.5,
               textAlign: TextAlign.center,
-              textScaler: TextScaler.noScaling,
-              style: SnippetFonts.monoText(
-                8.5,
+              styleFor: (s) => SnippetFonts.monoText(
+                s,
                 color: palette.accent,
-                letterSpacing: 1.3,
+                letterSpacing: s * 0.15,
               ),
             ),
           ],

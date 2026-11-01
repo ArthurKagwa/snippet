@@ -8,17 +8,22 @@ import '../card_palette.dart';
 import '../card_shape.dart';
 import '../marked_text.dart';
 import '../styles/halftone_painter.dart';
+import '../verse_reference.dart';
+import '../verse_scale.dart';
 import 'layout_values.dart';
 
 part 'layout_leaf_nodes.dart';
 
 /// What a remote layout draws with.
 class LayoutScope {
-  const LayoutScope(this.content, this.palette, this.shape);
+  const LayoutScope(this.content, this.palette, this.shape, [this.reading]);
 
   final CardContent content;
   final CardPalette palette;
   final CardShape shape;
+
+  /// Null when a layout is drawn without a verse reading (older call sites).
+  final VerseReading? reading;
 }
 
 /// One node of a remote card layout, read from JSON with a `type`.
@@ -73,10 +78,16 @@ sealed class LayoutNode {
 
 /// `{"type": "box", "color", "gradient": {"colors", "begin", "end"},
 /// "border", "borderWidth", "radius", "circle", "width", "height",
-/// "padding", "child"}`
+/// "minHeight", "maxHeight", "padding", "child"}`
+///
+/// `height` pins the box, so anything taller is clipped. `minHeight` only
+/// sets a floor, which is what a reference that may take a second line
+/// needs. Older app builds ignore `minHeight` and `maxHeight`.
 final class _BoxNode extends LayoutNode {
   _BoxNode(Map json, this.child)
     : color = ColorRef.parse(json['color']),
+      minHeight = numberOf(json['minHeight']),
+      maxHeight = numberOf(json['maxHeight']),
       gradient = json['gradient'] is Map ? json['gradient'] as Map : null,
       border = ColorRef.parse(json['border']),
       borderWidth = numberOf(json['borderWidth']) ?? 1,
@@ -95,7 +106,20 @@ final class _BoxNode extends LayoutNode {
   final bool circle;
   final double? width;
   final double? height;
+  final double? minHeight;
+  final double? maxHeight;
   final EdgeInsets padding;
+
+  EdgeInsets _padding(LayoutScope s) {
+    final scale = s.reading?.spacing ?? 1;
+    if (scale == 1) return padding;
+    return EdgeInsets.fromLTRB(
+      padding.left,
+      padding.top * scale,
+      padding.right,
+      padding.bottom * scale,
+    );
+  }
 
   Gradient? _gradient(CardPalette p) {
     final colors = [
@@ -111,21 +135,33 @@ final class _BoxNode extends LayoutNode {
   }
 
   @override
-  Widget build(LayoutScope s) => Container(
-    width: width,
-    height: height,
-    padding: padding,
-    decoration: BoxDecoration(
-      color: color?.resolve(s.palette),
-      gradient: _gradient(s.palette),
-      border: border == null
-          ? null
-          : Border.all(color: border!.resolve(s.palette), width: borderWidth),
-      borderRadius: circle ? null : radius,
-      shape: circle ? BoxShape.circle : BoxShape.rectangle,
-    ),
-    child: child?.build(s),
-  );
+  Widget build(LayoutScope s) {
+    Widget? built = child?.build(s);
+    if (minHeight != null || maxHeight != null) {
+      built = ConstrainedBox(
+        constraints: BoxConstraints(
+          minHeight: minHeight ?? 0,
+          maxHeight: maxHeight ?? double.infinity,
+        ),
+        child: built ?? const SizedBox.shrink(),
+      );
+    }
+    return Container(
+      width: width,
+      height: height,
+      padding: _padding(s),
+      decoration: BoxDecoration(
+        color: color?.resolve(s.palette),
+        gradient: _gradient(s.palette),
+        border: border == null
+            ? null
+            : Border.all(color: border!.resolve(s.palette), width: borderWidth),
+        borderRadius: circle ? null : radius,
+        shape: circle ? BoxShape.circle : BoxShape.rectangle,
+      ),
+      child: built,
+    );
+  }
 }
 
 /// `{"type": "column" | "row", "children", "main", "cross", "gap"}`; a
@@ -166,7 +202,7 @@ final class _FlexNode extends LayoutNode {
     direction: axis,
     mainAxisAlignment: main,
     crossAxisAlignment: cross,
-    spacing: gap,
+    spacing: gap * (s.reading?.spacing ?? 1),
     children: [
       for (var i = 0; i < children.length; i++)
         switch (flexes[i]) {
@@ -235,5 +271,6 @@ final class _SpaceNode extends LayoutNode {
   final double size;
 
   @override
-  Widget build(LayoutScope s) => SizedBox.square(dimension: size);
+  Widget build(LayoutScope s) =>
+      SizedBox.square(dimension: size * (s.reading?.spacing ?? 1));
 }

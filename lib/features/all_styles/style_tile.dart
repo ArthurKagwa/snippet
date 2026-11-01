@@ -4,6 +4,7 @@ import '../../cards/card_content.dart';
 import '../../cards/card_palette.dart';
 import '../../cards/card_style_spec.dart';
 import '../../cards/quote_card.dart';
+import '../../cards/verse_scale.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
 import '../../core/theme/snippet_motion.dart';
@@ -61,6 +62,7 @@ class StyleTile extends StatelessWidget {
                     content: content,
                     style: style,
                     variant: variant,
+                    shape: VerseScales.previewShape(content.text),
                     radius: 8,
                   ),
                 ),

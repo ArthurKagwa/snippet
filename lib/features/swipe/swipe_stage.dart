@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../cards/card_content.dart';
 import '../../cards/card_style_spec.dart';
+import '../../cards/verse_scale.dart';
 import '../../services/services.dart';
 import 'style_page.dart';
 import 'style_track.dart';
@@ -44,12 +45,14 @@ class SwipeStage extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         final area = box.maxHeight - hintHeight;
-        // Largest 4:5 card that fits the area, with breathing room.
+        // Longest verses are shown as 9:16, matching the only export shape.
+        final shape = VerseScales.previewShape(content.text);
+        final aspect = shape.aspectRatio;
         final h = math.min(
-          (box.maxWidth - sideMargin * 2) / 0.8,
+          (box.maxWidth - sideMargin * 2) / aspect,
           area - StylePage.peekDepth - 12,
         );
-        final cardSize = Size(h * 0.8, h);
+        final cardSize = Size(h * aspect, h);
         final cardTop = (area - h - StylePage.peekDepth) / 2;
         return Stack(
           children: [
@@ -72,6 +75,7 @@ class SwipeStage extends StatelessWidget {
                     content: content,
                     controller: variantController(i),
                     cardSize: cardSize,
+                    shape: shape,
                     onVariantChanged: (v) => onVariantChanged(i, v),
                   ),
                 ),
