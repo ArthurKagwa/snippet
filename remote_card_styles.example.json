@@ -1,5 +1,5 @@
 {
-  "order": ["psalter", "marquee", "highlight"],
+  "order": ["marquee", "highlight", "psalter"],
   "styles": {
     "psalter": {
       "name": "Psalter",
