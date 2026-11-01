@@ -1,0 +1,153 @@
+:root {
+  --cobalt: #2433D6;
+  --cobalt-deep: #121A7E;
+  --stone: #F1EEE8;
+  --lime: #D9F75B;
+  --ink: #10133F;
+  --ink-dim: #4A4E7A;
+  --stone-dim: #C9CCF2;
+  --shadow: rgba(8, 12, 60, 0.38);
+  --syne: 'Syne', 'Trebuchet MS', sans-serif;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; overflow-x: clip; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--cobalt);
+  color: var(--stone);
+  font: 17px/1.55 var(--sans);
+}
+a { color: inherit; }
+.wrap { max-width: 68rem; margin: 0 auto; padding: 0 1.25rem; }
+
+/* Top bar */
+.bar {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--cobalt); border-bottom: 1px solid var(--cobalt-deep);
+}
+.bar .wrap { display: flex; align-items: center; gap: 1rem 2rem; min-height: 4.25rem; }
+.brand { display: inline-flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--stone); }
+.brand svg { width: 1.6rem; height: 2rem; display: block; }
+.wordmark { font-family: var(--syne); font-weight: 800; font-size: 1.55rem; letter-spacing: -0.04em; line-height: 1; }
+.bar nav { margin-left: auto; }
+.nav { display: flex; gap: 1.75rem; margin: 0; padding: 0; list-style: none; }
+.nav a { text-decoration: none; font-weight: 500; color: var(--stone); white-space: nowrap; }
+.nav a:hover { text-decoration: underline; text-underline-offset: 0.3em; }
+.nav a[aria-current="page"] { color: var(--lime); }
+.cta {
+  display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0.6rem 1.2rem;
+  border-radius: 999px; background: var(--lime); color: var(--ink);
+  font-weight: 600; text-decoration: none; white-space: nowrap;
+}
+.cta:hover { background: var(--stone); }
+.cta:focus-visible, .nav a:focus-visible, .brand:focus-visible, .btn:focus-visible {
+  outline: 3px solid var(--lime); outline-offset: 3px;
+}
+
+/* Scripture symbols */
+.sym-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.deco { position: absolute; pointer-events: none; --s1: var(--stone); --s2: var(--lime); --s3: var(--cobalt-deep); }
+.deco svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+/* Hero */
+.hero {
+  position: relative;
+  display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 3rem;
+  align-items: center; padding: 4rem 0 4.5rem;
+}
+.pill {
+  display: inline-block; margin-bottom: 1.4rem;
+  background: var(--lime); color: var(--ink);
+  font-family: var(--syne); font-weight: 700; font-size: 0.72rem;
+  letter-spacing: 0.16em; padding: 0.5rem 0.95rem; border-radius: 999px;
+}
+h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(2.8rem, 6vw, 4.6rem); line-height: 1; margin: 0 0 1.25rem; }
+h1 em { color: var(--lime); }
+.lede { font-size: 1.2rem; max-width: 32rem; margin: 0; }
+
+.stage { position: relative; height: 25rem; }
+.halo { position: absolute; inset: -2rem -6rem -2rem 0; border-radius: 50%; background: var(--cobalt-deep); opacity: 0.45; }
+.card { position: absolute; width: 15rem; height: 21.5rem; border-radius: 7.5rem 7.5rem 1.3rem 1.3rem; box-shadow: 0 2rem 4.5rem var(--shadow); }
+.card.back { background: var(--lime); left: 12%; top: 1.5rem; transform: rotate(-9deg); }
+.card.front {
+  background: var(--stone); color: var(--ink); left: 26%; top: 1rem; transform: rotate(5deg);
+  display: flex; flex-direction: column; align-items: center; gap: 1.4rem; padding: 2.4rem 1.6rem 1.6rem; text-align: center;
+}
+.sun { flex: none; width: 4.2rem; height: 4.2rem; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 0.55rem var(--stone), 0 0 0 0.8rem var(--ink); }
+.verse { font-family: var(--serif); font-size: 1.75rem; line-height: 1.08; }
+.ref { margin-top: auto; font-family: var(--syne); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.2em; color: var(--ink-dim); }
+
+.d-dove    { width: 6rem;   height: 6rem;   left: 44%; top: 1.25rem; transform: rotate(14deg); }
+.d-olive   { width: 4.5rem; height: 4.5rem; left: 0;   bottom: 0.25rem; }
+.d-sunrise { width: 5rem;   height: 5rem;   right: -1rem; top: 0.5rem; }
+.d-fish    { width: 4.5rem; height: 4.5rem; left: 50%; bottom: 0.5rem; }
+
+/* Steps */
+.steps-wrap { position: relative; }
+.steps {
+  position: relative; z-index: 1;
+  background: var(--stone); color: var(--ink); border-radius: 1.75rem;
+  padding: 2.5rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;
+  list-style: none; margin: 0;
+}
+.steps li { display: flex; flex-direction: column; gap: 0.7rem; }
+.num { width: 3rem; height: 3rem; border-radius: 50%; background: var(--lime); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1.35rem; }
+.steps h2 { margin: 0.2rem 0 0; font-size: 1.35rem; line-height: 1.2; font-weight: 600; }
+.steps p { margin: 0; color: var(--ink-dim); }
+.btn {
+  margin-top: auto; align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.9rem;
+  padding: 0.75rem 1.3rem; border-radius: 999px;
+  background: var(--cobalt); color: var(--stone); text-decoration: none; font-weight: 600; font-size: 1rem;
+}
+.btn:hover { background: var(--cobalt-deep); }
+.btn svg { width: 1.1rem; height: 1.1rem; }
+.d-anchor { width: 4.5rem; height: 4.5rem; right: 3rem; top: -3.4rem; z-index: 2; }
+.d-lamp   { width: 5rem;   height: 5rem;   left: 2.5rem; bottom: -3.6rem; z-index: 2; }
+
+/* Questions */
+.faq { position: relative; padding: 4.5rem 0 1rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
+.faq h3 { font-family: var(--syne); font-size: 1rem; margin: 0 0 0.5rem; letter-spacing: 0.01em; }
+.faq p { margin: 0; color: var(--stone-dim); }
+.faq a { color: var(--lime); }
+.d-crown { width: 3.5rem; height: 3.5rem; right: 0; top: 1.25rem; }
+
+#join, #faq { scroll-margin-top: 6rem; }
+
+footer {
+  margin-top: 3rem; border-top: 1px solid var(--cobalt-deep);
+  padding: 1.5rem 0 2.5rem; font-size: 0.9rem; color: var(--stone-dim);
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem;
+}
+footer a { color: var(--stone); }
+
+@media (max-width: 860px) {
+  .bar .wrap { flex-wrap: wrap; justify-content: space-between; min-height: 0; padding-top: 0.75rem; padding-bottom: 0.7rem; gap: 0.6rem 1rem; }
+  .wordmark { font-size: 1.35rem; }
+  .cta { min-height: 2.6rem; padding: 0.5rem 1rem; font-size: 0.95rem; }
+  .bar nav { order: 3; width: 100%; margin: 0; overflow-x: auto; }
+  .nav { gap: 1.25rem; font-size: 0.95rem; }
+  .nav a { display: inline-block; padding: 0.35rem 0; }
+  #join, #faq { scroll-margin-top: 8rem; }
+
+  .hero { grid-template-columns: 1fr; padding: 2.5rem 0 1.5rem; gap: 1rem; }
+  .stage { height: 22rem; max-width: 22rem; width: 100%; margin: 0 auto; }
+  .halo { inset: 0 -0.5rem; }
+  .card { width: 13rem; height: 19rem; }
+  .card.back { left: 8%; }
+  .card.front { left: 26%; }
+  .verse { font-size: 1.5rem; }
+  .d-dove { width: 4.25rem; height: 4.25rem; left: auto; right: 0; top: 1.75rem; }
+  .d-sunrise { width: 3.5rem; height: 3.5rem; right: 0; top: 0; }
+  .d-olive { width: 3.5rem; height: 3.5rem; left: 0; bottom: 0.5rem; }
+  .d-fish { display: none; }
+
+  .steps { grid-template-columns: 1fr; padding: 1.75rem; gap: 2rem; }
+  .d-anchor { width: 3.5rem; height: 3.5rem; right: 1.25rem; top: -2.5rem; }
+  .d-lamp { width: 3.75rem; height: 3.75rem; left: auto; right: 1.25rem; bottom: -2.75rem; }
+
+  .faq { grid-template-columns: 1fr; gap: 1.5rem; padding-top: 4rem; }
+  .d-crown { width: 2.75rem; height: 2.75rem; top: 4rem; }
+}

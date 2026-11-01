@@ -73,3 +73,8 @@ secrets.*
 # Play / Google Cloud service account keys
 *service-account*.json
 snippet-79ab2-*.json
+
+# Local tooling state
+.agents/
+.claude/launch.json
+.wrangler/

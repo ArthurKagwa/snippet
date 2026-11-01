@@ -1,0 +1,5 @@
+Contact: mailto:support@snippetverses.app
+Expires: 2027-10-23T23:59:59Z
+Preferred-Languages: en
+Canonical: https://snippetverses.app/.well-known/security.txt
+Canonical: https://www.snippetverses.app/.well-known/security.txt

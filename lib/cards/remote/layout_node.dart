@@ -7,6 +7,7 @@ import '../card_content.dart';
 import '../card_palette.dart';
 import '../card_shape.dart';
 import '../marked_text.dart';
+import '../reference_text.dart';
 import '../styles/halftone_painter.dart';
 import 'layout_values.dart';
 
@@ -73,10 +74,16 @@ sealed class LayoutNode {
 
 /// `{"type": "box", "color", "gradient": {"colors", "begin", "end"},
 /// "border", "borderWidth", "radius", "circle", "width", "height",
-/// "padding", "child"}`
+/// "minHeight", "maxHeight", "padding", "child"}`
+///
+/// `height` pins the box, so anything taller is clipped; `minHeight` only
+/// sets a floor, which is what text that may take a second line needs.
+/// Older app builds ignore `minHeight` and `maxHeight`.
 final class _BoxNode extends LayoutNode {
   _BoxNode(Map json, this.child)
     : color = ColorRef.parse(json['color']),
+      minHeight = numberOf(json['minHeight']),
+      maxHeight = numberOf(json['maxHeight']),
       gradient = json['gradient'] is Map ? json['gradient'] as Map : null,
       border = ColorRef.parse(json['border']),
       borderWidth = numberOf(json['borderWidth']) ?? 1,
@@ -95,7 +102,16 @@ final class _BoxNode extends LayoutNode {
   final bool circle;
   final double? width;
   final double? height;
+  final double? minHeight;
+  final double? maxHeight;
   final EdgeInsets padding;
+
+  BoxConstraints? get _constraints => minHeight == null && maxHeight == null
+      ? null
+      : BoxConstraints(
+          minHeight: minHeight ?? 0,
+          maxHeight: maxHeight ?? double.infinity,
+        );
 
   Gradient? _gradient(CardPalette p) {
     final colors = [
@@ -114,6 +130,7 @@ final class _BoxNode extends LayoutNode {
   Widget build(LayoutScope s) => Container(
     width: width,
     height: height,
+    constraints: _constraints,
     padding: padding,
     decoration: BoxDecoration(
       color: color?.resolve(s.palette),

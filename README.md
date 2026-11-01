@@ -90,7 +90,7 @@ and app IDs are not committed.
 
 1. Create a [Firebase](https://console.firebase.google.com/) project and register the Android app
    (`com.arthur.snippet`) and iOS app (`com.arthur.snippet`).
-2. In the Firebase console, enable **Authentication** → sign-in methods **Google** and **Anonymous**.
+2. In the Firebase console, enable **Authentication** → sign-in methods **Email/Password**, **Google**, and **Anonymous**.
 3. Enable **Cloud Firestore** (start in test mode or add rules from `firestore.rules` as you prefer).
 4. On your machine, install the FlutterFire CLI and generate config:
 
@@ -121,6 +121,30 @@ Do not commit `lib/firebase_options.dart`, `google-services.json`, `GoogleServic
 The app runs fully offline if Firebase is unavailable (local auth, cards kept on the device).
 
 - Services used: Authentication (email/password, Google), Firestore (Library), Remote Config.
+- Email accounts must verify their address before completing setup or saving
+  cards. Signup and unverified sign-in show a verification step with resend,
+  status check, and account-switching actions. Returning from the browser
+  refreshes verification automatically; dismissing or restarting does not
+  bypass the requirement. Profile → Account also offers verification actions.
+  Phone-only cards wait until verification before migrating to the cloud.
+  Firestore rules also reject writes from unverified password sessions; deploy
+  the updated rules with `firebase deploy --only firestore:rules` when releasing.
+  Test them locally with `firebase emulators:exec --only firestore --project demo-snippet 'python3 tool/test_firestore_rules.py'`.
+- Password resets are available through **Forgot password?** on sign-in and
+  **Reset password** in Profile for password accounts. The response does not
+  reveal whether an address has an account.
+- **Change email** in Profile confirms the current password (or Google account)
+  and sends a verification link to the new address using Firebase's
+  `verifyBeforeUpdateEmail`. The old address stays active until verification.
+  If Firebase expires the session afterward, sign in with the new address.
+- These links use Firebase's hosted email action pages. In Authentication →
+  Templates, configure the sender and email copy for verification, email changes,
+  and password resets; retain the default Firebase action URL unless a custom
+  handler implements those actions. No app deep link setup is required.
+  Before release, use a test account and real inboxes to check registration,
+  verification/resend, reset (including an expired link), and an email change
+  followed by signing in with the verified address. Automated tests use fakes
+  and do not send real mail.
 - Remote Config parameters live in `remoteconfig.template.json`:
   `verse_calendar` (JSON object of the phone's local date to a ref, e.g. `{"2026-10-21": "ISA 40:31", "2026-10-22": "LAM 3:22-23"}`),
   `fallback_verse` (ref used for any day missing from the calendar; empty or unreadable = `GEN 1:1`) and `announcement` (text, empty = none).

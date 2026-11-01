@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Snippet Verses on Android</title>
+  <meta name="description" content="Snippet Verses turns Bible verses into beautiful cards you can share. Join the Android early access test in three steps.">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://snippetverses.app/testers">
+  <meta property="og:title" content="Test Snippet Verses on Android">
+  <meta property="og:description" content="Turn Bible verses into beautiful cards you can share. Join the early access test in three steps.">
+  <meta property="og:image" content="https://snippetverses.app/og.png">
+  <meta property="og:image:width" content="1024">
+  <meta property="og:image:height" content="500">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/testers.css">
+</head>
+<body>
+  <svg class="sym-sprite" aria-hidden="true" focusable="false">
+    <symbol id="mark" viewBox="0 0 64 80">
+      <path style="fill: var(--stone)" d="M4 80 V32 A28 28 0 0 1 60 32 V80 Z"/>
+      <circle style="fill: var(--lime)" cx="32" cy="32" r="13"/>
+    </symbol>
+    <symbol id="dove" viewBox="0 0 120 120">
+      <path style="fill: var(--s1)" d="M24 70 C40 56 70 54 88 60 C80 74 56 84 32 80 Z"/>
+      <path style="fill: var(--s1)" d="M28 76 L8 90 L12 68 Z"/>
+      <path style="fill: var(--s2)" d="M46 64 L58 18 C78 30 82 50 72 62 Z"/>
+      <circle style="fill: var(--s1)" cx="90" cy="56" r="11"/>
+      <path style="fill: var(--s2)" d="M100 52 L112 57 L100 62 Z"/>
+      <circle style="fill: var(--s3)" cx="92" cy="53" r="2.5"/>
+    </symbol>
+    <symbol id="olive" viewBox="0 0 120 120">
+      <path style="fill: none; stroke: var(--s1); stroke-width: 5; stroke-linecap: round" d="M16 104 C40 84 70 54 104 18"/>
+      <ellipse style="fill: var(--s1)" cx="30" cy="80" rx="15" ry="6.5" transform="rotate(-75 30 80)"/>
+      <ellipse style="fill: var(--s1)" cx="44" cy="96" rx="15" ry="6.5" transform="rotate(-15 44 96)"/>
+      <ellipse style="fill: var(--s1)" cx="52" cy="56" rx="15" ry="6.5" transform="rotate(-75 52 56)"/>
+      <ellipse style="fill: var(--s1)" cx="70" cy="72" rx="15" ry="6.5" transform="rotate(-15 70 72)"/>
+      <ellipse style="fill: var(--s1)" cx="76" cy="30" rx="15" ry="6.5" transform="rotate(-75 76 30)"/>
+      <ellipse style="fill: var(--s1)" cx="94" cy="46" rx="15" ry="6.5" transform="rotate(-15 94 46)"/>
+      <circle style="fill: var(--s2)" cx="62" cy="58" r="7"/>
+      <circle style="fill: var(--s2)" cx="86" cy="34" r="7"/>
+    </symbol>
+    <symbol id="sunrise" viewBox="0 0 120 120">
+      <path style="fill: var(--s2)" d="M28 86 A32 32 0 0 1 92 86 Z"/>
+      <g style="fill: none; stroke: var(--s1); stroke-width: 7; stroke-linecap: round">
+        <path d="M60 40 L60 24"/><path d="M30 52 L20 42"/><path d="M90 52 L100 42"/><path d="M18 74 L6 70"/><path d="M102 74 L114 70"/>
+      </g>
+      <rect style="fill: var(--s1)" x="6" y="86" width="108" height="7" rx="3.5"/>
+    </symbol>
+    <symbol id="fish" viewBox="0 0 120 120">
+      <path style="fill: none; stroke: var(--s1); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round" d="M12 38 C36 86 86 88 110 60 C86 32 36 34 12 82"/>
+      <circle style="fill: var(--s2)" cx="88" cy="56" r="6"/>
+    </symbol>
+    <symbol id="anchor" viewBox="0 0 120 120">
+      <g style="fill: none; stroke: var(--s1); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round">
+        <path d="M60 30 L60 104"/><path d="M40 44 L80 44"/><path d="M22 74 C26 98 50 106 60 104 C70 106 94 98 98 74"/>
+      </g>
+      <path style="fill: var(--s1)" d="M12 80 L22 62 L32 80 Z"/>
+      <path style="fill: var(--s1)" d="M88 80 L98 62 L108 80 Z"/>
+      <circle style="fill: var(--s2)" cx="60" cy="20" r="10"/>
+    </symbol>
+    <symbol id="lamp" viewBox="0 0 120 120">
+      <path style="fill: var(--s1)" d="M18 74 C18 62 34 58 52 58 L84 58 C94 58 100 54 106 46 C106 66 94 80 70 82 L40 82 C26 82 18 80 18 74 Z"/>
+      <rect style="fill: var(--s3)" x="40" y="82" width="36" height="9" rx="3"/>
+      <circle style="fill: none; stroke: var(--s1); stroke-width: 5" cx="17" cy="66" r="10"/>
+      <path style="fill: var(--s2)" d="M105 42 C95 34 98 22 106 10 C113 22 116 34 105 42 Z"/>
+    </symbol>
+    <symbol id="crown" viewBox="0 0 120 120">
+      <path style="fill: var(--s1)" d="M20 88 L14 40 L38 62 L60 28 L82 62 L106 40 L100 88 Z"/>
+      <rect style="fill: var(--s3)" x="18" y="88" width="84" height="10" rx="3"/>
+      <circle style="fill: var(--s2)" cx="14" cy="38" r="7"/>
+      <circle style="fill: var(--s2)" cx="60" cy="26" r="7"/>
+      <circle style="fill: var(--s2)" cx="106" cy="38" r="7"/>
+    </symbol>
+  </svg>
+
+  <header class="bar">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="Snippet Verses home">
+        <svg aria-hidden="true"><use href="#mark"/></svg>
+        <span class="wordmark">snippet</span>
+      </a>
+      <nav aria-label="Main">
+        <ul class="nav">
+          <li><a href="/">Home</a></li>
+          <li><a href="/contribute">Contribute</a></li>
+          <li><a href="#join" aria-current="page">How to join</a></li>
+          <li><a href="#faq">Questions</a></li>
+          <li><a href="/privacy">Privacy</a></li>
+        </ul>
+      </nav>
+      <a class="cta" href="#join">Join the test</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <main>
+      <section class="hero">
+        <span class="deco d-dove" aria-hidden="true"><svg><use href="#dove"/></svg></span>
+        <span class="deco d-olive" aria-hidden="true"><svg><use href="#olive"/></svg></span>
+        <span class="deco d-fish" aria-hidden="true"><svg><use href="#fish"/></svg></span>
+        <div>
+          <span class="pill">EARLY ACCESS · ANDROID</span>
+          <h1>Help test <em>Snippet Verses</em> before launch.</h1>
+          <p class="lede">Turn Bible verses into beautiful cards you can share. The Android app is in early testing, and it's free to join.</p>
+        </div>
+        <div class="stage" aria-hidden="true">
+          <div class="halo"></div>
+          <span class="deco d-sunrise"><svg><use href="#sunrise"/></svg></span>
+          <div class="card back"></div>
+          <div class="card front">
+            <span class="sun"></span>
+            <span class="verse">Thy word is a lamp unto my feet, and a light unto my path.</span>
+            <span class="ref">PSALM 119:105</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="steps-wrap">
+        <span class="deco d-anchor" aria-hidden="true"><svg><use href="#anchor"/></svg></span>
+        <span class="deco d-lamp" aria-hidden="true"><svg><use href="#lamp"/></svg></span>
+        <ol class="steps" id="join">
+          <li>
+            <span class="num" aria-hidden="true">1</span>
+            <h2>Join the tester group</h2>
+            <p>Use the Gmail that's signed in to the Play Store on your Android phone.</p>
+            <a class="btn" href="https://groups.google.com/g/testsnippetverses" target="_blank" rel="noopener">
+              Join the group
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+            </a>
+          </li>
+          <li>
+            <span class="num" aria-hidden="true">2</span>
+            <h2>Become a tester</h2>
+            <p>Open this on your phone with the same Gmail, then tap "Become a tester."</p>
+            <a class="btn" href="https://play.google.com/apps/testing/com.arthur.snippet" target="_blank" rel="noopener">
+              Become a tester
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+            </a>
+          </li>
+          <li>
+            <span class="num" aria-hidden="true">3</span>
+            <h2>Install and keep it 14 days</h2>
+            <p>Make a few cards and share what to improve. Staying for 14 days helps the app get approved for launch.</p>
+            <a class="btn" href="https://play.google.com/store/apps/details?id=com.arthur.snippet" target="_blank" rel="noopener">
+              Get it on Google Play
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+            </a>
+          </li>
+        </ol>
+      </div>
+
+      <section class="faq" id="faq" aria-label="Questions">
+        <span class="deco d-crown" aria-hidden="true"><svg><use href="#crown"/></svg></span>
+        <div>
+          <h3>"You're not eligible" message?</h3>
+          <p>Join the group first, with the same Gmail your phone uses for Google Play. Then wait a few minutes and open step 2 again.</p>
+        </div>
+        <div>
+          <h3>iPhone?</h3>
+          <p>Android only for now.</p>
+        </div>
+        <div>
+          <h3>Feedback or problems?</h3>
+          <p>Email <a href="mailto:support@snippetverses.app">support@snippetverses.app</a>.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <a href="/">Home</a>
+      <a href="/privacy">Privacy policy</a>
+      <a href="/delete-account">Delete your account</a>
+    </footer>
+  </div>
+</body>
+</html>
