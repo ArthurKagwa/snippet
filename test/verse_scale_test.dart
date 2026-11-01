@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snippet/cards/card_catalog.dart';
 import 'package:snippet/cards/card_content.dart';
+import 'package:snippet/cards/card_measure.dart';
 import 'package:snippet/cards/card_palette.dart';
 import 'package:snippet/cards/card_shape.dart';
 import 'package:snippet/cards/card_style_overrides.dart';
@@ -12,16 +14,13 @@ import 'package:snippet/cards/card_style_spec.dart';
 import 'package:snippet/cards/quote_card.dart';
 import 'package:snippet/cards/verse_reference.dart';
 import 'package:snippet/cards/verse_scale.dart';
+import 'package:snippet/data/bible_models.dart';
+import 'package:snippet/data/bible_repository.dart';
 
 const _short = 'Jesus wept.';
 
 /// A verse long enough to leave the short bucket without being a paragraph.
 String _repeat(int words) => List.filled(words, 'beloved').join(' ');
-
-String _ofLength(int characters) {
-  final text = _repeat(characters);
-  return text.length <= characters ? text : text.substring(0, characters);
-}
 
 String _until(VerseBucket target) {
   for (var words = 1; words < 4000; words += words < 30 ? 1 : 8) {
@@ -40,7 +39,7 @@ void main() {
     VerseScales.byId.remove('cramped');
   });
 
-  test('length buckets grow with the verse and only the longest is story', () {
+  test('length buckets grow with the verse and still scale the type', () {
     expect(VerseScales.bucketOf(_short), VerseBucket.short);
     expect(VerseScales.bucketOf(''), VerseBucket.short);
 
@@ -64,12 +63,22 @@ void main() {
       greaterThan(VerseScales.lineCount(long)),
     );
 
-    expect(VerseScales.exportShapes(_short), CardShape.values);
-    expect(VerseScales.exportShapes(medium), contains(CardShape.feed));
-    expect(VerseScales.exportShapes(long), contains(CardShape.feed));
-    expect(VerseScales.exportShapes(longest), [CardShape.story]);
-    expect(VerseScales.previewShape(longest), CardShape.story);
-    expect(VerseScales.previewShape(long), CardShape.portrait);
+    final vigil = CardCatalog.bundled.first;
+    expect(
+      VerseScales.exportShapes(vigil, _content('Psalm 1:1', text: _short)),
+      CardShape.values,
+    );
+    expect(
+      VerseScales.previewShape(vigil, _content('Psalm 1:1', text: _short)),
+      CardShape.portrait,
+    );
+    // The bucket still picks the type size. It does not by itself drop a
+    // shape; a long verse keeps the square when that style's well holds it.
+    expect(VerseScales.read('vigil', longest).bucket, VerseBucket.longest);
+    expect(
+      VerseScales.read('vigil', longest).size,
+      VerseScales.of('vigil').minSize,
+    );
   });
 
   test('each style gets smaller and tighter as the verse gets longer', () {
@@ -155,47 +164,91 @@ void main() {
       expect(VerseScales.of('vigil').fitsStory(long), isTrue);
       expect(VerseScales.of('vigil').fitsStory(_short), isTrue);
 
-      final offered = VerseScales.stylesForVerse([cramped, vigil], long);
+      final offered = VerseScales.stylesForVerse([
+        cramped,
+        vigil,
+      ], _content('Psalm 1:1', text: long));
       expect(offered.map((s) => s.id), ['vigil']);
       expect(VerseScales.indexOfStyle(offered, 'cramped'), 0);
       expect(VerseScales.indexOfStyle(offered, 'vigil'), 0);
 
       // Nothing fits: keep the list so the screen is not blank.
-      expect(VerseScales.stylesForVerse([cramped], long).single.id, 'cramped');
+      expect(
+        VerseScales.stylesForVerse([
+          cramped,
+        ], _content('Psalm 1:1', text: long)).single.id,
+        'cramped',
+      );
     },
   );
 
-  test(
-    'the longest KJV verse stays on story and every style can still show it',
-    () {
-      // Esther 8:9 is 528 characters, the longest verse in the KJV. A repeated
-      // word of that length is the same measure the buckets use.
-      final esther = _ofLength(528);
-      expect(VerseScales.bucketOf(esther), VerseBucket.longest);
-      expect(VerseScales.exportShapes(esther), [CardShape.story]);
-      final hidden = [
-        for (final id in VerseScales.byId.keys)
-          if (!VerseScales.of(id).fitsStory(esther)) id,
-      ];
-      expect(hidden, isEmpty, reason: 'styles that cannot hold Esther 8:9');
-      for (final id in VerseScales.byId.keys) {
+  testWidgets(
+    'Hebrews 12:1-2 WEB keeps a square on the styles Arthur checked',
+    (tester) async {
+      _applyExample();
+      final content = _passage('web', 'HEB', 12, 1, 2);
+      expect(VerseScales.bucketOf(content.text), VerseBucket.longest);
+      const checked = ['highlight', 'marquee', 'psalter', 'vigil', 'riso'];
+      for (final id in checked) {
+        final style = CardCatalog.byId(id);
         expect(
-          VerseScales.of(id).fitsSquare(esther),
-          isFalse,
-          reason: '$id would still offer a square for the longest verse',
+          VerseScales.exportShapes(style, content),
+          contains(CardShape.feed),
+          reason: id,
+        );
+        final full = await _fullness(tester, style, content, CardShape.feed);
+        expect(
+          full.height,
+          lessThanOrEqualTo(full.slot * (1 + CardMeasure.slack) + 0.5),
+          reason: id,
         );
       }
     },
   );
 
-  test(
-    'verses that are not the longest still fit a square at each style minimum',
-    () {
-      final long = _until(VerseBucket.long);
-      expect(VerseScales.bucketOf(long), VerseBucket.long);
-      for (final id in VerseScales.byId.keys) {
-        expect(VerseScales.of(id).fitsSquare(long), isTrue, reason: id);
+  testWidgets(
+    'Esther 8:9 drops the square only where the verse overflows the well',
+    (tester) async {
+      _applyExample();
+      final content = _passage('kjv', 'EST', 8, 9, 9);
+      expect(VerseScales.bucketOf(content.text), VerseBucket.longest);
+      final square = <String>[];
+      final storyOnly = <String>[];
+      for (final style in CardCatalog.styles) {
+        final shapes = VerseScales.exportShapes(style, content);
+        expect(shapes, contains(CardShape.story), reason: style.id);
+        final full = await _fullness(tester, style, content, CardShape.feed);
+        final fits = full.height <= full.slot * (1 + CardMeasure.slack) + 0.5;
+        expect(
+          shapes.contains(CardShape.feed),
+          fits,
+          reason: '${style.id} square is ${full.height} in ${full.slot}',
+        );
+        if (fits) {
+          square.add(style.id);
+        } else {
+          storyOnly.add(style.id);
+        }
+        final story = await _fullness(tester, style, content, CardShape.story);
+        expect(
+          story.height,
+          lessThanOrEqualTo(story.slot * (1 + CardMeasure.slack) + 0.5),
+          reason: '${style.id} story',
+        );
       }
+      expect(square, containsAll(['riso', 'swiss']));
+      expect(
+        storyOnly,
+        containsAll([
+          'highlight',
+          'marquee',
+          'psalter',
+          'vigil',
+          'dawn',
+          'night-watch',
+          'cobalt-arch',
+        ]),
+      );
     },
   );
 
@@ -263,6 +316,105 @@ void main() {
 }
 
 StyleTypeScale scaleOf(String id) => VerseScales.of(id);
+
+void _applyExample() {
+  final example = File('remote_card_styles.example.json').readAsStringSync();
+  CardCatalog.apply(CardStyleOverrides.parse(example));
+}
+
+CardContent _passage(
+  String translation,
+  String bookId,
+  int chapter,
+  int start,
+  int end,
+) {
+  final raw = File('assets/bibles/$translation.json').readAsStringSync();
+  final json = jsonDecode(raw) as Map<String, dynamic>;
+  final book = (json['books'] as List<dynamic>)
+      .cast<Map<String, dynamic>>()
+      .firstWhere((b) => b['id'] == bookId);
+  final verses =
+      (book['chapters'] as List<dynamic>)[chapter - 1] as List<dynamic>;
+  return CardContent(
+    text: verses.sublist(start - 1, end).join(' '),
+    reference: BibleRepository.formatReference(
+      book['name'] as String,
+      VerseRange(
+        bookId: bookId,
+        chapter: chapter,
+        startVerse: start,
+        endVerse: end,
+      ),
+    ),
+    translation: translation.toUpperCase(),
+  );
+}
+
+class _Fill {
+  const _Fill(this.height, this.slot);
+  final double height;
+  final double slot;
+}
+
+/// Verse height at the scaled font, over the well the card actually gives it.
+Future<_Fill> _fullness(
+  WidgetTester tester,
+  CardStyleSpec style,
+  CardContent content,
+  CardShape shape,
+) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Center(
+        child: SizedBox(
+          width: CardShape.designWidth,
+          height: shape.designHeight,
+          child: QuoteCard(
+            content: content,
+            style: style,
+            variant: style.variants.first,
+            shape: shape,
+          ),
+        ),
+      ),
+    ),
+  );
+  final wanted = content.text.trim();
+  final upper = wanted.toUpperCase();
+  RenderParagraph? verse;
+  void visit(RenderObject node) {
+    if (node is RenderParagraph) {
+      final plain = node.text.toPlainText().trim();
+      if (plain == wanted || plain == upper) verse = node;
+    }
+    node.visitChildren(visit);
+  }
+
+  visit(tester.renderObject(find.byType(QuoteCard)));
+  final found = verse;
+  expect(found, isNotNull, reason: style.id);
+  final reading = VerseScales.read(style.id, content.text);
+  final painted = found!.text.style;
+  final rendered = painted?.fontSize ?? reading.size;
+  final factor = rendered == 0 ? 1.0 : reading.size / rendered;
+  final font = (painted ?? const TextStyle()).copyWith(
+    fontSize: reading.size,
+    height: reading.height,
+    letterSpacing: painted?.letterSpacing == null
+        ? null
+        : painted!.letterSpacing! * factor,
+  );
+  final painter = TextPainter(
+    text: TextSpan(text: found.text.toPlainText(), style: font),
+    textAlign: found.textAlign,
+    textDirection: TextDirection.ltr,
+    textScaler: TextScaler.noScaling,
+  )..layout(maxWidth: found.constraints.maxWidth);
+  final height = painter.height;
+  painter.dispose();
+  return _Fill(height, found.constraints.maxHeight);
+}
 
 CardStyleSpec _style(String id) => CardStyleSpec(
   id: id,

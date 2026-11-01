@@ -53,7 +53,7 @@ class _AllStylesScreenState extends State<AllStylesScreen> {
     final c = context.colors;
     final styles = VerseScales.stylesForVerse(
       CardCatalog.styles,
-      widget.content.text,
+      widget.content,
     );
     // The outgoing grid of a filter fade keeps its own filter, so only the
     // current grid can offer a hero.

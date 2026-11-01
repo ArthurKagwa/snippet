@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 
 import '../core/theme/snippet_fonts.dart';
+import 'card_content.dart';
+import 'card_measure.dart';
 import 'card_shape.dart';
 import 'card_style_spec.dart';
 
@@ -64,9 +66,12 @@ class StyleTypeScale {
   /// Whether [text] still fits the story column at this style's minimum.
   bool fitsStory(String text) => _fits(text, storyWidth, storyHeight);
 
-  /// Whether [text] fits the square column at the minimum. Used to check
-  /// that a verse which is not in the longest bucket can still be a square.
+  /// Whether [text] fits the square column at the minimum.
   bool fitsSquare(String text) => _fits(text, squareWidth, squareHeight);
+
+  /// Whether [text] fits an explicit column at this style's minimum.
+  bool fitsBox(String text, double width, double height) =>
+      _fits(text, width, height);
 
   bool _fits(String text, double width, double height) {
     final trimmed = text.trim();
@@ -112,8 +117,9 @@ class VerseReading {
 
 /// Per-style caps and the shared length buckets. This is the place to tune.
 abstract final class VerseScales {
-  /// Line measure shared by every style, so the bucket (and therefore
-  /// "story only") does not change as you swipe.
+  /// Line measure shared by every style, so the bucket (and therefore the
+  /// type size and the gaps) does not change as you swipe. Which export
+  /// sizes are offered is measured per style, not taken from the bucket.
   static const measureWidth = 236.0;
   static const measureSize = 18.0;
   static const measureHeight = 1.2;
@@ -347,28 +353,72 @@ abstract final class VerseScales {
     return VerseBucket.short;
   }
 
-  /// Square and 4:5 stay available until the verse is in the longest bucket.
-  static List<CardShape> exportShapes(String text) =>
-      bucketOf(text) == VerseBucket.longest
-      ? const [CardShape.story]
-      : CardShape.values;
+  /// Shapes whose verse well can hold [content] in [style] at the scaled
+  /// font. A size is left out only when the text overruns that well by
+  /// more than [CardMeasure.slack]. When nothing fits, story stays so the
+  /// export sheet is never empty.
+  static List<CardShape> exportShapes(
+    CardStyleSpec style,
+    CardContent content,
+  ) {
+    final offered = [
+      for (final shape in CardShape.values)
+        if (_offers(style, content, shape)) shape,
+    ];
+    return offered.isEmpty ? const [CardShape.story] : offered;
+  }
 
-  /// The swipe card. Longest verses are shown as the 9:16 story, which is
-  /// also the only export shape for them.
-  static CardShape previewShape(String text) =>
-      bucketOf(text) == VerseBucket.longest
-      ? CardShape.story
-      : CardShape.portrait;
+  /// The swipe card: 4:5 when it fits, otherwise the story, otherwise the
+  /// square. Each style is measured on its own.
+  static CardShape previewShape(CardStyleSpec style, CardContent content) {
+    final shapes = exportShapes(style, content);
+    if (shapes.contains(CardShape.portrait)) return CardShape.portrait;
+    if (shapes.contains(CardShape.story)) return CardShape.story;
+    return CardShape.feed;
+  }
 
-  /// Styles whose minimum still fits [text] in the story frame. When none
-  /// do, the full list is returned so the screen is never empty.
+  static bool _offers(
+    CardStyleSpec style,
+    CardContent content,
+    CardShape shape,
+  ) {
+    final reading = read(style.id, content.text);
+    return CardMeasure.offers(
+      style: style,
+      content: content,
+      shape: shape,
+      fontSize: reading.size,
+      lineHeight: reading.height,
+      fallback: () => _columnFits(style.id, content.text, shape),
+    );
+  }
+
+  /// Column check for a style whose card does not draw the verse (tests,
+  /// and a layout that failed to measure). Uses the declared text column.
+  static bool _columnFits(String id, String text, CardShape shape) {
+    final scale = of(id);
+    final (width, height) = switch (shape) {
+      CardShape.feed => (scale.squareWidth, scale.squareHeight),
+      CardShape.story => (scale.storyWidth, scale.storyHeight),
+      CardShape.portrait => (
+        scale.squareWidth < scale.storyWidth
+            ? scale.squareWidth
+            : scale.storyWidth,
+        (scale.squareHeight + scale.storyHeight) / 2,
+      ),
+    };
+    return scale.fitsBox(text, width, height);
+  }
+
+  /// Styles whose story frame can still hold [content]. When none can,
+  /// the full list is returned so the screen is never empty.
   static List<CardStyleSpec> stylesForVerse(
     List<CardStyleSpec> styles,
-    String text,
+    CardContent content,
   ) {
     final offered = [
       for (final style in styles)
-        if (of(style.id).fitsStory(text)) style,
+        if (_offers(style, content, CardShape.story)) style,
     ];
     return offered.isEmpty ? styles : offered;
   }

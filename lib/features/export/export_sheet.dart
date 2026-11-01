@@ -50,7 +50,8 @@ class ExportSheet extends StatefulWidget {
 class _ExportSheetState extends State<ExportSheet> {
   final GlobalKey _boundaryKey = GlobalKey();
   late final List<CardShape> _shapes = VerseScales.exportShapes(
-    widget.content.text,
+    widget.style,
+    widget.content,
   );
   late CardShape _shape =
       _shapes.contains(Services.of(context).settings.defaultShape)
