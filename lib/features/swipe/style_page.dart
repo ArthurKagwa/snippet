@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../cards/card_content.dart';
+import '../../cards/card_shape.dart';
 import '../../cards/card_style_spec.dart';
 import '../../cards/quote_card.dart';
 import '../../core/theme/snippet_colors.dart';
@@ -16,6 +17,7 @@ class StylePage extends StatelessWidget {
     required this.controller,
     required this.cardSize,
     required this.onVariantChanged,
+    this.shape = CardShape.portrait,
     this.nextStyle,
   });
 
@@ -25,6 +27,7 @@ class StylePage extends StatelessWidget {
   final PageController controller;
   final Size cardSize;
   final ValueChanged<int> onVariantChanged;
+  final CardShape shape;
 
   /// How far the next style's edge shows under the card.
   static const double peekDepth = 6;
@@ -60,9 +63,8 @@ class StylePage extends StatelessWidget {
                 controller: controller,
                 pageSnapping: false,
                 physics: SwipePagePhysics(
-                  parent: ScrollConfiguration.of(
-                    context,
-                  ).getScrollPhysics(context),
+                  parent: ScrollConfiguration.of(context)
+                      .getScrollPhysics(context),
                 ),
                 itemCount: style.variants.length,
                 onPageChanged: onVariantChanged,
@@ -88,6 +90,7 @@ class StylePage extends StatelessWidget {
                         content: content,
                         style: style,
                         variant: style.variants[i],
+                        shape: shape,
                         radius: 4,
                       ),
                     ),

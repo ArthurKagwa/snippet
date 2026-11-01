@@ -27,12 +27,9 @@ class CardContent {
   String get referenceBook => _chapterVerse.firstMatch(_ref)?.group(1) ?? _ref;
 
   /// The chapter and verse: "46:10", "23:1–3". Empty when [reference]
-  /// carries none.
-  ///
-  /// Split out so a card can set it on its own line when the book name is
-  /// too long to keep it alongside (see `ReferenceText`).
-  String get referenceNumbers =>
-      _chapterVerse.firstMatch(_ref)?.group(2) ?? '';
+  /// carries none, so a card can set it on its own line instead of
+  /// dropping it when the book name is long.
+  String get referenceNumbers => _chapterVerse.firstMatch(_ref)?.group(2) ?? '';
 
   String get _ref => reference.trim();
 

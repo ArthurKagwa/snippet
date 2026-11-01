@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'card_palette.dart';
 import 'card_style_spec.dart';
 import 'remote/layout_node.dart';
+import 'verse_scale.dart';
 
 /// Remote changes to the bundled card styles (Remote Config `card_styles`).
 ///
@@ -187,7 +188,9 @@ class StyleOverride {
       tags: tags == null || tags!.isEmpty ? null : tags,
       variants: shown,
       builder: switch (layout) {
-        final l? => (c, p, s) => l.build(LayoutScope(c, p, s)),
+        final l? => (c, p, shape) => l.build(
+          LayoutScope(c, p, shape, VerseScales.read(style.id, c.text)),
+        ),
         null => null,
       },
       hiddenVariants: [

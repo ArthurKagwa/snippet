@@ -4,6 +4,7 @@ import '../../cards/card_content.dart';
 import '../../cards/card_palette.dart';
 import '../../cards/card_style_spec.dart';
 import '../../cards/quote_card.dart';
+import '../../cards/verse_scale.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
 import '../../core/theme/snippet_motion.dart';
@@ -43,27 +44,44 @@ class StyleTile extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            HeroMode(
-              enabled: hero && !SnippetMotion.reduce(context),
-              child: Hero(
-                tag: cardHeroTag(style, variant),
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    boxShadow: selected
-                        ? [
-                            BoxShadow(color: c.lime, spreadRadius: 4.7),
-                            BoxShadow(color: c.black, spreadRadius: 2.7),
-                          ]
-                        : const [],
-                  ),
-                  child: QuoteCard(
-                    content: content,
-                    style: style,
-                    variant: variant,
-                    radius: 8,
-                  ),
-                ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final shape = VerseScales.previewShape(style, content);
+                  final fitted = _fit(constraints.biggest, shape.aspectRatio);
+                  return Align(
+                    alignment: Alignment.topCenter,
+                    child: HeroMode(
+                      enabled: hero && !SnippetMotion.reduce(context),
+                      child: Hero(
+                        tag: cardHeroTag(style, variant),
+                        child: Container(
+                          width: fitted.width,
+                          height: fitted.height,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            boxShadow: selected
+                                ? [
+                                    BoxShadow(color: c.lime, spreadRadius: 4.7),
+                                    BoxShadow(
+                                      color: c.black,
+                                      spreadRadius: 2.7,
+                                    ),
+                                  ]
+                                : const [],
+                          ),
+                          child: QuoteCard(
+                            content: content,
+                            style: style,
+                            variant: variant,
+                            shape: shape,
+                            radius: 8,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 8),
@@ -88,4 +106,15 @@ class StyleTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The largest rectangle of [aspect] (width / height) that fits in [box].
+Size _fit(Size box, double aspect) {
+  var width = box.width;
+  var height = width / aspect;
+  if (height > box.height && box.height.isFinite) {
+    height = box.height;
+    width = height * aspect;
+  }
+  return Size(width, height);
 }

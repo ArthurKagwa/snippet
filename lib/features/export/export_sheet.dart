@@ -7,6 +7,7 @@ import '../../cards/card_content.dart';
 import '../../cards/card_palette.dart';
 import '../../cards/card_shape.dart';
 import '../../cards/card_style_spec.dart';
+import '../../cards/verse_scale.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
 import '../../services/services.dart';
@@ -48,7 +49,14 @@ class ExportSheet extends StatefulWidget {
 
 class _ExportSheetState extends State<ExportSheet> {
   final GlobalKey _boundaryKey = GlobalKey();
-  late CardShape _shape = Services.of(context).settings.defaultShape;
+  late final List<CardShape> _shapes = VerseScales.exportShapes(
+    widget.style,
+    widget.content,
+  );
+  late CardShape _shape =
+      _shapes.contains(Services.of(context).settings.defaultShape)
+      ? Services.of(context).settings.defaultShape
+      : _shapes.first;
   late bool _mark = Services.of(context).settings.showMark;
   late bool _hd = Services.of(context).settings.hdExport;
 
@@ -148,7 +156,7 @@ class _ExportSheetState extends State<ExportSheet> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            for (final s in CardShape.values)
+            for (final s in _shapes)
               Expanded(
                 child: ShapeOption(
                   key: Key('shape-${s.name}'),

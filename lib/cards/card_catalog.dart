@@ -1,5 +1,6 @@
 import 'card_style_overrides.dart';
 import 'card_style_spec.dart';
+import 'verse_scale.dart';
 import 'palettes/graphic_palettes.dart';
 import 'palettes/serif_palettes.dart';
 import 'styles/cobalt_arch_card.dart';
@@ -34,42 +35,72 @@ abstract final class CardCatalog {
       name: 'Vigil',
       tags: {StyleTag.classic},
       variants: SerifPalettes.vigil,
-      builder: (c, p, s) => VigilCard(content: c, palette: p, shape: s),
+      builder: (c, p, s) => VigilCard(
+        content: c,
+        palette: p,
+        shape: s,
+        reading: VerseScales.read('vigil', c.text),
+      ),
     ),
     CardStyleSpec(
       id: 'riso',
       name: 'Riso Loud',
       tags: {StyleTag.bold},
       variants: GraphicPalettes.riso,
-      builder: (c, p, s) => RisoCard(content: c, palette: p, shape: s),
+      builder: (c, p, s) => RisoCard(
+        content: c,
+        palette: p,
+        shape: s,
+        reading: VerseScales.read('riso', c.text),
+      ),
     ),
     CardStyleSpec(
       id: 'dawn',
       name: 'Dawn',
       tags: {StyleTag.soft},
       variants: SerifPalettes.dawn,
-      builder: (c, p, s) => DawnCard(content: c, palette: p, shape: s),
+      builder: (c, p, s) => DawnCard(
+        content: c,
+        palette: p,
+        shape: s,
+        reading: VerseScales.read('dawn', c.text),
+      ),
     ),
     CardStyleSpec(
       id: 'swiss',
       name: 'Swiss',
       tags: {StyleTag.bold, StyleTag.minimal},
       variants: GraphicPalettes.swiss,
-      builder: (c, p, s) => SwissCard(content: c, palette: p, shape: s),
+      builder: (c, p, s) => SwissCard(
+        content: c,
+        palette: p,
+        shape: s,
+        reading: VerseScales.read('swiss', c.text),
+      ),
     ),
     CardStyleSpec(
       id: 'night-watch',
       name: 'Night Watch',
       tags: {StyleTag.classic, StyleTag.minimal},
       variants: SerifPalettes.nightWatch,
-      builder: (c, p, s) => NightWatchCard(content: c, palette: p, shape: s),
+      builder: (c, p, s) => NightWatchCard(
+        content: c,
+        palette: p,
+        shape: s,
+        reading: VerseScales.read('night-watch', c.text),
+      ),
     ),
     CardStyleSpec(
       id: 'cobalt-arch',
       name: 'Cobalt Arch',
       tags: {StyleTag.soft, StyleTag.minimal},
       variants: GraphicPalettes.cobaltArch,
-      builder: (c, p, s) => CobaltArchCard(content: c, palette: p, shape: s),
+      builder: (c, p, s) => CobaltArchCard(
+        content: c,
+        palette: p,
+        shape: s,
+        reading: VerseScales.read('cobalt-arch', c.text),
+      ),
     ),
   ];
 

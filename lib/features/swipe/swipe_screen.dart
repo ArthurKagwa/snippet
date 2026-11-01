@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../cards/card_catalog.dart';
 import '../../cards/card_content.dart';
+import '../../cards/card_style_spec.dart';
+import '../../cards/verse_scale.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../data/bible_models.dart';
 import '../../data/bible_repository.dart';
@@ -36,8 +38,19 @@ class SwipeScreen extends StatefulWidget {
 }
 
 class _SwipeScreenState extends State<SwipeScreen> {
-  final _styles = CardCatalog.styles;
-  late int _styleIndex = CardCatalog.indexOf(widget.initialStyleId);
+  late final List<CardStyleSpec> _styles = VerseScales.stylesForVerse(
+    CardCatalog.styles,
+    CardContent(
+      text: widget.passage.text,
+      reference: widget.passage.reference,
+      translation:
+          BibleRepository.shortNames[widget.passage.translationId] ?? '',
+    ),
+  );
+  late int _styleIndex = VerseScales.indexOfStyle(
+    _styles,
+    widget.initialStyleId,
+  );
   late final PageController _styleController = PageController(
     initialPage: _styleIndex,
   );

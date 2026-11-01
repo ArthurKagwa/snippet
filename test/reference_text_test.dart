@@ -8,7 +8,7 @@ import 'package:snippet/cards/card_content.dart';
 import 'package:snippet/cards/card_shape.dart';
 import 'package:snippet/cards/card_style_overrides.dart';
 import 'package:snippet/cards/quote_card.dart';
-import 'package:snippet/cards/reference_text.dart';
+import 'package:snippet/cards/verse_reference.dart';
 
 /// The long book names, plus a three-digit reference and a range.
 const _references = [
@@ -118,14 +118,17 @@ void main() {
         final drawn = tester
             .widgetList<Text>(
               find.descendant(
-                of: find.byType(ReferenceText),
+                of: find.byType(VerseReference),
                 matching: find.byType(Text),
               ),
             )
             .single
             .data!;
-        expect(drawn.replaceAll('\n', ' '), reference.toUpperCase(),
-            reason: why);
+        expect(
+          drawn.replaceAll('\n', ' '),
+          reference.toUpperCase(),
+          reason: why,
+        );
         expect(drawn.split('\n').length, lessThanOrEqualTo(2), reason: why);
 
         // And nothing on the card is taller than the box holding it, which
@@ -157,10 +160,10 @@ void main() {
             child: SizedBox(
               width: 200,
               height: 40,
-              child: ReferenceText(
-                book: 'SONG OF SOLOMON',
-                numbers: '1:1',
-                maxSize: 31,
+              child: VerseReference(
+                reference: 'Song of Solomon 1:1',
+                upper: true,
+                size: 31,
                 minSize: 8,
                 styleFor: (size) => TextStyle(fontSize: size, height: 1.05),
               ),

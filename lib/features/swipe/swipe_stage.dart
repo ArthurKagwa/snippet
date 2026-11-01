@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../cards/card_content.dart';
+import '../../cards/card_shape.dart';
 import '../../cards/card_style_spec.dart';
+import '../../cards/verse_scale.dart';
 import '../../services/services.dart';
 import 'style_page.dart';
 import 'style_track.dart';
@@ -44,12 +46,20 @@ class SwipeStage extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         final area = box.maxHeight - hintHeight;
-        // Largest 4:5 card that fits the area, with breathing room.
-        final h = math.min(
-          (box.maxWidth - sideMargin * 2) / 0.8,
-          area - StylePage.peekDepth - 12,
+        Size cardSizeFor(CardShape shape) {
+          final aspect = shape.aspectRatio;
+          final h = math.min(
+            (box.maxWidth - sideMargin * 2) / aspect,
+            area - StylePage.peekDepth - 12,
+          );
+          return Size(h * aspect, h);
+        }
+
+        // 4:5 when that shape fits this style; otherwise the shape that does.
+        final currentSize = cardSizeFor(
+          VerseScales.previewShape(styles[styleIndex], content),
         );
-        final cardSize = Size(h * 0.8, h);
+        final h = currentSize.height;
         final cardTop = (area - h - StylePage.peekDepth) / 2;
         return Stack(
           children: [
@@ -66,14 +76,18 @@ class SwipeStage extends StatelessWidget {
                   scrollDirection: Axis.vertical,
                   itemCount: styles.length,
                   onPageChanged: onStyleChanged,
-                  itemBuilder: (context, i) => StylePage(
-                    style: styles[i],
-                    nextStyle: i + 1 < styles.length ? styles[i + 1] : null,
-                    content: content,
-                    controller: variantController(i),
-                    cardSize: cardSize,
-                    onVariantChanged: (v) => onVariantChanged(i, v),
-                  ),
+                  itemBuilder: (context, i) {
+                    final shape = VerseScales.previewShape(styles[i], content);
+                    return StylePage(
+                      style: styles[i],
+                      nextStyle: i + 1 < styles.length ? styles[i + 1] : null,
+                      content: content,
+                      controller: variantController(i),
+                      cardSize: cardSizeFor(shape),
+                      shape: shape,
+                      onVariantChanged: (v) => onVariantChanged(i, v),
+                    );
+                  },
                 ),
               ),
             ),

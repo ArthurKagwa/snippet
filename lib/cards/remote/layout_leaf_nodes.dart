@@ -4,15 +4,17 @@ part of 'layout_node.dart';
 /// "size", "fit", "minSize", "maxLines", "color", "align", "upper",
 /// "height", "tracking", "highlight", "highlightPadding"}`. [text] may use
 /// `{verse}`, `{reference}`, `{translation}` and `{referenceLine}`; `fit`
-/// shrinks to the space given (from `size` down to `minSize`); `tracking`
-/// is in ems. `highlight` is a colour for a marker band behind each line
-/// (a `height` above 1 opens gaps between the bands), grown by
-/// `highlightPadding`; older app builds ignore it.
+/// shrinks to the space given (from `size` down to `minSize`); `maxLines`
+/// caps the line count; `tracking` is in ems. `highlight` is a colour for
+/// a marker band behind each line (a `height` above 1 opens gaps between
+/// the bands), grown by `highlightPadding`; older app builds ignore it.
 ///
-/// A fitted `"{reference}"` is drawn by [ReferenceText], which sets the
-/// chapter:verse on its own line when the book name is too long to keep it
-/// alongside. Give that node room for two lines (a `minHeight` box rather
-/// than a fixed `height`).
+/// A `{reference}` or `{referenceLine}` is drawn by [VerseReference], which
+/// keeps the chapter and verse and sets them on their own line when the
+/// book name is too long to sit beside them. Give that node room for two
+/// lines (a `minHeight` box rather than a fixed `height`). Verse text takes
+/// its size, line height and surrounding gaps from the length bucket when
+/// a reading is in scope.
 final class _TextNode extends LayoutNode {
   _TextNode(Map json)
     : text = json['text'] is String ? json['text'] as String : '{verse}',
@@ -52,21 +54,39 @@ final class _TextNode extends LayoutNode {
     return upper ? s.toUpperCase() : s;
   }
 
-  /// Whether this node is the reference itself, rather than text that
-  /// merely mentions it, so its chapter:verse can take its own line.
-  bool get _isReference => text.trim() == '{reference}';
+  bool get _isVerse {
+    final token = text.trim();
+    return token.isEmpty || token == '{verse}';
+  }
+
+  /// The reference itself, so its chapter and verse can take their own line.
+  bool get _isReference {
+    final token = text.trim();
+    return token == '{reference}' || token == '{referenceLine}';
+  }
 
   @override
   Widget build(LayoutScope s) {
     final ink = (color ?? ColorRef.parse('ink')!).resolve(s.palette);
-    TextStyle styleFor(double size) =>
-        font.style(size, color: ink, height: height, tracking: tracking);
-    if (fit && _isReference && highlight == null) {
-      final book = s.content.referenceBook;
-      return ReferenceText(
-        book: upper ? book.toUpperCase() : book,
-        numbers: s.content.referenceNumbers,
-        maxSize: size,
+    final reading = _isVerse ? s.reading : null;
+    final maxSize = reading?.size ?? size;
+    final floor = math.min(reading?.minSize ?? minSize, maxSize);
+    final lineHeight = reading?.height ?? height;
+    TextStyle styleFor(double fontSize) => font.style(
+      fontSize,
+      color: ink,
+      height: lineHeight,
+      tracking: tracking,
+    );
+    if (_isReference) {
+      final content = s.content;
+      return VerseReference(
+        reference: content.reference,
+        translation: text.trim() == '{referenceLine}'
+            ? content.translation
+            : '',
+        upper: upper,
+        size: size,
         minSize: math.min(minSize, size),
         textAlign: align,
         styleFor: styleFor,
@@ -76,8 +96,8 @@ final class _TextNode extends LayoutNode {
     if (fit) {
       return AutoFitText(
         value,
-        maxSize: size,
-        minSize: math.min(minSize, size),
+        maxSize: maxSize,
+        minSize: floor,
         textAlign: align,
         maxLines: maxLines,
         styleFor: styleFor,

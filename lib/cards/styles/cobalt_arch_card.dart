@@ -5,6 +5,8 @@ import '../auto_fit_text.dart';
 import '../card_content.dart';
 import '../card_palette.dart';
 import '../card_shape.dart';
+import '../verse_reference.dart';
+import '../verse_scale.dart';
 
 /// Cobalt Arch: the app's own motif. A stone arch on colour, lime sun.
 class CobaltArchCard extends StatelessWidget {
@@ -13,11 +15,13 @@ class CobaltArchCard extends StatelessWidget {
     required this.content,
     required this.palette,
     required this.shape,
+    required this.reading,
   });
 
   final CardContent content;
   final CardPalette palette;
   final CardShape shape;
+  final VerseReading reading;
 
   @override
   Widget build(BuildContext context) {
@@ -46,31 +50,33 @@ class CobaltArchCard extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                 ),
-                const SizedBox(height: 22),
+                SizedBox(height: reading.gap),
                 Expanded(
                   child: Center(
                     child: AutoFitText(
                       content.text,
-                      maxSize: 24,
+                      maxSize: reading.size,
+                      minSize: reading.minSize,
                       textAlign: TextAlign.center,
                       styleFor: (s) => SnippetFonts.serifText(
                         s,
                         color: palette.surfaceInk,
-                        height: 1.1,
+                        height: reading.height,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  content.reference.toUpperCase(),
+                SizedBox(height: reading.gap),
+                VerseReference(
+                  reference: content.reference,
+                  upper: true,
+                  size: 9.3,
                   textAlign: TextAlign.center,
-                  textScaler: TextScaler.noScaling,
-                  style: SnippetFonts.display(
-                    9.3,
+                  styleFor: (s) => SnippetFonts.display(
+                    s,
                     weight: FontWeight.w700,
                     color: palette.surfaceInk,
-                    letterSpacing: 1.3,
+                    letterSpacing: s * 0.14,
                   ),
                 ),
               ],

@@ -7,6 +7,8 @@ import '../auto_fit_text.dart';
 import '../card_content.dart';
 import '../card_palette.dart';
 import '../card_shape.dart';
+import '../verse_reference.dart';
+import '../verse_scale.dart';
 import 'halftone_painter.dart';
 
 /// Riso Loud: poster type, heavy outline, tilted reference tag.
@@ -16,11 +18,13 @@ class RisoCard extends StatelessWidget {
     required this.content,
     required this.palette,
     required this.shape,
+    required this.reading,
   });
 
   final CardContent content;
   final CardPalette palette;
   final CardShape shape;
+  final VerseReading reading;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +42,7 @@ class RisoCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 28),
+            padding: EdgeInsets.fromLTRB(24, reading.pad, 24, reading.pad),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -53,30 +57,33 @@ class RisoCard extends StatelessWidget {
                       color: palette.surface,
                       border: Border.all(color: palette.border, width: 1.7),
                     ),
-                    child: Text(
-                      content.referenceLine,
-                      textScaler: TextScaler.noScaling,
-                      style: SnippetFonts.monoText(
-                        9.3,
+                    child: VerseReference(
+                      reference: content.reference,
+                      translation: content.translation,
+                      upper: true,
+                      size: 9.3,
+                      styleFor: (s) => SnippetFonts.monoText(
+                        s,
                         bold: true,
                         color: palette.surfaceInk,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                SizedBox(height: reading.gap),
                 Expanded(
                   child: Align(
                     alignment: Alignment.bottomLeft,
                     child: AutoFitText(
                       content.text.toUpperCase(),
-                      maxSize: 34,
+                      maxSize: reading.size,
+                      minSize: reading.minSize,
                       styleFor: (s) => SnippetFonts.grotesk(
                         s,
                         weight: FontWeight.w800,
                         condensed: true,
                         color: palette.ink,
-                        height: 0.9,
+                        height: reading.height,
                         letterSpacing: -s * 0.021,
                       ),
                     ),
