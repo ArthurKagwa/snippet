@@ -12,3 +12,8 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# fastlane output and Play service account keys
+fastlane/report.xml
+fastlane/README.md
+*service-account*.json

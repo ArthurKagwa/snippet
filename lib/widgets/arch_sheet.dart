@@ -12,6 +12,7 @@ Future<T?> showArchSheet<T>(
   final c = context.colors;
   return showModalBottomSheet<T>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: c.stone.withAlpha(0),

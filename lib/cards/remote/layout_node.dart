@@ -6,6 +6,7 @@ import '../auto_fit_text.dart';
 import '../card_content.dart';
 import '../card_palette.dart';
 import '../card_shape.dart';
+import '../marked_text.dart';
 import '../styles/halftone_painter.dart';
 import 'layout_values.dart';
 

@@ -10,7 +10,10 @@ import 'content_config_service.dart';
 /// [ContentConfigService] backed by Firebase Remote Config.
 ///
 /// Parameters (see remoteconfig.template.json):
-/// - `featured_verses`: JSON array of references, e.g. `["PSA 46:10"]`.
+/// - `verse_calendar`: JSON object of local dates to references, e.g.
+///   `{"2026-10-21": "ISA 40:31"}`.
+/// - `fallback_verse`: reference for days missing from the calendar; empty or
+///   unreadable means Genesis 1:1.
 /// - `announcement`: plain text; empty means none.
 /// - `card_styles`: JSON changes to the card styles; see
 ///   [CardStyleOverrides]. `{}` means as bundled.
@@ -25,7 +28,8 @@ class FirebaseContentConfigService implements ContentConfigService {
   FirebaseContentConfigService({FirebaseRemoteConfig? remoteConfig})
     : _remoteConfig = remoteConfig ?? FirebaseRemoteConfig.instance;
 
-  static const featuredVersesKey = 'featured_verses';
+  static const verseCalendarKey = 'verse_calendar';
+  static const fallbackVerseKey = 'fallback_verse';
   static const announcementKey = 'announcement';
   static const cardStylesKey = 'card_styles';
   static const inviteMessageKey = 'invite_message';
@@ -49,9 +53,11 @@ class FirebaseContentConfigService implements ContentConfigService {
         ),
       );
       await rc.setDefaults({
-        featuredVersesKey: jsonEncode([
-          for (final v in defaultContentConfig.featuredVerses) v.ref,
-        ]),
+        verseCalendarKey: jsonEncode({
+          for (final e in defaultContentConfig.verseCalendar.entries)
+            e.key: e.value.ref,
+        }),
+        fallbackVerseKey: defaultContentConfig.fallbackVerse.ref,
         announcementKey: '',
         cardStylesKey: '{}',
         inviteMessageKey: defaultInviteMessage,
@@ -72,7 +78,8 @@ class FirebaseContentConfigService implements ContentConfigService {
         );
       }
       return parseRemoteContent(
-        featuredVersesJson: rc.getString(featuredVersesKey),
+        verseCalendarJson: rc.getString(verseCalendarKey),
+        fallbackVerse: rc.getString(fallbackVerseKey),
         announcement: rc.getString(announcementKey),
         cardStylesJson: rc.getString(cardStylesKey),
         inviteMessage: rc.getString(inviteMessageKey),
@@ -85,35 +92,40 @@ class FirebaseContentConfigService implements ContentConfigService {
   }
 }
 
-/// Builds a [ContentConfig] from raw parameter values. Unreadable verse
-/// references are skipped; if none are left the bundled verses are used.
+/// Builds a [ContentConfig] from raw parameter values. Calendar entries with
+/// an unreadable date or reference are skipped, leaving that day on the
+/// fallback verse; an empty or unreadable fallback means Genesis 1:1.
 /// An empty invite message or share caption falls back to the bundled one.
 ContentConfig parseRemoteContent({
-  required String featuredVersesJson,
+  required String verseCalendarJson,
+  String fallbackVerse = '',
   required String announcement,
   String cardStylesJson = '',
   String inviteMessage = '',
   String shareCaption = '',
 }) {
-  var verses = <FeaturedVerse>[];
+  final calendar = <String, FeaturedVerse>{};
   try {
-    final decoded = jsonDecode(featuredVersesJson);
-    if (decoded is List) {
-      verses = [
-        for (final ref in decoded.whereType<String>())
-          ?FeaturedVerse.tryParse(ref),
-      ];
+    final decoded = jsonDecode(verseCalendarJson);
+    if (decoded is Map) {
+      for (final MapEntry(:key, :value) in decoded.entries) {
+        final date = key is String ? DateTime.tryParse(key) : null;
+        final verse = value is String ? FeaturedVerse.tryParse(value) : null;
+        if (date == null || verse == null || localDateKey(date) != key) {
+          continue;
+        }
+        calendar[key as String] = verse;
+      }
     }
   } on FormatException catch (e) {
-    debugPrint('Remote Config featured_verses is not JSON: $e');
+    debugPrint('Remote Config verse_calendar is not JSON: $e');
   }
   final text = announcement.trim();
   final invite = inviteMessage.trim();
   final caption = shareCaption.trim();
   return ContentConfig(
-    featuredVerses: verses.isEmpty
-        ? defaultContentConfig.featuredVerses
-        : verses,
+    verseCalendar: calendar,
+    fallbackVerse: FeaturedVerse.tryParse(fallbackVerse) ?? genesisFallback,
     announcement: text.isEmpty ? null : text,
     cardStyles: CardStyleOverrides.parse(cardStylesJson),
     inviteMessage: invite.isEmpty ? defaultInviteMessage : invite,

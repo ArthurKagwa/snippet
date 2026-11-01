@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Resources looked up by name at runtime, which release resource shrinking
+     would otherwise strip: the notification plugin's icon, and the values the
+     google-services plugin generates (Google sign-in reads
+     default_web_client_id as its serverClientId). -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@drawable/ic_notification,@string/default_web_client_id,@string/gcm_defaultSenderId,@string/google_api_key,@string/google_app_id,@string/google_crash_reporting_api_key,@string/google_storage_bucket,@string/project_id" />

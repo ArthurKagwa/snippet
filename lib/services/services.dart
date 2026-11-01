@@ -20,6 +20,7 @@ class Services extends InheritedWidget {
     required this.reminders,
     required this.library,
     required this.settings,
+    this.now = DateTime.now,
     required super.child,
   });
 
@@ -30,6 +31,7 @@ class Services extends InheritedWidget {
   final VerseReminderService reminders;
   final LibraryRepository library;
   final AppSettings settings;
+  final DateTime Function() now;
 
   static Services of(BuildContext context) {
     final s = context.dependOnInheritedWidgetOfExactType<Services>();
@@ -45,5 +47,6 @@ class Services extends InheritedWidget {
       export != old.export ||
       reminders != old.reminders ||
       library != old.library ||
-      settings != old.settings;
+      settings != old.settings ||
+      now != old.now;
 }

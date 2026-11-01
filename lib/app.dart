@@ -25,6 +25,7 @@ class SnippetApp extends StatelessWidget {
     VerseReminderService? reminders,
     JsonStore? store,
     LibraryBackendFactory? libraryBackend,
+    DateTime Function()? now,
   }) : this._(
          bible: bible ?? BibleRepository(),
          auth: auth ?? LocalAuthService(),
@@ -33,6 +34,7 @@ class SnippetApp extends StatelessWidget {
          reminders: reminders ?? const NoopVerseReminderService(),
          store: store ?? FileJsonStore(),
          libraryBackend: libraryBackend,
+         now: now ?? DateTime.now,
          key: key,
        );
 
@@ -45,6 +47,7 @@ class SnippetApp extends StatelessWidget {
     required this.reminders,
     required JsonStore store,
     LibraryBackendFactory? libraryBackend,
+    required this.now,
   }) : library = LibraryRepository(
          auth: auth,
          backendFor: (user) => libraryBackend == null || user.isAnonymous
@@ -60,6 +63,7 @@ class SnippetApp extends StatelessWidget {
   final VerseReminderService reminders;
   final LibraryRepository library;
   final AppSettings settings;
+  final DateTime Function() now;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +75,7 @@ class SnippetApp extends StatelessWidget {
       reminders: reminders,
       library: library,
       settings: settings,
+      now: now,
       child: MaterialApp(
         title: AppTheme.appName,
         debugShowCheckedModeBanner: false,

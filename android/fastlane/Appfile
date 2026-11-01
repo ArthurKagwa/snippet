@@ -1,0 +1,3 @@
+# Play service account key: kept outside the repo, never committed.
+json_key_file(ENV["SNIPPET_PLAY_JSON_KEY"] || File.expand_path("~/.config/snippet/play-service-account.json"))
+package_name("com.arthur.snippet")

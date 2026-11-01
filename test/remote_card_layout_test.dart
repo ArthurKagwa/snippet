@@ -7,6 +7,7 @@ import 'package:snippet/cards/card_content.dart';
 import 'package:snippet/cards/card_palette.dart';
 import 'package:snippet/cards/card_shape.dart';
 import 'package:snippet/cards/card_style_overrides.dart';
+import 'package:snippet/cards/marked_text.dart';
 import 'package:snippet/cards/quote_card.dart';
 import 'package:snippet/cards/remote/layout_values.dart';
 
@@ -29,10 +30,10 @@ void main() {
 
   final example = File('remote_card_styles.example.json').readAsStringSync();
 
-  test('the example adds Psalter and Marquee in front', () {
+  test('the example adds Psalter, Marquee and Highlight in front', () {
     CardCatalog.apply(CardStyleOverrides.parse(example));
     final styles = CardCatalog.styles;
-    expect(styles.length, CardCatalog.bundled.length + 2);
+    expect(styles.length, CardCatalog.bundled.length + 3);
     expect(styles[0].name, 'Psalter');
     expect(
       [for (final v in styles[0].variants) v.id],
@@ -40,13 +41,14 @@ void main() {
     );
     expect(styles[1].name, 'Marquee');
     expect(styles[1].tags.map((t) => t.name), ['bold']);
+    expect(styles[2].name, 'Highlight');
   });
 
   testWidgets('example styles draw in every shape and colourway', (
     tester,
   ) async {
     CardCatalog.apply(CardStyleOverrides.parse(example));
-    for (final id in ['psalter', 'marquee']) {
+    for (final id in ['psalter', 'marquee', 'highlight']) {
       final style = CardCatalog.byId(id);
       for (final variant in style.variants) {
         for (final shape in CardShape.values) {
@@ -103,6 +105,36 @@ void main() {
     final swiss = CardCatalog.byId('swiss');
     expect(swiss.builder, isNot(same(bundled.builder)));
     expect(swiss.variants, bundled.variants);
+  });
+
+  testWidgets('a text highlight draws a marker band per line', (tester) async {
+    Future<void> pump(String text) async {
+      CardCatalog.apply(
+        CardStyleOverrides.parse(
+          _withStyle('{"type": "text", "size": 14, "height": 1.8, $text}'),
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: QuoteCard(
+            content: _content,
+            style: CardCatalog.byId('new'),
+            variant: CardCatalog.byId('new').variants.single,
+          ),
+        ),
+      );
+    }
+
+    await pump('"highlight": "accent@0.4", "highlightPadding": 3');
+    expect(tester.takeException(), isNull);
+    expect(find.byType(MarkedText), findsOneWidget);
+
+    await pump('"fit": true, "highlight": "#FADCE0"');
+    expect(tester.takeException(), isNull);
+    expect(find.byType(MarkedText), findsOneWidget);
+
+    await pump('"highlight": "nope"');
+    expect(find.byType(MarkedText), findsNothing);
   });
 
   test('colour refs read palette slots, hex and opacity', () {

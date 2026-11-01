@@ -20,7 +20,7 @@ SavedCard _card(String id) => SavedCard(
 );
 
 /// Anonymous sign-in that can be upgraded to Google, keeping the uid.
-class _LinkingAuth implements AuthService {
+class _LinkingAuth extends LocalAuthService {
   final _changes = StreamController<AppUser?>.broadcast();
   AppUser? _user;
 

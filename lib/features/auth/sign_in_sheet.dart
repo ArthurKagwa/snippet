@@ -9,18 +9,21 @@ import '../../widgets/icons/google_logo.dart';
 import '../../widgets/overlay_toast.dart';
 import '../../widgets/pill_button.dart';
 import 'email_sign_in_form.dart';
+import 'email_verification_step.dart';
 
 /// Returns true when a user is signed in, showing the optional sign-in
 /// sheet first if needed. "Not now" returns false and keeps current work.
 Future<bool> ensureSignedIn(BuildContext context) async {
   final auth = Services.of(context).auth;
-  if (auth.currentUser != null) return true;
+  final user = auth.currentUser;
+  if (user != null && !user.requiresEmailVerification) return true;
   final ok = await showArchSheet<bool>(
     context,
     padding: const EdgeInsets.fromLTRB(28, 44, 28, 12),
     builder: (_) => const SignInSheet(),
   );
-  return ok ?? false;
+  final current = auth.currentUser;
+  return (ok ?? false) && current != null && !current.requiresEmailVerification;
 }
 
 /// "Keep it in your library": shown when saving while signed out.
@@ -40,12 +43,21 @@ class _SignInSheetState extends State<SignInSheet> {
   /// Showing the email and password form instead of the other options.
   bool _email = false;
 
+  void _complete() {
+    if (!mounted) return;
+    final user = Services.of(context).auth.currentUser;
+    if (user == null || user.requiresEmailVerification) {
+      setState(() {});
+    } else {
+      Navigator.of(context).pop(true);
+    }
+  }
+
   Future<void> _signIn(String id, Future<bool> Function() attempt) async {
     if (_busy) return;
-    final navigator = Navigator.of(context);
     setState(() => _running = id);
     try {
-      if (await attempt()) navigator.pop(true);
+      if (await attempt()) _complete();
     } catch (e) {
       debugPrint('Sign-in failed: $e');
       if (mounted) showOverlayToast(context, 'Could not sign in. Try again.');
@@ -71,6 +83,14 @@ class _SignInSheetState extends State<SignInSheet> {
   Widget build(BuildContext context) {
     final c = context.colors;
     final auth = Services.of(context).auth;
+    final user = auth.currentUser;
+    if (user != null && user.requiresEmailVerification) {
+      return EmailVerificationStep(
+        user: user,
+        onVerified: _complete,
+        onSignedOut: () => setState(() => _email = false),
+      );
+    }
     return Column(
       children: [
         Container(
@@ -100,7 +120,7 @@ class _SignInSheetState extends State<SignInSheet> {
         SizedBox(height: _email ? 24 : 40),
         if (_email)
           EmailSignInForm(
-            onSignedIn: () => Navigator.of(context).pop(true),
+            onSignedIn: _complete,
             onBack: auth.supportsGoogleSignIn
                 ? () => setState(() => _email = false)
                 : null,

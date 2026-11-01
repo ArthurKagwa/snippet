@@ -69,3 +69,7 @@ local.properties
 *.pem
 api_keys.*
 secrets.*
+
+# Play / Google Cloud service account keys
+*service-account*.json
+snippet-79ab2-*.json

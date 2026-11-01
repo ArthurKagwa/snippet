@@ -2,9 +2,12 @@ part of 'layout_node.dart';
 
 /// `{"type": "text", "text", "font", "weight", "italic", "condensed",
 /// "size", "fit", "minSize", "color", "align", "upper", "height",
-/// "tracking"}`. [text] may use `{verse}`, `{reference}`,
-/// `{translation}` and `{referenceLine}`; `fit` shrinks to the space
-/// given (from `size` down to `minSize`); `tracking` is in ems.
+/// "tracking", "highlight", "highlightPadding"}`. [text] may use
+/// `{verse}`, `{reference}`, `{translation}` and `{referenceLine}`; `fit`
+/// shrinks to the space given (from `size` down to `minSize`); `tracking`
+/// is in ems. `highlight` is a colour for a marker band behind each line
+/// (a `height` above 1 opens gaps between the bands), grown by
+/// `highlightPadding`; older app builds ignore it.
 final class _TextNode extends LayoutNode {
   _TextNode(Map json)
     : text = json['text'] is String ? json['text'] as String : '{verse}',
@@ -16,7 +19,9 @@ final class _TextNode extends LayoutNode {
       align = textAlignOf(json['align']),
       upper = json['upper'] == true,
       height = numberOf(json['height']),
-      tracking = numberOf(json['tracking']);
+      tracking = numberOf(json['tracking']),
+      highlight = ColorRef.parse(json['highlight']),
+      highlightPadding = insetsOf(json['highlightPadding']);
 
   final String text;
   final FontRef font;
@@ -28,6 +33,8 @@ final class _TextNode extends LayoutNode {
   final bool upper;
   final double? height;
   final double? tracking;
+  final ColorRef? highlight;
+  final EdgeInsets highlightPadding;
 
   String _fill(CardContent c) {
     final s = text
@@ -51,6 +58,17 @@ final class _TextNode extends LayoutNode {
         minSize: math.min(minSize, size),
         textAlign: align,
         styleFor: styleFor,
+        highlight: highlight?.resolve(s.palette),
+        highlightPadding: highlightPadding,
+      );
+    }
+    if (highlight case final band?) {
+      return MarkedText(
+        value,
+        style: styleFor(size),
+        color: band.resolve(s.palette),
+        padding: highlightPadding,
+        textAlign: align,
       );
     }
     return Text(

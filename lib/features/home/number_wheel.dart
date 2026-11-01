@@ -39,7 +39,9 @@ class _NumberWheelState extends State<NumberWheel> {
     final target = widget.value - widget.min;
     if (_controller.hasClients && _controller.selectedItem != target) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && _controller.hasClients) _controller.jumpToItem(target);
+        if (mounted && _controller.hasClients) {
+          _controller.jumpToItem(widget.value - widget.min);
+        }
       });
     }
   }
@@ -85,7 +87,12 @@ class _NumberWheelState extends State<NumberWheel> {
                 diameterRatio: 2.4,
                 perspective: 0.002,
                 physics: const FixedExtentScrollPhysics(),
-                onSelectedItemChanged: (i) => widget.onChanged(widget.min + i),
+                onSelectedItemChanged: (i) {
+                  final value = widget.min + i;
+                  // Programmatic jumps already reflect the parent's selection.
+                  // Sending them back would reset the selected verse range.
+                  if (value != widget.value) widget.onChanged(value);
+                },
                 childDelegate: ListWheelChildBuilderDelegate(
                   childCount: count,
                   builder: (context, i) {

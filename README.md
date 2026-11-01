@@ -57,7 +57,7 @@ lib/
     auth_service.dart             AuthService + LocalAuthService (offline fallback)
     firebase_auth_service.dart    Firebase email/password + Google sign-in
     content_config_service.dart   ContentConfigService + LocalContentConfigService (bundled defaults)
-    firebase_content_config_service.dart  Remote Config: featured_verses, announcement
+    firebase_content_config_service.dart  Remote Config: verse_calendar, fallback_verse, announcement
     export_service.dart           PNG capture, save to gallery (gal), share (share_plus)
     services.dart                 InheritedWidget container for the services above
 assets/bibles/{kjv,web}.json      66 books; {id,name,license,books:[{id,name,chapters:[[verse,...]]}]}
@@ -122,9 +122,11 @@ The app runs fully offline if Firebase is unavailable (local auth, cards kept on
 
 - Services used: Authentication (email/password, Google), Firestore (Library), Remote Config.
 - Remote Config parameters live in `remoteconfig.template.json`:
-  `featured_verses` (JSON array of refs like `"PSA 46:10"`, `"LAM 3:22-23"`) and `announcement` (text, empty = none).
+  `verse_calendar` (JSON object of the phone's local date to a ref, e.g. `{"2026-10-21": "ISA 40:31", "2026-10-22": "LAM 3:22-23"}`),
+  `fallback_verse` (ref used for any day missing from the calendar; empty or unreadable = `GEN 1:1`) and `announcement` (text, empty = none).
   Edit them in the console, or `firebase deploy --only remoteconfig` (this replaces the console template).
-  New values reach users on their next launch; bad refs are skipped, and an empty list falls back to the bundled verses.
+  New values reach users on their next launch, which also reschedules the next 14 days of reminders from the calendar.
+  Entries with a bad date or ref are skipped, so that day uses the fallback.
 - Security rules are in `firestore.rules`.
 - Add your debug and release SHA-1/SHA-256 to the Android app for Google sign-in.
 

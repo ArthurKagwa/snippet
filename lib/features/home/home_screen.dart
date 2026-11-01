@@ -6,19 +6,20 @@ import '../../cards/card_catalog.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../data/app_settings.dart';
 import '../../data/bible_models.dart';
+import '../../services/content_config_service.dart';
+import '../../services/daily_verse.dart';
 import '../../services/services.dart';
 import '../../services/verse_reminder_sync.dart';
-import '../../widgets/cobalt_header.dart';
-import '../../widgets/profile_button.dart';
-import '../../widgets/snippet_wordmark.dart';
-import '../profile/profile_screen.dart';
+import '../../services/verse_reminder_service.dart';
 import '../shell/shell_controller.dart';
-import 'announcement_banner.dart';
 import 'book_picker_sheet.dart';
+import 'daily_verse_listener.dart';
+import 'home_greeting.dart';
+import 'home_header.dart';
 import 'verse_of_day.dart';
 import 'verse_picker_panel.dart';
 
-/// Home: verse of the day on top, the verse picker in the stone panel.
+/// Home selects today's verse, falling back to Genesis 1:1 when unavailable.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -29,18 +30,20 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _translationId = 'kjv';
   List<Book> _books = const [];
-  VerseRange _range = const VerseRange(
-    bookId: 'PSA',
-    chapter: 46,
-    startVerse: 10,
-  );
+  VerseRange _range = genesisFallback.range;
   Passage? _passage;
   Passage? _votd;
-  String _votdPull = '';
   String? _announcement;
   bool _loading = true;
   Object? _error;
   bool _started = false;
+  DateTime _today = DateUtils.dateOnly(DateTime.now());
+  int _request = 0;
+  ShellController? _shell;
+
+  /// Today's tapped notification; it was scheduled from an older config, so
+  /// it outranks a calendar edit made since, until the day ends.
+  ReminderVerse? _tapped;
 
   Services get _services => Services.of(context);
 
@@ -49,6 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.didChangeDependencies();
     if (!_started) {
       _started = true;
+      _shell = ShellScope.read(context)..addListener(_followSwipe);
       _init();
     }
   }
@@ -57,49 +61,104 @@ class _HomeScreenState extends State<HomeScreen> {
     final s = _services;
     try {
       await s.settings.load();
+      if (!mounted) return;
       _translationId = s.settings.defaultTranslationId;
-      await _loadTranslation();
-      unawaited(
-        syncVerseReminders(
-          reminders: s.reminders,
-          settings: s.settings,
-          contentConfig: s.contentConfig,
-          bible: s.bible,
-        ),
-      );
+      final launch = await s.reminders.launchVerse();
+      if (!mounted) return;
+      await _rememberNotification(launch);
+      await _loadTranslation(selectDaily: launch == null || _isToday(launch));
+      syncAppVerseReminders(_services);
       if (mounted) setState(() => _loading = false);
     } catch (e) {
       if (mounted) setState(() => _error = e);
     }
   }
 
-  Future<void> _loadTranslation() async {
+  @override
+  void dispose() {
+    _shell?.removeListener(_followSwipe);
+    super.dispose();
+  }
+
+  bool _isToday(ReminderVerse verse) =>
+      DateUtils.isSameDay(verse.day, _services.now());
+
+  Future<void> _rememberNotification(ReminderVerse? verse) async {
     final s = _services;
-    final books = await s.bible.books(_translationId);
+    if (verse == null ||
+        !s.bible.translationIds.contains(verse.translationId)) {
+      return;
+    }
+    final passage = await s.bible.passage(verse.translationId, verse.range);
+    if (passage == null || !mounted) return;
+    if (_isToday(verse)) _tapped = verse;
+    _range = passage.range;
+    _translationId = passage.translationId;
+  }
+
+  Future<void> _onNotification(ReminderVerse? verse) async {
+    _shell!.select(ShellTab.home);
+    await _rememberNotification(verse);
+    if (mounted) {
+      await _loadTranslation(selectDaily: verse == null || _isToday(verse));
+    }
+  }
+
+  /// Rolls Home to the new local day; same-day ticks and resumes are no-ops so
+  /// a version picked in Styles is not overwritten.
+  void _refreshDay() {
+    if (_loading || _error != null) return;
+    if (DateUtils.isSameDay(_today, _services.now())) return;
+    final shared = _shell!.passage;
+    final onDaily = (shared?.range ?? _range) == _votd?.range;
+    if (shared != null) {
+      _range = shared.range;
+      _translationId = shared.translationId;
+    }
+    _loadTranslation(selectDaily: onDaily);
+    syncAppVerseReminders(_services);
+  }
+
+  void _followSwipe() {
+    final p = _shell!.passage;
+    if (_shell!.tab != ShellTab.home || p == null || _loading) return;
+    if (p.range == _range && p.translationId == _translationId) return;
+    _range = p.range;
+    _translationId = p.translationId;
+    _loadTranslation();
+  }
+
+  Future<void> _loadTranslation({bool selectDaily = false}) async {
+    final request = ++_request;
+    final s = _services;
+    final id = _translationId;
+    final day = DateUtils.dateOnly(s.now());
+    final books = await s.bible.books(id);
     final config = await s.contentConfig.load();
     CardCatalog.apply(config.cardStyles);
-    final passage = await s.bible.passage(_translationId, _range);
-    Passage? votd;
-    var pull = '';
-    final featured = config.verseOfTheDay(DateTime.now());
-    if (featured != null) {
-      final r = featured.range;
-      votd = await s.bible.passage(_translationId, r);
-      final last = await s.bible.passage(
-        _translationId,
-        r.copyWith(startVerse: r.endVerse),
-      );
-      pull = last?.text ?? votd?.text ?? '';
-    }
-    if (!mounted) return;
-    _share(passage);
+    final tapped = _tapped;
+    final votd =
+        (tapped != null && DateUtils.isSameDay(tapped.day, day)
+            ? await s.bible.passage(id, tapped.range)
+            : null) ??
+        await loadDailyVerse(
+          bible: s.bible,
+          config: config,
+          translationId: id,
+          day: day,
+        );
+    final range = selectDaily ? votd?.range ?? genesisFallback.range : _range;
+    final passage = await s.bible.passage(id, range);
+    if (!mounted || request != _request) return;
     setState(() {
+      _today = day;
+      _range = range;
       _books = books;
       _passage = passage;
       _votd = votd;
-      _votdPull = pull;
       _announcement = config.announcement;
     });
+    _share(passage);
   }
 
   Book get _book => _books.firstWhere((b) => b.id == _range.bookId);
@@ -119,10 +178,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _setRange(VerseRange range) async {
+    final request = ++_request;
     final r = _clamp(range);
     setState(() => _range = r);
     final p = await _services.bible.passage(_translationId, r);
-    if (mounted && r == _range) {
+    if (mounted && request == _request) {
       _share(p);
       setState(() => _passage = p);
     }
@@ -131,7 +191,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _setTranslation(String id) async {
     if (id == _translationId) return;
     setState(() => _translationId = id);
+    _services.settings.defaultTranslationId = id;
     await _loadTranslation();
+    syncAppVerseReminders(_services);
   }
 
   Future<void> _pickBook() async {
@@ -157,78 +219,49 @@ class _HomeScreenState extends State<HomeScreen> {
     if (p != null) ShellScope.read(context).setPassage(p);
   }
 
-  /// Returns the route's Future so the button ignores a double tap.
-  Future<void> _openProfile() {
-    final navigator = Navigator.of(context);
-    final shell = ShellScope.read(context);
-    return navigator.push(
-      MaterialPageRoute<void>(
-        builder: (_) =>
-            ProfileScreen(onShowSaved: () => shell.select(ShellTab.saved)),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
-    return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          CobaltHeader(
-            child: Row(
-              children: [
-                const SnippetWordmark(),
-                const Spacer(),
-                ProfileButton(onPressed: _openProfile),
-              ],
-            ),
-          ),
-          if (_error != null)
-            Expanded(
-              child: Center(
-                child: Text(
-                  'Could not load Bible text: $_error',
-                  style: TextStyle(color: c.white),
+    return DailyVerseListener(
+      onRefresh: _refreshDay,
+      onNotification: _onNotification,
+      child: Scaffold(
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            HomeHeader(announcement: _announcement),
+            if (_error != null)
+              Expanded(
+                child: Center(
+                  child: Text(
+                    'Could not load Bible text: $_error',
+                    style: TextStyle(color: c.white),
+                  ),
                 ),
+              )
+            else if (_loading)
+              Expanded(
+                child: Center(child: CircularProgressIndicator(color: c.lime)),
+              )
+            else ...[
+              const Padding(
+                padding: EdgeInsets.fromLTRB(24, 20, 24, 0),
+                child: HomeGreeting(),
               ),
-            )
-          else if (_loading)
-            Expanded(
-              child: Center(child: CircularProgressIndicator(color: c.lime)),
-            )
-          else ...[
-            _announcementBanner(),
-            if (_votd != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 22),
-                child: VerseOfDay(
-                  passage: _votd!,
-                  pullQuote: _votdPull,
-                  onSwipe: () => _openSwipe(_votd!),
+              if (_votd != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
+                  child: VerseOfDay(
+                    passage: _votd!,
+                    day: _today,
+                    onSelect: () => _setRange(_votd!.range),
+                  ),
                 ),
-              ),
-            Expanded(child: _panel()),
+              Expanded(child: _panel()),
+            ],
           ],
-        ],
+        ),
       ),
-    );
-  }
-
-  Widget _announcementBanner() {
-    final settings = _services.settings;
-    return ListenableBuilder(
-      listenable: settings,
-      builder: (context, _) {
-        final text = _announcement;
-        return AnnouncementBanner(
-          message: text != null && text != settings.dismissedAnnouncement
-              ? text
-              : null,
-          onDismiss: () => settings.dismissedAnnouncement = text,
-        );
-      },
     );
   }
 
