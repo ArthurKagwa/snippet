@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contribute · Snippet Verses</title>
+  <meta name="description" content="Help build Snippet, a free, open source Bible verse card app. Test on Android, report bugs, or contribute code and design.">
+  <link rel="canonical" href="https://snippetverses.app/contribute">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://snippetverses.app/contribute">
+  <meta property="og:title" content="Contribute · Snippet Verses">
+  <meta property="og:description" content="Test the app, report a bug, or help with code and design. Snippet is free and open source.">
+  <meta property="og:image" content="https://snippetverses.app/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=20261024">
+</head>
+<body>
+  <svg class="sym-sprite" aria-hidden="true" focusable="false">
+    <symbol id="mark" viewBox="0 0 64 80">
+      <path style="fill: var(--stone)" d="M4 80 V32 A28 28 0 0 1 60 32 V80 Z"/>
+      <circle style="fill: var(--lime)" cx="32" cy="32" r="13"/>
+    </symbol>
+    <symbol id="olive" viewBox="0 0 120 120">
+      <path style="fill: none; stroke: var(--s1); stroke-width: 5; stroke-linecap: round" d="M16 104 C40 84 70 54 104 18"/>
+      <ellipse style="fill: var(--s1)" cx="30" cy="80" rx="15" ry="6.5" transform="rotate(-75 30 80)"/>
+      <ellipse style="fill: var(--s1)" cx="44" cy="96" rx="15" ry="6.5" transform="rotate(-15 44 96)"/>
+      <ellipse style="fill: var(--s1)" cx="52" cy="56" rx="15" ry="6.5" transform="rotate(-75 52 56)"/>
+      <ellipse style="fill: var(--s1)" cx="70" cy="72" rx="15" ry="6.5" transform="rotate(-15 70 72)"/>
+      <ellipse style="fill: var(--s1)" cx="76" cy="30" rx="15" ry="6.5" transform="rotate(-75 76 30)"/>
+      <ellipse style="fill: var(--s1)" cx="94" cy="46" rx="15" ry="6.5" transform="rotate(-15 94 46)"/>
+      <circle style="fill: var(--s2)" cx="62" cy="58" r="7"/>
+      <circle style="fill: var(--s2)" cx="86" cy="34" r="7"/>
+    </symbol>
+  </svg>
+
+  <header class="bar">
+    <div class="wrap">
+      <a class="brand" href="/" aria-label="Snippet Verses home">
+        <svg aria-hidden="true"><use href="#mark"/></svg>
+        <span class="wordmark">snippet</span>
+      </a>
+      <nav aria-label="Main">
+        <ul class="nav">
+          <li><a href="/">Home</a></li>
+          <li><a href="/contribute" aria-current="page">Contribute</a></li>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/delete-account">Delete account</a></li>
+        </ul>
+      </nav>
+      <a class="cta" href="/testers">Join the test</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <main>
+      <div class="doc-wrap">
+        <span class="deco d-doc" aria-hidden="true"><svg><use href="#olive"/></svg></span>
+        <header class="doc-head">
+          <span class="pill">OPEN SOURCE · MIT</span>
+          <h1>Help build Snippet.</h1>
+          <p class="sub">Test the app, report a bug, or help with code and design.</p>
+          <div class="actions">
+            <a class="cta" href="https://github.com/ArthurKagwa/snippet">View on GitHub</a>
+            <a class="btn ghost" href="https://github.com/ArthurKagwa/snippet/issues">Browse issues</a>
+          </div>
+        </header>
+      </div>
+
+      <article class="doc" aria-label="Ways to contribute">
+        <h2>Test on Android</h2>
+        <p>Make a few cards. Try saving and sharing. Tell us what works and what needs fixing.</p>
+        <p><a href="/testers">Join the Android test</a>.</p>
+
+        <h2>Report a bug or share an idea</h2>
+        <p>Tell us what happened, what you expected, and how to repeat it. Include your phone model and a screenshot if you can.</p>
+        <p><a href="https://github.com/ArthurKagwa/snippet/issues/new">Open an issue</a>.</p>
+
+        <h2>Help with code and design</h2>
+        <p>Fix a bug, improve a card style, or make the docs clearer. For bigger changes, open an issue first so we can talk it through.</p>
+        <ol class="steps-list">
+          <li>Fork the repo and create a branch from <code>main</code>. Follow the <a href="https://github.com/ArthurKagwa/snippet#develop">setup guide</a>.</li>
+          <li>Keep changes small. Use theme tokens for colours and one component per file. Keep files under 300 lines.</li>
+          <li>Run <code>flutter analyze</code> and <code>flutter test</code>, then open a pull request. Add screenshots for visual changes.</li>
+        </ol>
+
+        <h2>New to contributing?</h2>
+        <p>Start with feedback or a small fix. Questions are welcome at <a href="mailto:support@snippetverses.app">support@snippetverses.app</a>.</p>
+        <p>Snippet is free and open source under the <a href="https://github.com/ArthurKagwa/snippet/blob/main/LICENSE">MIT license</a>.</p>
+      </article>
+    </main>
+
+    <footer class="site">
+      <a class="brand" href="/" aria-label="Snippet Verses home">
+        <svg aria-hidden="true"><use href="#mark"/></svg>
+        <span class="wordmark">snippet</span>
+      </a>
+      <a href="/testers">Join the test</a>
+      <a href="https://github.com/ArthurKagwa/snippet">GitHub</a>
+      <a href="/privacy">Privacy policy</a>
+      <a href="/delete-account">Delete your account</a>
+      <a href="mailto:support@snippetverses.app">support@snippetverses.app</a>
+    </footer>
+  </div>
+</body>
+</html>

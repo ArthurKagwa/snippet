@@ -1,19 +1,27 @@
 part of 'layout_node.dart';
 
 /// `{"type": "text", "text", "font", "weight", "italic", "condensed",
-/// "size", "fit", "minSize", "color", "align", "upper", "height",
-/// "tracking", "highlight", "highlightPadding"}`. [text] may use
+/// "size", "fit", "minSize", "maxLines", "color", "align", "upper",
+/// "height", "tracking", "highlight", "highlightPadding"}`. [text] may use
 /// `{verse}`, `{reference}`, `{translation}` and `{referenceLine}`; `fit`
-/// shrinks to the space given (from `size` down to `minSize`); `tracking`
-/// is in ems. `highlight` is a colour for a marker band behind each line
-/// (a `height` above 1 opens gaps between the bands), grown by
-/// `highlightPadding`; older app builds ignore it.
+/// shrinks to the space given (from `size` down to `minSize`); `maxLines`
+/// caps the line count; `tracking` is in ems. `highlight` is a colour for
+/// a marker band behind each line (a `height` above 1 opens gaps between
+/// the bands), grown by `highlightPadding`; older app builds ignore it.
+///
+/// A `{reference}` or `{referenceLine}` is drawn by [VerseReference], which
+/// keeps the chapter and verse and sets them on their own line when the
+/// book name is too long to sit beside them. Give that node room for two
+/// lines (a `minHeight` box rather than a fixed `height`). Verse text takes
+/// its size, line height and surrounding gaps from the length bucket when
+/// a reading is in scope.
 final class _TextNode extends LayoutNode {
   _TextNode(Map json)
     : text = json['text'] is String ? json['text'] as String : '{verse}',
       font = FontRef.fromJson(json),
       size = numberOf(json['size']) ?? 12,
       minSize = numberOf(json['minSize']) ?? 6,
+      maxLines = numberOf(json['maxLines'])?.round(),
       fit = json['fit'] == true,
       color = ColorRef.parse(json['color']),
       align = textAlignOf(json['align']),
@@ -27,6 +35,7 @@ final class _TextNode extends LayoutNode {
   final FontRef font;
   final double size;
   final double minSize;
+  final int? maxLines;
   final bool fit;
   final ColorRef? color;
   final TextAlign align;
@@ -90,6 +99,7 @@ final class _TextNode extends LayoutNode {
         maxSize: maxSize,
         minSize: floor,
         textAlign: align,
+        maxLines: maxLines,
         styleFor: styleFor,
         highlight: highlight?.resolve(s.palette),
         highlightPadding: highlightPadding,
@@ -102,12 +112,14 @@ final class _TextNode extends LayoutNode {
         color: band.resolve(s.palette),
         padding: highlightPadding,
         textAlign: align,
+        maxLines: maxLines,
       );
     }
     return Text(
       value,
       textAlign: align,
       textScaler: TextScaler.noScaling,
+      maxLines: maxLines,
       style: styleFor(size),
     );
   }

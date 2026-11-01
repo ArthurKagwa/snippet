@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'card_content.dart';
+import 'text_fit.dart';
 
 /// A verse reference that keeps every character.
 ///
@@ -44,45 +45,21 @@ class VerseReference extends StatelessWidget {
     ].join(' · ');
     final oneLine = tail.isEmpty ? book : '$book $tail';
 
-    TextStyle painted(double fontSize) {
-      final style = styleFor(fontSize);
-      if (!style.inherit) return style;
-      return DefaultTextStyle.of(context).style.merge(style);
-    }
+    TextStyle painted(double fontSize) =>
+        paintedStyle(context, styleFor(fontSize));
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        double fit(String text, {int? maxLines}) {
-          bool fits(double fontSize) {
-            final painter = TextPainter(
-              text: TextSpan(text: text, style: painted(fontSize)),
-              textAlign: textAlign,
-              textDirection: direction,
-              textScaler: TextScaler.noScaling,
-              maxLines: maxLines,
-            )..layout(maxWidth: width);
-            final ok =
-                !painter.didExceedMaxLines &&
-                (!constraints.hasBoundedHeight ||
-                    painter.height <= constraints.maxHeight);
-            painter.dispose();
-            return ok;
-          }
-
-          if (!width.isFinite || fits(size)) return size;
-          var lo = minSize;
-          var hi = size;
-          for (var i = 0; i < 12; i++) {
-            final mid = (lo + hi) / 2;
-            if (fits(mid)) {
-              lo = mid;
-            } else {
-              hi = mid;
-            }
-          }
-          return lo;
-        }
+        double fit(String text, {int? maxLines}) => fitTextSize(
+          text,
+          styleFor: painted,
+          box: constraints,
+          maxSize: size,
+          minSize: minSize,
+          textAlign: textAlign,
+          direction: direction,
+          maxLines: maxLines,
+        );
 
         var text = oneLine;
         var fontSize = fit(oneLine, maxLines: 1);

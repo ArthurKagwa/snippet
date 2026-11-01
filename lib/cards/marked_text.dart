@@ -14,6 +14,7 @@ class MarkedText extends StatelessWidget {
     required this.color,
     this.padding = EdgeInsets.zero,
     this.textAlign = TextAlign.start,
+    this.maxLines,
   });
 
   final String text;
@@ -21,6 +22,7 @@ class MarkedText extends StatelessWidget {
   final Color color;
   final EdgeInsets padding;
   final TextAlign textAlign;
+  final int? maxLines;
 
   @override
   Widget build(BuildContext context) => CustomPaint(
@@ -31,11 +33,13 @@ class MarkedText extends StatelessWidget {
       padding: padding,
       textAlign: textAlign,
       direction: Directionality.of(context),
+      maxLines: maxLines,
     ),
     child: Text(
       text,
       textAlign: textAlign,
       textScaler: TextScaler.noScaling,
+      maxLines: maxLines,
       style: style,
     ),
   );
@@ -49,6 +53,7 @@ class _BandPainter extends CustomPainter {
     required this.padding,
     required this.textAlign,
     required this.direction,
+    this.maxLines,
   });
 
   final String text;
@@ -57,6 +62,7 @@ class _BandPainter extends CustomPainter {
   final EdgeInsets padding;
   final TextAlign textAlign;
   final TextDirection direction;
+  final int? maxLines;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -65,6 +71,7 @@ class _BandPainter extends CustomPainter {
       textAlign: textAlign,
       textDirection: direction,
       textScaler: TextScaler.noScaling,
+      maxLines: maxLines,
     )..layout(maxWidth: size.width);
     // One unscaled line gives the glyph ascent and descent.
     final glyphs = TextPainter(
@@ -97,5 +104,6 @@ class _BandPainter extends CustomPainter {
       old.color != color ||
       old.padding != padding ||
       old.textAlign != textAlign ||
-      old.direction != direction;
+      old.direction != direction ||
+      old.maxLines != maxLines;
 }
