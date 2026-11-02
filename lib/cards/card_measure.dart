@@ -1,6 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 
+import '../core/app_theme.dart';
 import 'card_content.dart';
 import 'card_shape.dart';
 import 'card_style_spec.dart';
@@ -8,15 +9,13 @@ import 'quote_card.dart';
 
 /// Whether a verse actually fits one style at one export size.
 ///
-/// The card is laid out at that shape's design size, with the style's own
-/// type, caps, padding and reference block, at the font the fit chose.
-/// The size is offered when that text stays inside the verse well.
-/// About 8% past the well still counts as fitting: the well already sits
-/// inside the padding, and a few pixels is the difference between this
-/// measure and a phone. Further than that, the size is hidden.
+/// The card is laid out at that shape's design size, inside the same text
+/// theme the export paints with, at the font the fit chose. The size is
+/// offered only when that text stays inside the verse well. A line past the
+/// well is clipped on the card, so it does not count as fitting.
 abstract final class CardMeasure {
-  /// How far past the verse well still counts as fitting.
-  static const slack = 0.08;
+  /// Rounding slack, in logical pixels. Not a fraction of the well.
+  static const epsilon = 0.5;
 
   static final _cache = <String, _Well>{};
 
@@ -63,13 +62,7 @@ abstract final class CardMeasure {
         '${spacing.toStringAsFixed(3)}';
     final cached = _cache[key];
     if (cached != null) return cached.missing ? null : cached;
-    final well = _layout(
-      style: style,
-      content: content,
-      shape: shape,
-      fontSize: fontSize,
-      lineHeight: lineHeight,
-    );
+    final well = _layout(style: style, content: content, shape: shape);
     if (well == null) {
       _cache[key] = _Well.absent;
       return null;
@@ -82,8 +75,6 @@ abstract final class CardMeasure {
     required CardStyleSpec style,
     required CardContent content,
     required CardShape shape,
-    required double fontSize,
-    required double lineHeight,
   }) {
     if (style.variants.isEmpty) return null;
     final size = Size(CardShape.designWidth, shape.designHeight);
@@ -92,20 +83,27 @@ abstract final class CardMeasure {
     root.scheduleInitialLayout();
     final buildOwner = BuildOwner(focusManager: FocusManager());
     try {
+      final theme = AppTheme.cobaltSwipe();
       final element = RenderObjectToWidgetAdapter<RenderBox>(
         container: root,
         child: Directionality(
           textDirection: TextDirection.ltr,
           child: MediaQuery(
             data: MediaQueryData(size: size, textScaler: TextScaler.noScaling),
-            child: SizedBox(
-              width: size.width,
-              height: size.height,
-              child: QuoteCard(
-                content: content,
-                style: style,
-                variant: style.variants.first,
-                shape: shape,
+            child: Theme(
+              data: theme,
+              child: DefaultTextStyle(
+                style: theme.textTheme.bodyMedium ?? const TextStyle(),
+                child: SizedBox(
+                  width: size.width,
+                  height: size.height,
+                  child: QuoteCard(
+                    content: content,
+                    style: style,
+                    variant: style.variants.first,
+                    shape: shape,
+                  ),
+                ),
               ),
             ),
           ),
@@ -130,12 +128,7 @@ abstract final class CardMeasure {
       visit(root);
       final found = verse;
       if (found == null) return null;
-      return _Well.fromParagraph(
-        paragraph: found,
-        plain: found.text.toPlainText(),
-        fontSize: fontSize,
-        lineHeight: lineHeight,
-      );
+      return _Well.fromParagraph(found);
     } catch (e, stack) {
       debugPrint('Could not measure ${style.id} ${shape.name}: $e\n$stack');
       return null;
@@ -154,38 +147,30 @@ class _Well {
   final bool fits;
   final bool missing;
 
-  factory _Well.fromParagraph({
-    required RenderParagraph paragraph,
-    required String plain,
-    required double fontSize,
-    required double lineHeight,
-  }) {
+  factory _Well.fromParagraph(RenderParagraph paragraph) {
     final slotWidth = paragraph.constraints.maxWidth;
     final slotHeight = paragraph.constraints.maxHeight;
     if (!slotWidth.isFinite || slotWidth <= 0 || !slotHeight.isFinite) {
       return const _Well(fits: false);
     }
-    final painted = paragraph.text.style;
-    final rendered = painted?.fontSize ?? fontSize;
-    final factor = rendered == 0 ? 1.0 : fontSize / rendered;
-    final style = (painted ?? const TextStyle()).copyWith(
-      fontSize: fontSize,
-      height: lineHeight,
-      letterSpacing: painted?.letterSpacing == null
-          ? null
-          : painted!.letterSpacing! * factor,
-    );
+    // The paragraph already carries the style the card painted, including
+    // the ambient theme. Rebuilding a bare style here used to miss that
+    // letter spacing, and the old 8% allowance then treated a clipped last
+    // line as fitting.
     final painter = TextPainter(
-      text: TextSpan(text: plain, style: style),
+      text: paragraph.text,
       textAlign: paragraph.textAlign,
-      textDirection: TextDirection.ltr,
+      textDirection: paragraph.textDirection,
       textScaler: TextScaler.noScaling,
+      maxLines: paragraph.maxLines,
     )..layout(maxWidth: slotWidth);
     final wide = painter.computeLineMetrics().any(
-      (line) => line.width > slotWidth + 0.5,
+      (line) => line.width > slotWidth + CardMeasure.epsilon,
     );
-    final limit = slotHeight * (1 + CardMeasure.slack) + 0.5;
-    final fits = !wide && painter.height <= limit;
+    final fits =
+        !wide &&
+        !painter.didExceedMaxLines &&
+        painter.height <= slotHeight + CardMeasure.epsilon;
     painter.dispose();
     return _Well(fits: fits);
   }

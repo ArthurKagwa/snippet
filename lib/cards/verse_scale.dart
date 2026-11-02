@@ -103,7 +103,7 @@ class StyleTypeScale {
       textDirection: TextDirection.ltr,
       textScaler: TextScaler.noScaling,
     )..layout(maxWidth: width);
-    final ok = painter.height <= height * (1 + CardMeasure.slack) + 0.5;
+    final ok = painter.height <= height + CardMeasure.epsilon;
     painter.dispose();
     return ok;
   }
@@ -171,6 +171,20 @@ class VerseReading {
   /// A length that is [loose] for a short verse and [tight] at the floor.
   double span(double loose, double tight) =>
       loose + (tight - loose) * tightness;
+
+  /// Paints this size exactly, so the fit check cannot pass by letting
+  /// [AutoFitText] shrink under the candidate.
+  VerseReading locked() => VerseReading(
+    tightness: tightness,
+    size: size,
+    minSize: size,
+    height: height,
+    gap: gap,
+    pad: pad,
+    spacing: spacing,
+    looseSpacing: looseSpacing,
+    fits: fits,
+  );
 }
 
 /// Per-style caps and the continuous length curve. This is the place to tune.
@@ -179,7 +193,7 @@ class VerseReading {
 /// curve. [read] places a verse on that curve from its measured line count.
 /// [forShape] then keeps the largest size on the curve that fits one export
 /// shape, searching down to the floor. A size is hidden only when the floor
-/// still overflows, with [CardMeasure.slack] of room past the well.
+/// still overflows the verse well.
 abstract final class VerseScales {
   /// Line measure shared by every style, so the length curve (and therefore
   /// the preferred type) does not change as you swipe. Which export sizes
@@ -404,8 +418,9 @@ abstract final class VerseScales {
     double? minLineHeight,
   }) {
     if (minFontSize == null && minLineHeight == null) return;
-    layoutLimits[id] = of(id)
-        .copyWith(minSize: minFontSize, tightHeight: minLineHeight);
+    layoutLimits[id] = of(
+      id,
+    ).copyWith(minSize: minFontSize, tightHeight: minLineHeight);
     _fitCache.clear();
   }
 
@@ -474,7 +489,7 @@ abstract final class VerseScales {
     if (cached != null) return cached;
 
     bool fits(VerseReading reading) {
-      _probe = reading;
+      _probe = reading.locked();
       try {
         return CardMeasure.offers(
           style: style,
@@ -532,9 +547,8 @@ abstract final class VerseScales {
       '${scale.tightSpacing}';
 
   /// Shapes whose verse well can hold [content] in [style]. A size is left
-  /// out only when the text overruns that well at the floor by more than
-  /// [CardMeasure.slack]. When nothing fits, story stays so the export
-  /// sheet is never empty.
+  /// out when the text overruns that well at the floor. When nothing fits,
+  /// story stays so the export sheet is never empty.
   static List<CardShape> exportShapes(
     CardStyleSpec style,
     CardContent content,

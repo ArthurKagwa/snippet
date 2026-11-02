@@ -341,11 +341,6 @@ void main() {
           containsAll(previous),
           reason: '$label ${style.id} lost a size',
         );
-        expect(
-          names,
-          ['feed', 'portrait', 'story'],
-          reason: '$label ${style.id}',
-        );
         beforeCount += previous.length;
         afterCount += names.length;
         cells.add(_marks(names));
@@ -354,7 +349,11 @@ void main() {
       lines.add('${label.padRight(16)} ${cells.join('  ')}');
     }
     expect(beforeCount, 150);
-    expect(afterCount, 216);
+    // Psalter's square is withheld for John 3:16–21: the floor still clips
+    // the last line, so the size is not offered.
+    expect(afterCount, 214);
+    expect(after['kjv JOH 3:16-21']!['psalter'], ['portrait', 'story']);
+    expect(after['web JOH 3:16-21']!['psalter'], ['portrait', 'story']);
     // ignore: avoid_print
     print(
       'style-size coverage before $beforeCount after $afterCount\n'
@@ -442,7 +441,7 @@ void main() {
         final full = await _fullness(tester, style, content, CardShape.feed);
         expect(
           full.height,
-          lessThanOrEqualTo(full.slot * (1 + CardMeasure.slack) + 0.5),
+          lessThanOrEqualTo(full.slot + CardMeasure.epsilon),
           reason: id,
         );
       }

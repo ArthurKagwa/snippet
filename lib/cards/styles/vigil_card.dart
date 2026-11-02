@@ -5,6 +5,7 @@ import '../auto_fit_text.dart';
 import '../card_content.dart';
 import '../card_palette.dart';
 import '../card_shape.dart';
+import '../fleuron.dart';
 import '../verse_reference.dart';
 import '../verse_scale.dart';
 
@@ -27,6 +28,9 @@ class VigilCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final vertical = shape == CardShape.feed ? reading.pad * 0.72 : reading.pad;
     final horizontal = reading.span(40, 26);
+    // Gone once the verse needs the room. The fit lays this card out, so a
+    // dropped fleuron is already in the measurement.
+    final ornament = reading.span(20, 0);
     return ColoredBox(
       color: palette.background,
       child: Stack(
@@ -48,12 +52,10 @@ class VigilCard extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  '❧',
-                  textScaler: TextScaler.noScaling,
-                  style: SnippetFonts.cormorantText(24, color: palette.accent),
-                ),
-                SizedBox(height: reading.gap),
+                if (ornament >= 10) ...[
+                  Fleuron(color: palette.accent, extent: ornament),
+                  SizedBox(height: reading.gap),
+                ],
                 Flexible(
                   child: AutoFitText(
                     content.text,
