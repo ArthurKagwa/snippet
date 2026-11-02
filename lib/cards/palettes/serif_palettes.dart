@@ -13,28 +13,6 @@ abstract final class SerifPalettes {
 
   static const List<CardVariant> vigil = [
     CardVariant(
-      id: 'gilt',
-      name: 'Gilt',
-      swatch: Color(0xFF0F0D0B),
-      palette: CardPalette(
-        background: Color(0xFF0F0D0B),
-        ink: _vellum,
-        accent: _gold,
-        accentDim: _goldDim,
-      ),
-    ),
-    CardVariant(
-      id: 'oxblood',
-      name: 'Oxblood',
-      swatch: Color(0xFF3A1114),
-      palette: CardPalette(
-        background: Color(0xFF3A1114),
-        ink: _vellum,
-        accent: _gold,
-        accentDim: _goldDim,
-      ),
-    ),
-    CardVariant(
       id: 'verdigris',
       name: 'Verdigris',
       swatch: Color(0xFF0F2E2A),
@@ -57,6 +35,28 @@ abstract final class SerifPalettes {
       ),
     ),
     CardVariant(
+      id: 'oxblood',
+      name: 'Oxblood',
+      swatch: Color(0xFF3A1114),
+      palette: CardPalette(
+        background: Color(0xFF3A1114),
+        ink: _vellum,
+        accent: _gold,
+        accentDim: _goldDim,
+      ),
+    ),
+    CardVariant(
+      id: 'gilt',
+      name: 'Gilt',
+      swatch: Color(0xFF0F0D0B),
+      palette: CardPalette(
+        background: Color(0xFF0F0D0B),
+        ink: _vellum,
+        accent: _gold,
+        accentDim: _goldDim,
+      ),
+    ),
+    CardVariant(
       id: 'bone',
       name: 'Bone',
       swatch: _vellum,
@@ -71,17 +71,6 @@ abstract final class SerifPalettes {
 
   // Dawn
   static const List<CardVariant> dawn = [
-    CardVariant(
-      id: 'peach',
-      name: 'Peach',
-      swatch: Color(0xFFF7A58C),
-      palette: CardPalette(
-        background: Color(0xFFFFE3C2),
-        backgroundEnd: Color(0xFFF7A58C),
-        ink: Color(0xFF3B1F1A),
-        accent: Color(0xFF8A3B2B),
-      ),
-    ),
     CardVariant(
       id: 'rose',
       name: 'Rose',
@@ -105,6 +94,17 @@ abstract final class SerifPalettes {
       ),
     ),
     CardVariant(
+      id: 'dusk',
+      name: 'Dusk',
+      swatch: Color(0xFF4A3566),
+      palette: CardPalette(
+        background: Color(0xFF8A6BA8),
+        backgroundEnd: Color(0xFF4A3566),
+        ink: Color(0xFFF7EEFF),
+        accent: Color(0xFFF2C6A0),
+      ),
+    ),
+    CardVariant(
       id: 'sand',
       name: 'Sand',
       swatch: Color(0xFFD9B98A),
@@ -116,31 +116,20 @@ abstract final class SerifPalettes {
       ),
     ),
     CardVariant(
-      id: 'dusk',
-      name: 'Dusk',
-      swatch: Color(0xFF4A3566),
+      id: 'peach',
+      name: 'Peach',
+      swatch: Color(0xFFF7A58C),
       palette: CardPalette(
-        background: Color(0xFF8A6BA8),
-        backgroundEnd: Color(0xFF4A3566),
-        ink: Color(0xFFF7EEFF),
-        accent: Color(0xFFF2C6A0),
+        background: Color(0xFFFFE3C2),
+        backgroundEnd: Color(0xFFF7A58C),
+        ink: Color(0xFF3B1F1A),
+        accent: Color(0xFF8A3B2B),
       ),
     ),
   ];
 
   // Night Watch
   static const List<CardVariant> nightWatch = [
-    CardVariant(
-      id: 'forest',
-      name: 'Forest',
-      swatch: Color(0xFF173F2C),
-      palette: CardPalette(
-        background: Color(0xFF173F2C),
-        backgroundEnd: Color(0xFF0B2218),
-        ink: Color(0xFFF3EBD8),
-        accent: Color(0xFFD9B866),
-      ),
-    ),
     CardVariant(
       id: 'midnight',
       name: 'Midnight',
@@ -164,14 +153,14 @@ abstract final class SerifPalettes {
       ),
     ),
     CardVariant(
-      id: 'slate',
-      name: 'Slate',
-      swatch: Color(0xFF2E3338),
+      id: 'forest',
+      name: 'Forest',
+      swatch: Color(0xFF173F2C),
       palette: CardPalette(
-        background: Color(0xFF2E3338),
-        backgroundEnd: Color(0xFF121517),
-        ink: Color(0xFFF1F2F0),
-        accent: _lime,
+        background: Color(0xFF173F2C),
+        backgroundEnd: Color(0xFF0B2218),
+        ink: Color(0xFFF3EBD8),
+        accent: Color(0xFFD9B866),
       ),
     ),
     CardVariant(
@@ -183,6 +172,17 @@ abstract final class SerifPalettes {
         backgroundEnd: Color(0xFF1A0B1B),
         ink: Color(0xFFF8E9F4),
         accent: Color(0xFFE8B4D8),
+      ),
+    ),
+    CardVariant(
+      id: 'slate',
+      name: 'Slate',
+      swatch: Color(0xFF2E3338),
+      palette: CardPalette(
+        background: Color(0xFF2E3338),
+        backgroundEnd: Color(0xFF121517),
+        ink: Color(0xFFF1F2F0),
+        accent: _lime,
       ),
     ),
   ];

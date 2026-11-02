@@ -159,7 +159,7 @@ void main() {
     await tester.tap(find.byKey(const Key('swipe-styles')));
     await tester.pumpAndSettle();
     expect(find.text('Vigil'), findsOneWidget);
-    expect(find.text('Gilt'), findsOneWidget);
+    expect(find.text('Verdigris'), findsOneWidget);
 
     // Up: next style.
     await tester.fling(
@@ -172,12 +172,12 @@ void main() {
 
     // Sideways: next colourway.
     await tester.fling(
-      find.byKey(const Key('card-riso-pink')),
+      find.byKey(const Key('card-riso-blue')),
       const Offset(-300, 0),
       1500,
     );
     await tester.pumpAndSettle();
-    expect(find.text('Blue'), findsOneWidget);
+    expect(find.text('Mint'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('export-card')));
     await tester.pumpAndSettle();
@@ -187,22 +187,24 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('save-image')));
     await tester.pumpAndSettle();
-    expect(export.saved, ['snippet_psalm_46_10_story']);
-    expect(export.ratios.single, closeTo(1080, 0.5));
+    expect(export.saved, ['snippet_psalm_46_10_story_hd']);
+    expect(export.ratios.single, closeTo(2160, 0.5));
 
     await tester.tap(find.byKey(const Key('share-image')));
     await tester.pumpAndSettle();
     expect(export.captions, ['PSALM 46:10 · KJV']);
   });
 
-  testWidgets('HD toggle doubles the export resolution', (tester) async {
+  testWidgets('HD is the default and the toggle can turn it off', (
+    tester,
+  ) async {
     await boot(tester);
     await tester.tap(find.byKey(const Key('swipe-styles')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('export-card')));
     await tester.pumpAndSettle();
 
-    expect(find.text('PNG · 1080 × 1350 px'), findsOneWidget);
+    expect(find.text('PNG · 2160 × 2700 px'), findsOneWidget);
     await tester.tap(
       find.descendant(
         of: find.byKey(const Key('hd-export')),
@@ -210,12 +212,12 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('PNG · 2160 × 2700 px'), findsOneWidget);
+    expect(find.text('PNG · 1080 × 1350 px'), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('save-image')));
     await tester.pumpAndSettle();
-    expect(export.saved, ['snippet_psalm_46_10_portrait_hd']);
-    expect(export.ratios.single, closeTo(2160, 0.5));
+    expect(export.saved, ['snippet_psalm_46_10_portrait']);
+    expect(export.ratios.single, closeTo(1080, 0.5));
   });
 
   Future<void> openExportAndSave(WidgetTester tester) async {

@@ -36,4 +36,35 @@ void main() {
     await reloaded.load();
     expect(reloaded.showMark, isFalse);
   });
+
+  test('HD export is on for a fresh install', () async {
+    final settings = AppSettings(_MemoryStore());
+    await settings.load();
+    expect(settings.hdExport, isTrue);
+  });
+
+  test('settings saved before version 3 turn HD on', () async {
+    final store = _MemoryStore()
+      ..docs['settings'] = {'version': 2, 'hdExport': false, 'showMark': false};
+    final settings = AppSettings(store);
+    await settings.load();
+    expect(settings.hdExport, isTrue);
+    expect(settings.showMark, isFalse);
+  });
+
+  test('choosing HD before version 3 stays on', () async {
+    final store = _MemoryStore()
+      ..docs['settings'] = {'version': 2, 'hdExport': true};
+    final settings = AppSettings(store);
+    await settings.load();
+    expect(settings.hdExport, isTrue);
+  });
+
+  test('turning HD off sticks after the migration', () async {
+    final store = _MemoryStore();
+    AppSettings(store).hdExport = false;
+    final reloaded = AppSettings(store);
+    await reloaded.load();
+    expect(reloaded.hdExport, isFalse);
+  });
 }

@@ -87,6 +87,21 @@ void main() {
     expect(riso.variant('yellow').id, 'yellow');
   });
 
+  test('bundled colourways open on the shuffled variant', () {
+    final order = {
+      for (final s in CardCatalog.bundled)
+        s.id: [for (final v in s.variants) v.id],
+    };
+    expect(order, {
+      'vigil': ['verdigris', 'lapis', 'oxblood', 'gilt', 'bone'],
+      'riso': ['blue', 'mint', 'pink', 'yellow', 'black'],
+      'dawn': ['rose', 'sky', 'dusk', 'sand', 'peach'],
+      'swiss': ['cobalt', 'green', 'orange', 'inverted', 'red'],
+      'night-watch': ['midnight', 'ember', 'forest', 'plum', 'slate'],
+      'cobalt-arch': ['lime', 'ink', 'pink', 'cobalt'],
+    });
+  });
+
   test('parseRemoteContent carries card_styles', () {
     final c = parseRemoteContent(
       verseCalendarJson: '{}',

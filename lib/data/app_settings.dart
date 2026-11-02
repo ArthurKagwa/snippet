@@ -40,14 +40,18 @@ class AppSettings extends ChangeNotifier {
 
   /// Bumped when a stored value should be reset to a new default. Version 2
   /// turns the export mark back on for installs saved while it defaulted off.
-  static const int _version = 2;
+  /// Version 3 makes HD the export default. A stored `hdExport` from version
+  /// 3 on is the user's choice. Before that, `true` is a choice (HD was off
+  /// unless they turned it on) and `false` is the old default, written with
+  /// every other preference.
+  static const int _version = 3;
 
   final JsonStore _store;
 
   String _translationId = 'kjv';
   CardShape _shape = CardShape.portrait;
   bool _showMark = true;
-  bool _hdExport = false;
+  bool _hdExport = true;
   bool _swipeHints = true;
   List<RecentVerse> _recent = const [];
   String? _dismissedAnnouncement;
@@ -80,7 +84,11 @@ class AppSettings extends ChangeNotifier {
     _shape = CardShape.byName(raw['shape'] as String?);
     final version = raw['version'] as int? ?? 1;
     if (version >= 2) _showMark = raw['showMark'] as bool? ?? _showMark;
-    _hdExport = raw['hdExport'] as bool? ?? _hdExport;
+    if (version >= 3) {
+      _hdExport = raw['hdExport'] as bool? ?? _hdExport;
+    } else if (raw['hdExport'] == true) {
+      _hdExport = true;
+    }
     _swipeHints = raw['swipeHints'] as bool? ?? _swipeHints;
     _dismissedAnnouncement = raw['dismissedAnnouncement'] as String?;
     _recent = [
