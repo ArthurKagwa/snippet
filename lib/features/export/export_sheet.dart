@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import '../../cards/card_style_spec.dart';
 import '../../cards/verse_scale.dart';
 import '../../core/theme/snippet_colors.dart';
 import '../../core/theme/snippet_fonts.dart';
+import '../../services/export_service.dart';
 import '../../services/services.dart';
 import '../../widgets/arch_sheet.dart';
 import '../../widgets/circle_button.dart';
@@ -104,9 +106,26 @@ class _ExportSheetState extends State<ExportSheet> {
   }
 
   Future<void> _saveImage() => _run('save', (s, png) async {
-    await s.export.saveToGallery(png, name: _fileName);
-    if (mounted) showOverlayToast(context, 'Saved to Photos');
+    final saved = await s.export.saveToGallery(png, name: _fileName);
+    if (!mounted) return;
+    if (saved == null || !saved.canView) {
+      showOverlayToast(context, 'Saved to Photos');
+      return;
+    }
+    showOverlayToast(
+      context,
+      'Saved to Photos',
+      actionLabel: 'View',
+      onAction: () => unawaited(_openSaved(s, saved)),
+    );
   });
+
+  Future<void> _openSaved(Services s, SavedGalleryImage saved) async {
+    final opened = await s.export.openSaved(saved);
+    if (!opened && mounted) {
+      showOverlayToast(context, 'Could not open the photo.');
+    }
+  }
 
   Future<void> _share() => _run('share', (s, png) async {
     final config = await s.contentConfig.load();
