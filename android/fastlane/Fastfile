@@ -21,6 +21,7 @@ platform :android do
     unless options[:skip_build]
       Dir.chdir(ROOT) { sh("flutter", "build", "appbundle", "--release") }
     end
+    notes = File.join(ROOT, "android", "fastlane", "metadata", "android", "en-GB", "changelogs", "#{build}.txt")
     upload_to_play_store(
       aab: AAB,
       track: options[:track] || "alpha",
@@ -28,7 +29,7 @@ platform :android do
       validate_only: options[:dry_run] ? true : false,
       skip_upload_apk: true,
       skip_upload_metadata: true,
-      skip_upload_changelogs: true,
+      skip_upload_changelogs: !File.exist?(notes),
       skip_upload_images: true,
       skip_upload_screenshots: true
     )
