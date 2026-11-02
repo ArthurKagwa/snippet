@@ -136,6 +136,18 @@ void main() {
       );
       expect(styles.styles, isNotEmpty);
       expect(styles.styles.values.every((s) => s.layout != null), isTrue);
+      expect(
+        {
+          for (final e in styles.styles.entries)
+            e.key: [for (final v in e.value.variants) v.id],
+        },
+        {
+          'psalter': ['lapis', 'night', 'vellum'],
+          'marquee': ['tomato', 'lime'],
+          'highlight': ['nocturne', 'blush', 'sage', 'butter'],
+        },
+      );
+      expect(styles.order, ['marquee', 'highlight', 'psalter']);
     }
     expect(
       text(FirebaseContentConfigService.inviteMessageKey),

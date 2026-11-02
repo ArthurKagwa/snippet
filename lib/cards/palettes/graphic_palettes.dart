@@ -18,11 +18,24 @@ abstract final class GraphicPalettes {
 
   static const List<CardVariant> riso = [
     CardVariant(
-      id: 'pink',
-      name: 'Pink',
-      swatch: _risoPink,
+      id: 'blue',
+      name: 'Blue',
+      swatch: _risoBlue,
       palette: CardPalette(
-        background: _risoPink,
+        background: _risoBlue,
+        ink: _risoWhite,
+        accent: _risoInk,
+        surface: _risoYellow,
+        surfaceInk: _risoInk,
+        border: _risoInk,
+      ),
+    ),
+    CardVariant(
+      id: 'mint',
+      name: 'Mint',
+      swatch: Color(0xFF7FE0B5),
+      palette: CardPalette(
+        background: Color(0xFF7FE0B5),
         ink: _risoInk,
         accent: _risoInk,
         surface: _risoYellow,
@@ -31,12 +44,12 @@ abstract final class GraphicPalettes {
       ),
     ),
     CardVariant(
-      id: 'blue',
-      name: 'Blue',
-      swatch: _risoBlue,
+      id: 'pink',
+      name: 'Pink',
+      swatch: _risoPink,
       palette: CardPalette(
-        background: _risoBlue,
-        ink: _risoWhite,
+        background: _risoPink,
+        ink: _risoInk,
         accent: _risoInk,
         surface: _risoYellow,
         surfaceInk: _risoInk,
@@ -52,19 +65,6 @@ abstract final class GraphicPalettes {
         ink: _risoInk,
         accent: _risoInk,
         surface: _risoPink,
-        surfaceInk: _risoInk,
-        border: _risoInk,
-      ),
-    ),
-    CardVariant(
-      id: 'mint',
-      name: 'Mint',
-      swatch: Color(0xFF7FE0B5),
-      palette: CardPalette(
-        background: Color(0xFF7FE0B5),
-        ink: _risoInk,
-        accent: _risoInk,
-        surface: _risoYellow,
         surfaceInk: _risoInk,
         border: _risoInk,
       ),
@@ -91,16 +91,6 @@ abstract final class GraphicPalettes {
 
   static const List<CardVariant> swiss = [
     CardVariant(
-      id: 'red',
-      name: 'Red',
-      swatch: _swissRed,
-      palette: CardPalette(
-        background: _swissPaper,
-        ink: _swissInk,
-        accent: _swissRed,
-      ),
-    ),
-    CardVariant(
       id: 'cobalt',
       name: 'Cobalt',
       swatch: _cobalt,
@@ -108,16 +98,6 @@ abstract final class GraphicPalettes {
         background: _swissPaper,
         ink: _swissInk,
         accent: _cobalt,
-      ),
-    ),
-    CardVariant(
-      id: 'orange',
-      name: 'Orange',
-      swatch: Color(0xFFF26B1D),
-      palette: CardPalette(
-        background: _swissPaper,
-        ink: _swissInk,
-        accent: Color(0xFFF26B1D),
       ),
     ),
     CardVariant(
@@ -131,6 +111,16 @@ abstract final class GraphicPalettes {
       ),
     ),
     CardVariant(
+      id: 'orange',
+      name: 'Orange',
+      swatch: Color(0xFFF26B1D),
+      palette: CardPalette(
+        background: _swissPaper,
+        ink: _swissInk,
+        accent: Color(0xFFF26B1D),
+      ),
+    ),
+    CardVariant(
       id: 'inverted',
       name: 'Inverted',
       swatch: _swissInk,
@@ -140,20 +130,30 @@ abstract final class GraphicPalettes {
         accent: _swissRed,
       ),
     ),
+    CardVariant(
+      id: 'red',
+      name: 'Red',
+      swatch: _swissRed,
+      palette: CardPalette(
+        background: _swissPaper,
+        ink: _swissInk,
+        accent: _swissRed,
+      ),
+    ),
   ];
 
   // Cobalt Arch
   static const List<CardVariant> cobaltArch = [
     CardVariant(
-      id: 'cobalt',
-      name: 'Cobalt',
-      swatch: _cobalt,
+      id: 'lime',
+      name: 'Lime',
+      swatch: _lime,
       palette: CardPalette(
-        background: _cobalt,
-        ink: _cobaltInk,
-        accent: _lime,
-        surface: _stone,
-        surfaceInk: _cobaltInk,
+        background: _lime,
+        ink: _stone,
+        accent: _cobalt,
+        surface: _cobaltInk,
+        surfaceInk: _stone,
       ),
     ),
     CardVariant(
@@ -169,18 +169,6 @@ abstract final class GraphicPalettes {
       ),
     ),
     CardVariant(
-      id: 'lime',
-      name: 'Lime',
-      swatch: _lime,
-      palette: CardPalette(
-        background: _lime,
-        ink: _stone,
-        accent: _cobalt,
-        surface: _cobaltInk,
-        surfaceInk: _stone,
-      ),
-    ),
-    CardVariant(
       id: 'pink',
       name: 'Pink',
       swatch: _risoPink,
@@ -188,6 +176,18 @@ abstract final class GraphicPalettes {
         background: _risoPink,
         ink: _cobaltInk,
         accent: _cobalt,
+        surface: _stone,
+        surfaceInk: _cobaltInk,
+      ),
+    ),
+    CardVariant(
+      id: 'cobalt',
+      name: 'Cobalt',
+      swatch: _cobalt,
+      palette: CardPalette(
+        background: _cobalt,
+        ink: _cobaltInk,
+        accent: _lime,
         surface: _stone,
         surfaceInk: _cobaltInk,
       ),
