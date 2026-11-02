@@ -55,7 +55,9 @@
                     "italic": true,
                     "weight": 500,
                     "size": 26,
+                    "minFontSize": 12,
                     "height": 1.18,
+                    "minLineHeight": 1.15,
                     "align": "center"
                   }
                 },
@@ -130,7 +132,9 @@
                     "weight": 800,
                     "condensed": true,
                     "size": 40,
+                    "minFontSize": 12,
                     "height": 0.92,
+                    "minLineHeight": 0.8,
                     "tracking": -0.02
                   }
                 },
@@ -215,10 +219,12 @@
                   "type": "text",
                   "fit": true,
                   "minSize": 9,
+                  "minFontSize": 12,
                   "font": "cormorant",
                   "weight": 500,
                   "size": 21,
                   "height": 1.78,
+                  "minLineHeight": 1.2,
                   "color": "surfaceInk",
                   "highlight": "surface",
                   "highlightPadding": {

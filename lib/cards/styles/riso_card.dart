@@ -42,7 +42,12 @@ class RisoCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(24, reading.pad, 24, reading.pad),
+            padding: EdgeInsets.fromLTRB(
+              reading.span(24, 14),
+              reading.pad,
+              reading.span(24, 14),
+              reading.pad,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

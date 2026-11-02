@@ -19,16 +19,107 @@ import 'package:snippet/data/bible_repository.dart';
 
 const _short = 'Jesus wept.';
 
-/// A verse long enough to leave the short bucket without being a paragraph.
-String _repeat(int words) => List.filled(words, 'beloved').join(' ');
+/// What 1.0.2 offered for these passages, as shape names. The new fit must
+/// keep every one of them and may add more.
+final _before = <String, Map<String, List<String>>>{
+  'kjv EST 8:9': {
+    'marquee': ['portrait', 'story'],
+    'highlight': ['portrait', 'story'],
+    'psalter': ['portrait', 'story'],
+    'vigil': ['portrait', 'story'],
+    'riso': ['feed', 'portrait', 'story'],
+    'dawn': ['portrait', 'story'],
+    'swiss': ['feed', 'portrait', 'story'],
+    'night-watch': ['portrait', 'story'],
+    'cobalt-arch': ['portrait', 'story'],
+  },
+  'web EST 8:9': {
+    'marquee': ['portrait', 'story'],
+    'highlight': ['portrait', 'story'],
+    'psalter': ['portrait', 'story'],
+    'vigil': ['portrait', 'story'],
+    'riso': ['feed', 'portrait', 'story'],
+    'dawn': ['portrait', 'story'],
+    'swiss': ['feed', 'portrait', 'story'],
+    'night-watch': ['feed', 'portrait', 'story'],
+    'cobalt-arch': ['portrait', 'story'],
+  },
+  'kjv REV 20:4': {
+    for (final id in _styleIds) id: ['feed', 'portrait', 'story'],
+  },
+  'web REV 20:4': {
+    for (final id in _styleIds) id: ['feed', 'portrait', 'story'],
+  },
+  'kjv PSA 23:1-6': {
+    'marquee': ['portrait', 'story'],
+    'highlight': ['story'],
+    'psalter': ['portrait', 'story'],
+    'vigil': ['story'],
+    'riso': ['feed', 'portrait', 'story'],
+    'dawn': ['portrait', 'story'],
+    'swiss': ['portrait', 'story'],
+    'night-watch': ['portrait', 'story'],
+    'cobalt-arch': ['portrait', 'story'],
+  },
+  'web PSA 23:1-6': {
+    'marquee': ['portrait', 'story'],
+    'highlight': ['story'],
+    'psalter': ['portrait', 'story'],
+    'vigil': ['portrait', 'story'],
+    'riso': ['feed', 'portrait', 'story'],
+    'dawn': ['portrait', 'story'],
+    'swiss': ['portrait', 'story'],
+    'night-watch': ['portrait', 'story'],
+    'cobalt-arch': ['portrait', 'story'],
+  },
+  'kjv JOH 3:16-21': {
+    'marquee': ['story'],
+    'highlight': ['story'],
+    'psalter': ['story'],
+    'vigil': ['story'],
+    'riso': ['portrait', 'story'],
+    'dawn': ['story'],
+    'swiss': ['story'],
+    'night-watch': ['story'],
+    'cobalt-arch': ['story'],
+  },
+  'web JOH 3:16-21': {
+    'marquee': ['story'],
+    'highlight': ['story'],
+    'psalter': ['story'],
+    'vigil': ['story'],
+    'riso': ['portrait', 'story'],
+    'dawn': ['story'],
+    'swiss': ['story'],
+    'night-watch': ['story'],
+    'cobalt-arch': ['story'],
+  },
+};
 
-String _until(VerseBucket target) {
-  for (var words = 1; words < 4000; words += words < 30 ? 1 : 8) {
-    final text = _repeat(words);
-    if (VerseScales.bucketOf(text) == target) return text;
-  }
-  fail('no verse landed in $target');
-}
+const _styleIds = [
+  'marquee',
+  'highlight',
+  'psalter',
+  'vigil',
+  'riso',
+  'dawn',
+  'swiss',
+  'night-watch',
+  'cobalt-arch',
+];
+
+const _passages = [
+  ('kjv EST 8:9', 'kjv', 'EST', 8, 9, 9),
+  ('web EST 8:9', 'web', 'EST', 8, 9, 9),
+  ('kjv REV 20:4', 'kjv', 'REV', 20, 4, 4),
+  ('web REV 20:4', 'web', 'REV', 20, 4, 4),
+  ('kjv PSA 23:1-6', 'kjv', 'PSA', 23, 1, 6),
+  ('web PSA 23:1-6', 'web', 'PSA', 23, 1, 6),
+  ('kjv JOH 3:16-21', 'kjv', 'JOH', 3, 16, 21),
+  ('web JOH 3:16-21', 'web', 'JOH', 3, 16, 21),
+];
+
+String _repeat(int words) => List.filled(words, 'beloved').join(' ');
 
 CardContent _content(String reference, {String text = _short}) =>
     CardContent(text: text, reference: reference, translation: 'KJV');
@@ -37,65 +128,52 @@ void main() {
   tearDown(() {
     CardCatalog.apply(CardStyleOverrides.none);
     VerseScales.byId.remove('cramped');
+    VerseScales.resetLayoutLimits();
   });
 
-  test('length buckets grow with the verse and still scale the type', () {
-    expect(VerseScales.bucketOf(_short), VerseBucket.short);
-    expect(VerseScales.bucketOf(''), VerseBucket.short);
+  test('the length curve grows smoothly and still scales the type', () {
+    expect(VerseScales.lengthTightness(_short), 0);
+    expect(VerseScales.lengthTightness(''), 0);
+    expect(VerseScales.lineCount(''), 1);
 
-    final medium = _until(VerseBucket.medium);
-    final long = _until(VerseBucket.long);
-    final longest = _until(VerseBucket.longest);
-    expect(VerseScales.bucketOf(medium), VerseBucket.medium);
-    expect(VerseScales.bucketOf(long), VerseBucket.long);
-    expect(VerseScales.bucketOf(longest), VerseBucket.longest);
-
-    expect(
-      VerseScales.lineCount(medium),
-      greaterThan(VerseScales.lineCount(_short)),
-    );
-    expect(
-      VerseScales.lineCount(long),
-      greaterThan(VerseScales.lineCount(medium)),
-    );
-    expect(
-      VerseScales.lineCount(longest),
-      greaterThan(VerseScales.lineCount(long)),
-    );
+    final steps = [
+      for (var lines = 1; lines <= 18; lines++)
+        VerseScales.lengthTightness(_textOfLineCount(lines)),
+    ];
+    for (var i = 1; i < steps.length; i++) {
+      expect(steps[i], greaterThanOrEqualTo(steps[i - 1]));
+      expect(steps[i] - steps[i - 1], lessThanOrEqualTo(0.35));
+    }
+    expect(steps.first, 0);
+    expect(steps.last, 1);
 
     final vigil = CardCatalog.bundled.first;
     expect(
-      VerseScales.exportShapes(vigil, _content('Psalm 1:1', text: _short)),
+      VerseScales.exportShapes(vigil, _content('John 11:35', text: _short)),
       CardShape.values,
     );
     expect(
-      VerseScales.previewShape(vigil, _content('Psalm 1:1', text: _short)),
+      VerseScales.previewShape(vigil, _content('John 11:35', text: _short)),
       CardShape.portrait,
     );
-    // The bucket still picks the type size. It does not by itself drop a
-    // shape; a long verse keeps the square when that style's well holds it.
-    expect(VerseScales.read('vigil', longest).bucket, VerseBucket.longest);
-    expect(
-      VerseScales.read('vigil', longest).size,
-      VerseScales.of('vigil').minSize,
-    );
+
+    final longest = _textOfLineCount(16);
+    final reading = VerseScales.read('vigil', longest);
+    expect(reading.tightness, 1);
+    expect(reading.size, VerseScales.of('vigil').minSize);
+    expect(reading.height, VerseScales.of('vigil').tightHeight);
   });
 
   test('each style gets smaller and tighter as the verse gets longer', () {
     final samples = [
-      _short,
-      _until(VerseBucket.medium),
-      _until(VerseBucket.long),
-      _until(VerseBucket.longest),
+      _textOfLineCount(1),
+      _textOfLineCount(5),
+      _textOfLineCount(8),
+      _textOfLineCount(12),
+      _textOfLineCount(16),
     ];
     for (final id in VerseScales.byId.keys) {
       final readings = [for (final text in samples) VerseScales.read(id, text)];
-      expect(readings.map((r) => r.bucket).toList(), [
-        VerseBucket.short,
-        VerseBucket.medium,
-        VerseBucket.long,
-        VerseBucket.longest,
-      ], reason: id);
       for (var i = 0; i < readings.length; i++) {
         final r = readings[i];
         final scale = VerseScales.of(id);
@@ -106,7 +184,10 @@ void main() {
         );
         expect(
           r.height,
-          inInclusiveRange(scale.tightHeight, scale.looseHeight),
+          inInclusiveRange(
+            mathMin(scale.tightHeight, scale.looseHeight),
+            mathMax(scale.tightHeight, scale.looseHeight),
+          ),
           reason: id,
         );
         expect(
@@ -120,6 +201,7 @@ void main() {
           reason: id,
         );
         if (i > 0) {
+          expect(r.tightness, greaterThanOrEqualTo(readings[i - 1].tightness));
           expect(r.size, lessThanOrEqualTo(readings[i - 1].size), reason: id);
           expect(
             r.height,
@@ -127,15 +209,55 @@ void main() {
             reason: id,
           );
           expect(r.gap, lessThanOrEqualTo(readings[i - 1].gap), reason: id);
+          expect(r.pad, lessThanOrEqualTo(readings[i - 1].pad), reason: id);
         }
       }
       expect(readings.first.size, scaleOf(id).maxSize, reason: id);
+      expect(readings.first.tightness, 0, reason: id);
       expect(readings.last.size, VerseScales.of(id).minSize, reason: id);
+      expect(readings.last.tightness, 1, reason: id);
       expect(
         readings.last.spacing,
         lessThan(readings.first.spacing),
         reason: id,
       );
+    }
+  });
+
+  test('floors stay legible and short verses keep the loose end', () {
+    const body = [
+      'vigil',
+      'dawn',
+      'night-watch',
+      'cobalt-arch',
+      'psalter',
+      'highlight',
+    ];
+    for (final id in body) {
+      final scale = VerseScales.of(id);
+      expect(scale.minSize, inInclusiveRange(11, 12), reason: id);
+      expect(scale.tightHeight, greaterThanOrEqualTo(1.15), reason: id);
+      expect(
+        scale.tightHeight,
+        lessThanOrEqualTo(scale.looseHeight),
+        reason: id,
+      );
+      expect(scale.maxSize, greaterThan(scale.minSize), reason: id);
+    }
+    final swiss = VerseScales.of('swiss');
+    expect(swiss.minSize, inInclusiveRange(11, 12));
+    expect(swiss.tightHeight, greaterThanOrEqualTo(1));
+    expect(swiss.tightHeight, lessThanOrEqualTo(swiss.looseHeight));
+    for (final id in ['marquee', 'riso']) {
+      final scale = VerseScales.of(id);
+      expect(scale.minSize, inInclusiveRange(11, 12), reason: id);
+      expect(scale.tightHeight, lessThan(1.15), reason: id);
+      expect(
+        scale.tightHeight,
+        lessThanOrEqualTo(scale.looseHeight),
+        reason: id,
+      );
+      expect(scale.maxSize, greaterThan(30), reason: id);
     }
   });
 
@@ -159,7 +281,7 @@ void main() {
       );
       final cramped = _style('cramped');
       final vigil = CardCatalog.bundled.first;
-      final long = _until(VerseBucket.long);
+      final long = _repeat(12);
       expect(VerseScales.of('cramped').fitsStory(long), isFalse);
       expect(VerseScales.of('vigil').fitsStory(long), isTrue);
       expect(VerseScales.of('vigil').fitsStory(_short), isTrue);
@@ -182,12 +304,133 @@ void main() {
     },
   );
 
+  test('remote minFontSize and minLineHeight lower that style floor', () {
+    CardCatalog.apply(
+      CardStyleOverrides.parse(
+        '{"styles":{"highlight":{"layout":{"type":"text","fit":true,'
+        '"minFontSize":11.5,"minLineHeight":1.16}}}}',
+      ),
+    );
+    final scale = VerseScales.of('highlight');
+    expect(scale.minSize, 11.5);
+    expect(scale.tightHeight, 1.16);
+    expect(scale.maxSize, 24);
+    expect(scale.looseHeight, 1.95);
+  });
+
+  test('long passages keep every size 1.0.2 offered, and add more', () {
+    _applyExample();
+    final after = <String, Map<String, List<String>>>{};
+    var beforeCount = 0;
+    var afterCount = 0;
+    final lines = <String>[];
+    for (final passage in _passages) {
+      final (label, translation, book, chapter, start, end) = passage;
+      final content = _passage(translation, book, chapter, start, end);
+      final row = <String, List<String>>{};
+      final cells = <String>[];
+      for (final style in CardCatalog.styles) {
+        final names = [
+          for (final shape in VerseScales.exportShapes(style, content))
+            shape.name,
+        ];
+        row[style.id] = names;
+        final previous = _before[label]![style.id]!;
+        expect(
+          names,
+          containsAll(previous),
+          reason: '$label ${style.id} lost a size',
+        );
+        expect(
+          names,
+          ['feed', 'portrait', 'story'],
+          reason: '$label ${style.id}',
+        );
+        beforeCount += previous.length;
+        afterCount += names.length;
+        cells.add(_marks(names));
+      }
+      after[label] = row;
+      lines.add('${label.padRight(16)} ${cells.join('  ')}');
+    }
+    expect(beforeCount, 150);
+    expect(afterCount, 216);
+    // ignore: avoid_print
+    print(
+      'style-size coverage before $beforeCount after $afterCount\n'
+      '${''.padRight(16)} ${_styleIds.map((id) => id.padRight(5)).join('  ')}\n'
+      '${lines.join('\n')}',
+    );
+    // Esther 8:9 KJV had lost the square on every style but Riso and Swiss.
+    final esther = after['kjv EST 8:9']!;
+    for (final id in [
+      'highlight',
+      'marquee',
+      'psalter',
+      'vigil',
+      'dawn',
+      'night-watch',
+      'cobalt-arch',
+    ]) {
+      expect(esther[id], contains('feed'), reason: id);
+    }
+  });
+
+  testWidgets('a short verse is painted at the style maximum', (tester) async {
+    _applyExample();
+    final content = _content('John 11:35');
+    for (final style in CardCatalog.styles) {
+      final scale = VerseScales.of(style.id);
+      for (final shape in CardShape.values) {
+        final reading = VerseScales.forShape(style, content, shape);
+        expect(reading.tightness, 0, reason: '${style.id} ${shape.name}');
+        expect(
+          reading.size,
+          scale.maxSize,
+          reason: '${style.id} ${shape.name}',
+        );
+        expect(
+          reading.height,
+          scale.looseHeight,
+          reason: '${style.id} ${shape.name}',
+        );
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Center(
+              child: SizedBox(
+                width: CardShape.designWidth,
+                height: shape.designHeight,
+                child: QuoteCard(
+                  content: content,
+                  style: style,
+                  variant: style.variants.first,
+                  shape: shape,
+                ),
+              ),
+            ),
+          ),
+        );
+        final painted = _verseParagraph(tester, content.text);
+        expect(
+          painted.text.style?.fontSize,
+          closeTo(scale.maxSize, 0.05),
+          reason: '${style.id} ${shape.name}',
+        );
+        expect(
+          painted.text.style?.height,
+          closeTo(scale.looseHeight, 0.001),
+          reason: '${style.id} ${shape.name}',
+        );
+      }
+    }
+  });
+
   testWidgets(
     'Hebrews 12:1-2 WEB keeps a square on the styles Arthur checked',
     (tester) async {
       _applyExample();
       final content = _passage('web', 'HEB', 12, 1, 2);
-      expect(VerseScales.bucketOf(content.text), VerseBucket.longest);
+      expect(VerseScales.lineCount(content.text), greaterThanOrEqualTo(11));
       const checked = ['highlight', 'marquee', 'psalter', 'vigil', 'riso'];
       for (final id in checked) {
         final style = CardCatalog.byId(id);
@@ -203,52 +446,6 @@ void main() {
           reason: id,
         );
       }
-    },
-  );
-
-  testWidgets(
-    'Esther 8:9 drops the square only where the verse overflows the well',
-    (tester) async {
-      _applyExample();
-      final content = _passage('kjv', 'EST', 8, 9, 9);
-      expect(VerseScales.bucketOf(content.text), VerseBucket.longest);
-      final square = <String>[];
-      final storyOnly = <String>[];
-      for (final style in CardCatalog.styles) {
-        final shapes = VerseScales.exportShapes(style, content);
-        expect(shapes, contains(CardShape.story), reason: style.id);
-        final full = await _fullness(tester, style, content, CardShape.feed);
-        final fits = full.height <= full.slot * (1 + CardMeasure.slack) + 0.5;
-        expect(
-          shapes.contains(CardShape.feed),
-          fits,
-          reason: '${style.id} square is ${full.height} in ${full.slot}',
-        );
-        if (fits) {
-          square.add(style.id);
-        } else {
-          storyOnly.add(style.id);
-        }
-        final story = await _fullness(tester, style, content, CardShape.story);
-        expect(
-          story.height,
-          lessThanOrEqualTo(story.slot * (1 + CardMeasure.slack) + 0.5),
-          reason: '${style.id} story',
-        );
-      }
-      expect(square, containsAll(['riso', 'swiss']));
-      expect(
-        storyOnly,
-        containsAll([
-          'highlight',
-          'marquee',
-          'psalter',
-          'vigil',
-          'dawn',
-          'night-watch',
-          'cobalt-arch',
-        ]),
-      );
     },
   );
 
@@ -315,7 +512,29 @@ void main() {
   });
 }
 
+double mathMin(double a, double b) => a < b ? a : b;
+
+double mathMax(double a, double b) => a > b ? a : b;
+
 StyleTypeScale scaleOf(String id) => VerseScales.of(id);
+
+String _marks(List<String> names) {
+  final marks = [
+    if (names.contains('feed')) 'F',
+    if (names.contains('portrait')) 'P',
+    if (names.contains('story')) 'S',
+  ].join();
+  return marks.padRight(5);
+}
+
+/// Repeats a word until the shared line measure reports [lines] lines.
+String _textOfLineCount(int lines) {
+  for (var words = 1; words < 4000; words++) {
+    final text = _repeat(words);
+    if (VerseScales.lineCount(text) >= lines) return text;
+  }
+  fail('no verse reached $lines lines');
+}
 
 void _applyExample() {
   final example = File('remote_card_styles.example.json').readAsStringSync();
@@ -357,7 +576,7 @@ class _Fill {
   final double slot;
 }
 
-/// Verse height at the scaled font, over the well the card actually gives it.
+/// Verse height at the fitted font, over the well the card actually gives it.
 Future<_Fill> _fullness(
   WidgetTester tester,
   CardStyleSpec style,
@@ -380,22 +599,9 @@ Future<_Fill> _fullness(
       ),
     ),
   );
-  final wanted = content.text.trim();
-  final upper = wanted.toUpperCase();
-  RenderParagraph? verse;
-  void visit(RenderObject node) {
-    if (node is RenderParagraph) {
-      final plain = node.text.toPlainText().trim();
-      if (plain == wanted || plain == upper) verse = node;
-    }
-    node.visitChildren(visit);
-  }
-
-  visit(tester.renderObject(find.byType(QuoteCard)));
-  final found = verse;
-  expect(found, isNotNull, reason: style.id);
-  final reading = VerseScales.read(style.id, content.text);
-  final painted = found!.text.style;
+  final found = _verseParagraph(tester, content.text);
+  final reading = VerseScales.forShape(style, content, shape);
+  final painted = found.text.style;
   final rendered = painted?.fontSize ?? reading.size;
   final factor = rendered == 0 ? 1.0 : reading.size / rendered;
   final font = (painted ?? const TextStyle()).copyWith(
@@ -414,6 +620,24 @@ Future<_Fill> _fullness(
   final height = painter.height;
   painter.dispose();
   return _Fill(height, found.constraints.maxHeight);
+}
+
+RenderParagraph _verseParagraph(WidgetTester tester, String text) {
+  final wanted = text.trim();
+  final upper = wanted.toUpperCase();
+  RenderParagraph? verse;
+  void visit(RenderObject node) {
+    if (node is RenderParagraph) {
+      final plain = node.text.toPlainText().trim();
+      if (plain == wanted || plain == upper) verse = node;
+    }
+    node.visitChildren(visit);
+  }
+
+  visit(tester.renderObject(find.byType(QuoteCard)));
+  final found = verse;
+  expect(found, isNotNull);
+  return found!;
 }
 
 CardStyleSpec _style(String id) => CardStyleSpec(

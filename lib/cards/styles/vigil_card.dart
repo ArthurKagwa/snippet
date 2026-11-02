@@ -26,6 +26,7 @@ class VigilCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vertical = shape == CardShape.feed ? reading.pad * 0.72 : reading.pad;
+    final horizontal = reading.span(40, 26);
     return ColoredBox(
       color: palette.background,
       child: Stack(
@@ -40,7 +41,10 @@ class VigilCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40, vertical: vertical),
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontal,
+              vertical: vertical,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
