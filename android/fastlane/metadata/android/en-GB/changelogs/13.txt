@@ -1,0 +1,1 @@
+Cards now save in HD by default, and style colours have a fresh order.
