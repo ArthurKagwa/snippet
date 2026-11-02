@@ -18,9 +18,15 @@ class _FakeExport implements ExportService {
   final List<double> ratios = [];
   final List<String?> captions = [];
   final List<String> texts = [];
+  final List<String> opened = [];
 
   /// When set, saving waits on it, so a test can tap while work is pending.
   Completer<void>? gate;
+
+  /// What [saveToGallery] hands back. Null keeps the plain confirmation.
+  SavedGalleryImage? savedImage;
+
+  bool openResult = true;
 
   @override
   Future<Uint8List> capturePng(
@@ -32,9 +38,19 @@ class _FakeExport implements ExportService {
   }
 
   @override
-  Future<void> saveToGallery(Uint8List png, {required String name}) async {
+  Future<SavedGalleryImage?> saveToGallery(
+    Uint8List png, {
+    required String name,
+  }) async {
     saved.add(name);
     await gate?.future;
+    return savedImage;
+  }
+
+  @override
+  Future<bool> openSaved(SavedGalleryImage image) async {
+    opened.add(image.uri ?? 'photos');
+    return openResult;
   }
 
   @override
@@ -200,6 +216,64 @@ void main() {
     await tester.pumpAndSettle();
     expect(export.saved, ['snippet_psalm_46_10_portrait_hd']);
     expect(export.ratios.single, closeTo(2160, 0.5));
+  });
+
+  Future<void> openExportAndSave(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('swipe-styles')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('export-card')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('save-image')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+  }
+
+  testWidgets('saved image offers View when a content URI comes back', (
+    tester,
+  ) async {
+    await boot(tester);
+    export.savedImage = SavedGalleryImage.contentUri(
+      'content://media/external/images/media/12',
+    );
+
+    await openExportAndSave(tester);
+
+    expect(find.text('Saved to Photos'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('overlay-toast-action')));
+    await tester.pump();
+    expect(export.opened, ['content://media/external/images/media/12']);
+    expect(find.text('View'), findsNothing);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('saved image stays plain when nothing can be opened', (
+    tester,
+  ) async {
+    await boot(tester);
+
+    await openExportAndSave(tester);
+
+    expect(find.text('Saved to Photos'), findsOneWidget);
+    expect(find.byKey(const Key('overlay-toast-action')), findsNothing);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('View falls back to a plain message when opening fails', (
+    tester,
+  ) async {
+    await boot(tester);
+    export.savedImage = const SavedGalleryImage.photosApp();
+    export.openResult = false;
+
+    await openExportAndSave(tester);
+    await tester.tap(find.text('View'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(export.opened, ['photos']);
+    expect(find.text('Could not open the photo.'), findsOneWidget);
+    expect(find.byKey(const Key('overlay-toast-action')), findsNothing);
+    await tester.pumpAndSettle();
   });
 
   testWidgets('share caption and invite text come from content config', (
