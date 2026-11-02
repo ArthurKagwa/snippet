@@ -37,7 +37,10 @@ class NightWatchCard extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 32, vertical: reading.pad),
+        padding: EdgeInsets.symmetric(
+          horizontal: reading.span(32, 20),
+          vertical: reading.pad,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.start,

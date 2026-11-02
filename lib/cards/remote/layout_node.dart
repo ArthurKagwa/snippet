@@ -35,6 +35,10 @@ sealed class LayoutNode {
 
   Widget build(LayoutScope s);
 
+  /// Verse-text floors declared on this node or a descendant. Older builds
+  /// ignore the keys; a layout that omits them is unchanged.
+  void collectVerseLimits(VerseTextLimits limits) {}
+
   /// Null when [json] isn't a node this app knows, so a layout using a
   /// newer node type is dropped instead of drawn wrong.
   static LayoutNode? parse(Object? json, [int depth = 0]) {
@@ -83,6 +87,8 @@ sealed class LayoutNode {
 /// `height` pins the box, so anything taller is clipped. `minHeight` only
 /// sets a floor, which is what a reference that may take a second line
 /// needs. Older app builds ignore `minHeight` and `maxHeight`.
+/// Vertical padding tracks the verse reading. Horizontal padding eases in
+/// only as the verse gets longer, so a short verse keeps the authored inset.
 final class _BoxNode extends LayoutNode {
   _BoxNode(Map json, this.child)
     : color = ColorRef.parse(json['color']),
@@ -111,13 +117,16 @@ final class _BoxNode extends LayoutNode {
   final EdgeInsets padding;
 
   EdgeInsets _padding(LayoutScope s) {
-    final scale = s.reading?.spacing ?? 1;
-    if (scale == 1) return padding;
+    final reading = s.reading;
+    if (reading == null) return padding;
+    final vertical = reading.spacing;
+    final horizontal = 1 - 0.18 * reading.tightness;
+    if (vertical == 1 && horizontal == 1) return padding;
     return EdgeInsets.fromLTRB(
-      padding.left,
-      padding.top * scale,
-      padding.right,
-      padding.bottom * scale,
+      padding.left * horizontal,
+      padding.top * vertical,
+      padding.right * horizontal,
+      padding.bottom * vertical,
     );
   }
 
@@ -162,6 +171,10 @@ final class _BoxNode extends LayoutNode {
       child: built,
     );
   }
+
+  @override
+  void collectVerseLimits(VerseTextLimits limits) =>
+      child?.collectVerseLimits(limits);
 }
 
 /// `{"type": "column" | "row", "children", "main", "cross", "gap"}`; a
@@ -205,12 +218,30 @@ final class _FlexNode extends LayoutNode {
     spacing: gap * (s.reading?.spacing ?? 1),
     children: [
       for (var i = 0; i < children.length; i++)
-        switch (flexes[i]) {
+        switch (_flex(i, s)) {
           final f? when f > 0 => Expanded(flex: f, child: children[i].build(s)),
           _ => children[i].build(s),
         },
     ],
   );
+
+  /// A flexible gap gives its share of the free space back to the verse as
+  /// the reading tightens. A short verse keeps the authored flex.
+  int? _flex(int i, LayoutScope s) {
+    final base = flexes[i];
+    final reading = s.reading;
+    if (base == null || base <= 0) return null;
+    if (reading == null || children[i] is! _SpaceNode) return base;
+    final scaled = (base * (1 - reading.tightness)).round();
+    return scaled <= 0 ? null : scaled;
+  }
+
+  @override
+  void collectVerseLimits(VerseTextLimits limits) {
+    for (final child in children) {
+      child.collectVerseLimits(limits);
+    }
+  }
 }
 
 /// `{"type": "stack", "children"}`: layers that each fill the box.
@@ -224,6 +255,13 @@ final class _StackNode extends LayoutNode {
     fit: StackFit.expand,
     children: [for (final c in children) c.build(s)],
   );
+
+  @override
+  void collectVerseLimits(VerseTextLimits limits) {
+    for (final child in children) {
+      child.collectVerseLimits(limits);
+    }
+  }
 }
 
 /// `{"type": "align", "alignment", "child"}`
@@ -237,18 +275,46 @@ final class _AlignNode extends LayoutNode {
   @override
   Widget build(LayoutScope s) =>
       Align(alignment: alignment, child: child.build(s));
+
+  @override
+  void collectVerseLimits(VerseTextLimits limits) =>
+      child.collectVerseLimits(limits);
 }
 
 /// `{"type": "padding", "padding", "child"}`
+///
+/// Vertical and horizontal insets ease with the verse once it leaves the
+/// short end. At that end the factor is 1, so a short verse matches the
+/// padding as written. Older builds ignore the reading and paint [padding].
 final class _PaddingNode extends LayoutNode {
   _PaddingNode(Map json, this.child) : padding = insetsOf(json['padding']);
 
   final EdgeInsets padding;
   final LayoutNode child;
 
+  double _factor(LayoutScope s) {
+    final reading = s.reading;
+    if (reading == null || reading.looseSpacing == 0) return 1;
+    return reading.spacing / reading.looseSpacing;
+  }
+
   @override
-  Widget build(LayoutScope s) =>
-      Padding(padding: padding, child: child.build(s));
+  Widget build(LayoutScope s) {
+    final factor = _factor(s);
+    final resolved = factor == 1
+        ? padding
+        : EdgeInsets.fromLTRB(
+            padding.left * factor,
+            padding.top * factor,
+            padding.right * factor,
+            padding.bottom * factor,
+          );
+    return Padding(padding: resolved, child: child.build(s));
+  }
+
+  @override
+  void collectVerseLimits(VerseTextLimits limits) =>
+      child.collectVerseLimits(limits);
 }
 
 /// `{"type": "rotate", "degrees", "child"}`
@@ -262,6 +328,10 @@ final class _RotateNode extends LayoutNode {
   @override
   Widget build(LayoutScope s) =>
       Transform.rotate(angle: radians, child: child.build(s));
+
+  @override
+  void collectVerseLimits(VerseTextLimits limits) =>
+      child.collectVerseLimits(limits);
 }
 
 /// `{"type": "space", "size"}`: a gap in a row or column.
@@ -273,4 +343,11 @@ final class _SpaceNode extends LayoutNode {
   @override
   Widget build(LayoutScope s) =>
       SizedBox.square(dimension: size * (s.reading?.spacing ?? 1));
+}
+
+/// Floors a remote verse node may declare. Absent fields keep the style's
+/// own floor. Older app builds ignore the JSON keys.
+class VerseTextLimits {
+  double? minFontSize;
+  double? minLineHeight;
 }

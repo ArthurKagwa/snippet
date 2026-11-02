@@ -9,8 +9,8 @@ import 'quote_card.dart';
 /// Whether a verse actually fits one style at one export size.
 ///
 /// The card is laid out at that shape's design size, with the style's own
-/// type, caps, padding and reference block, at the font the length bucket
-/// chose. The size is offered when that text stays inside the verse well.
+/// type, caps, padding and reference block, at the font the fit chose.
+/// The size is offered when that text stays inside the verse well.
 /// About 8% past the well still counts as fitting: the well already sits
 /// inside the padding, and a few pixels is the difference between this
 /// measure and a phone. Further than that, the size is hidden.
@@ -27,6 +27,9 @@ abstract final class CardMeasure {
     required double fontSize,
     required double lineHeight,
     required bool Function() fallback,
+    double gap = 0,
+    double pad = 0,
+    double spacing = 1,
   }) {
     final well = _well(
       style: style,
@@ -34,6 +37,9 @@ abstract final class CardMeasure {
       shape: shape,
       fontSize: fontSize,
       lineHeight: lineHeight,
+      gap: gap,
+      pad: pad,
+      spacing: spacing,
     );
     if (well == null) return fallback();
     return well.fits;
@@ -45,11 +51,16 @@ abstract final class CardMeasure {
     required CardShape shape,
     required double fontSize,
     required double lineHeight,
+    required double gap,
+    required double pad,
+    required double spacing,
   }) {
     final key =
         '${style.id}|${identityHashCode(style.builder)}|${shape.name}|'
         '${content.text}|${content.reference}|${content.translation}|'
-        '${fontSize.toStringAsFixed(2)}|${lineHeight.toStringAsFixed(3)}';
+        '${fontSize.toStringAsFixed(2)}|${lineHeight.toStringAsFixed(3)}|'
+        '${gap.toStringAsFixed(2)}|${pad.toStringAsFixed(2)}|'
+        '${spacing.toStringAsFixed(3)}';
     final cached = _cache[key];
     if (cached != null) return cached.missing ? null : cached;
     final well = _layout(

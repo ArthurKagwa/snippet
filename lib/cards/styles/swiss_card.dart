@@ -28,7 +28,10 @@ class SwissCard extends StatelessWidget {
     return ColoredBox(
       color: palette.background,
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 28, vertical: reading.pad),
+        padding: EdgeInsets.symmetric(
+          horizontal: reading.span(28, 18),
+          vertical: reading.pad,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

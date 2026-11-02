@@ -21,6 +21,7 @@ abstract final class CardCatalog {
   /// Swaps in [overrides] over the bundled styles. Screens opened after
   /// this see the change; [CardStyleOverrides.none] restores the bundle.
   static void apply(CardStyleOverrides overrides) {
+    VerseScales.resetLayoutLimits();
     final all = overrides.applyTo(bundled);
     _all = all;
     _shown = [
@@ -39,7 +40,7 @@ abstract final class CardCatalog {
         content: c,
         palette: p,
         shape: s,
-        reading: VerseScales.read('vigil', c.text),
+        reading: VerseScales.forShape(CardCatalog.byId('vigil'), c, s),
       ),
     ),
     CardStyleSpec(
@@ -51,7 +52,7 @@ abstract final class CardCatalog {
         content: c,
         palette: p,
         shape: s,
-        reading: VerseScales.read('riso', c.text),
+        reading: VerseScales.forShape(CardCatalog.byId('riso'), c, s),
       ),
     ),
     CardStyleSpec(
@@ -63,7 +64,7 @@ abstract final class CardCatalog {
         content: c,
         palette: p,
         shape: s,
-        reading: VerseScales.read('dawn', c.text),
+        reading: VerseScales.forShape(CardCatalog.byId('dawn'), c, s),
       ),
     ),
     CardStyleSpec(
@@ -75,7 +76,7 @@ abstract final class CardCatalog {
         content: c,
         palette: p,
         shape: s,
-        reading: VerseScales.read('swiss', c.text),
+        reading: VerseScales.forShape(CardCatalog.byId('swiss'), c, s),
       ),
     ),
     CardStyleSpec(
@@ -87,7 +88,7 @@ abstract final class CardCatalog {
         content: c,
         palette: p,
         shape: s,
-        reading: VerseScales.read('night-watch', c.text),
+        reading: VerseScales.forShape(CardCatalog.byId('night-watch'), c, s),
       ),
     ),
     CardStyleSpec(
@@ -99,7 +100,7 @@ abstract final class CardCatalog {
         content: c,
         palette: p,
         shape: s,
-        reading: VerseScales.read('cobalt-arch', c.text),
+        reading: VerseScales.forShape(CardCatalog.byId('cobalt-arch'), c, s),
       ),
     ),
   ];

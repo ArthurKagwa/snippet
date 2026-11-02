@@ -182,14 +182,25 @@ class StyleOverride {
         if (!hiddenVariants.contains(v.id)) v,
     ];
     if (shown.isEmpty) shown = merged;
-    return style.copyWith(
+    final node = layout;
+    if (node != null) {
+      final limits = VerseTextLimits();
+      node.collectVerseLimits(limits);
+      VerseScales.applyTextLimits(
+        style.id,
+        minFontSize: limits.minFontSize,
+        minLineHeight: limits.minLineHeight,
+      );
+    }
+    late final CardStyleSpec built;
+    built = style.copyWith(
       name: name,
       collection: collection,
       tags: tags == null || tags!.isEmpty ? null : tags,
       variants: shown,
-      builder: switch (layout) {
+      builder: switch (node) {
         final l? => (c, p, shape) => l.build(
-          LayoutScope(c, p, shape, VerseScales.read(style.id, c.text)),
+          LayoutScope(c, p, shape, VerseScales.forShape(built, c, shape)),
         ),
         null => null,
       },
@@ -198,6 +209,7 @@ class StyleOverride {
           if (!shown.contains(v)) v,
       ],
     );
+    return built;
   }
 }
 

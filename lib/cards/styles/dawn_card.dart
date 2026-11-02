@@ -26,6 +26,8 @@ class DawnCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final top = shape == CardShape.feed ? reading.pad * 0.7 : reading.pad;
+    final bottom = reading.span(28, 16);
+    final horizontal = reading.span(32, 20);
     return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -38,7 +40,7 @@ class DawnCard extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: EdgeInsets.fromLTRB(32, top, 32, 28),
+        padding: EdgeInsets.fromLTRB(horizontal, top, horizontal, bottom),
         child: Column(
           children: [
             SizedBox(

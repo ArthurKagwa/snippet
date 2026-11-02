@@ -1,26 +1,31 @@
 part of 'layout_node.dart';
 
 /// `{"type": "text", "text", "font", "weight", "italic", "condensed",
-/// "size", "fit", "minSize", "maxLines", "color", "align", "upper",
-/// "height", "tracking", "highlight", "highlightPadding"}`. [text] may use
-/// `{verse}`, `{reference}`, `{translation}` and `{referenceLine}`; `fit`
-/// shrinks to the space given (from `size` down to `minSize`); `maxLines`
-/// caps the line count; `tracking` is in ems. `highlight` is a colour for
-/// a marker band behind each line (a `height` above 1 opens gaps between
-/// the bands), grown by `highlightPadding`; older app builds ignore it.
+/// "size", "fit", "minSize", "minFontSize", "maxLines", "color", "align",
+/// "upper", "height", "minLineHeight", "tracking", "highlight",
+/// "highlightPadding"}`. [text] may use `{verse}`, `{reference}`,
+/// `{translation}` and `{referenceLine}`; `fit` shrinks to the space given
+/// (from `size` down to `minSize`); `maxLines` caps the line count;
+/// `tracking` is in ems. `highlight` is a colour for a marker band behind
+/// each line (a `height` above 1 opens gaps between the bands), grown by
+/// `highlightPadding`. `minFontSize` and `minLineHeight` are the legible
+/// floors the verse fitter will not cross; older app builds ignore them,
+/// along with `highlight`.
 ///
 /// A `{reference}` or `{referenceLine}` is drawn by [VerseReference], which
 /// keeps the chapter and verse and sets them on their own line when the
 /// book name is too long to sit beside them. Give that node room for two
 /// lines (a `minHeight` box rather than a fixed `height`). Verse text takes
-/// its size, line height and surrounding gaps from the length bucket when
-/// a reading is in scope.
+/// its size, line height and surrounding gaps from the fitted reading when
+/// one is in scope.
 final class _TextNode extends LayoutNode {
   _TextNode(Map json)
     : text = json['text'] is String ? json['text'] as String : '{verse}',
       font = FontRef.fromJson(json),
       size = numberOf(json['size']) ?? 12,
       minSize = numberOf(json['minSize']) ?? 6,
+      minFontSize = numberOf(json['minFontSize']),
+      minLineHeight = numberOf(json['minLineHeight']),
       maxLines = numberOf(json['maxLines'])?.round(),
       fit = json['fit'] == true,
       color = ColorRef.parse(json['color']),
@@ -35,6 +40,8 @@ final class _TextNode extends LayoutNode {
   final FontRef font;
   final double size;
   final double minSize;
+  final double? minFontSize;
+  final double? minLineHeight;
   final int? maxLines;
   final bool fit;
   final ColorRef? color;
@@ -70,8 +77,12 @@ final class _TextNode extends LayoutNode {
     final ink = (color ?? ColorRef.parse('ink')!).resolve(s.palette);
     final reading = _isVerse ? s.reading : null;
     final maxSize = reading?.size ?? size;
-    final floor = math.min(reading?.minSize ?? minSize, maxSize);
-    final lineHeight = reading?.height ?? height;
+    final authoredFloor = minFontSize ?? minSize;
+    final floor = math.min(reading?.minSize ?? authoredFloor, maxSize);
+    final authoredHeight = reading?.height ?? height;
+    final lineHeight = authoredHeight == null || minLineHeight == null
+        ? authoredHeight
+        : math.max(authoredHeight, minLineHeight!);
     TextStyle styleFor(double fontSize) => font.style(
       fontSize,
       color: ink,
@@ -123,6 +134,13 @@ final class _TextNode extends LayoutNode {
       style: styleFor(size),
     );
   }
+
+  @override
+  void collectVerseLimits(VerseTextLimits limits) {
+    if (!_isVerse) return;
+    limits.minFontSize ??= minFontSize;
+    limits.minLineHeight ??= minLineHeight;
+  }
 }
 
 /// `{"type": "halftone", "color", "spacing", "dot"}`: a dot screen.
@@ -165,4 +183,12 @@ final class _ShapeNode extends LayoutNode {
 
   @override
   Widget build(LayoutScope s) => (byShape[s.shape] ?? fallback).build(s);
+
+  @override
+  void collectVerseLimits(VerseTextLimits limits) {
+    fallback.collectVerseLimits(limits);
+    for (final node in byShape.values) {
+      node.collectVerseLimits(limits);
+    }
+  }
 }

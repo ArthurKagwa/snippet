@@ -25,26 +25,31 @@ class CobaltArchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const side = 28.0;
-    const archWidth = CardShape.designWidth - side * 2;
+    final side = reading.span(28, 16);
+    final archWidth = CardShape.designWidth - side * 2;
     return ColoredBox(
       color: palette.background,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(side, side, side, 0),
+        padding: EdgeInsets.fromLTRB(side, side, side, 0),
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: palette.surface,
-            borderRadius: const BorderRadius.vertical(
+            borderRadius: BorderRadius.vertical(
               top: Radius.circular(archWidth / 2),
             ),
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            padding: EdgeInsets.fromLTRB(
+              reading.span(20, 8),
+              reading.span(24, 8),
+              reading.span(20, 8),
+              reading.span(24, 8),
+            ),
             child: Column(
               children: [
                 Container(
-                  width: 26,
-                  height: 26,
+                  width: reading.span(26, 16),
+                  height: reading.span(26, 16),
                   decoration: BoxDecoration(
                     color: palette.accent,
                     shape: BoxShape.circle,
