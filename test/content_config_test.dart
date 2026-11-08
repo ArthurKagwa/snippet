@@ -158,7 +158,7 @@ void main() {
       text(FirebaseContentConfigService.shareCaptionKey),
       defaultShareCaption,
     );
-    expect(text(FirebaseContentConfigService.minAndroidBuildKey), '');
+    expect(text(FirebaseContentConfigService.minAndroidBuildKey), '14');
     final update = parseRemoteContent(
       verseCalendarJson: '{}',
       announcement: '',
@@ -170,8 +170,9 @@ void main() {
         FirebaseContentConfigService.androidUpdateMessageKey,
       ),
     ).androidUpdate;
-    expect(update.minBuild, isNull);
-    expect(update.blocks(1), isFalse);
+    expect(update.minBuild, 14);
+    expect(update.blocks(13), isTrue);
+    expect(update.blocks(14), isFalse);
     expect(update.title, AndroidUpdatePolicy.defaultTitle);
     expect(update.message, AndroidUpdatePolicy.defaultMessage);
   });
