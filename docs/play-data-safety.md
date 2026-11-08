@@ -42,7 +42,7 @@ performance data.
   (`lib/data/saved_card.dart`, `firestore.rules`), only for Google accounts.
   Phone-only cards live in a local file (`lib/app.dart`).
 - **Installation ID**: Firebase Remote Config generates one to fetch the verse
-  of the day and announcements.
+  of the day, announcements, and the minimum supported Android version.
 - **Not collected**: exported images go to the gallery or share sheet on the
   device; the reminder schedule is local (`flutter_local_notifications`); no
   analytics, ads or crash-reporting SDKs are included.

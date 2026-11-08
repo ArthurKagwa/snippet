@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:snippet/cards/card_style_overrides.dart';
 import 'package:snippet/cards/card_content.dart';
+import 'package:snippet/services/android_update_policy.dart';
 import 'package:snippet/services/content_config_service.dart';
 import 'package:snippet/services/firebase_content_config_service.dart';
 
@@ -157,5 +158,21 @@ void main() {
       text(FirebaseContentConfigService.shareCaptionKey),
       defaultShareCaption,
     );
+    expect(text(FirebaseContentConfigService.minAndroidBuildKey), '');
+    final update = parseRemoteContent(
+      verseCalendarJson: '{}',
+      announcement: '',
+      minAndroidBuild: text(FirebaseContentConfigService.minAndroidBuildKey),
+      androidUpdateTitle: text(
+        FirebaseContentConfigService.androidUpdateTitleKey,
+      ),
+      androidUpdateMessage: text(
+        FirebaseContentConfigService.androidUpdateMessageKey,
+      ),
+    ).androidUpdate;
+    expect(update.minBuild, isNull);
+    expect(update.blocks(1), isFalse);
+    expect(update.title, AndroidUpdatePolicy.defaultTitle);
+    expect(update.message, AndroidUpdatePolicy.defaultMessage);
   });
 }

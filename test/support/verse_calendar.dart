@@ -19,4 +19,7 @@ class CalendarContent implements ContentConfigService {
 
   @override
   Future<ContentConfig> load() async => ContentConfig(verseCalendar: calendar);
+
+  @override
+  Future<ContentConfig> refresh() => load();
 }

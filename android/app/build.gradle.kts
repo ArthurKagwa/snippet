@@ -81,6 +81,9 @@ kotlin {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // Immediate in-app updates. The store listing is the fallback when Play
+    // does not offer one. 2.1.0 is required for apps targeting Android 14+.
+    implementation("com.google.android.play:app-update:2.1.0")
 }
 
 flutter {
