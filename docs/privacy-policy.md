@@ -24,9 +24,10 @@ Google Cloud Firestore under your account, so they sync across devices. Cards
 you kept on this phone move to your account when you link Google. Only you can
 read or change them.
 
-**Remote Config.** The app fetches the verse of the day and announcements
-from Firebase Remote Config. Firebase generates an app installation
-identifier for this. We do not use it to identify you personally.
+**Remote Config.** The app fetches the verse of the day, announcements, and
+the minimum supported Android version from Firebase Remote Config. Firebase
+generates an app installation identifier for this. We do not use it to
+identify you personally.
 
 **On-device only:** your preferences, and the daily verse notifications the
 app schedules locally. Images you export are saved to your device gallery

@@ -25,6 +25,9 @@ class _Content implements ContentConfigService {
     verseCalendar: rotatingCalendar(verses, from: DateTime(2026, 10, 21))
       ..addAll(rotatingCalendar(verses, from: DateTime.now())),
   );
+
+  @override
+  Future<ContentConfig> refresh() => load();
 }
 
 class _Reminders extends NoopVerseReminderService {

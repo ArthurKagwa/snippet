@@ -95,6 +95,9 @@ class _FakeContent implements ContentConfigService {
     inviteMessage: inviteMessage,
     shareCaption: shareCaption,
   );
+
+  @override
+  Future<ContentConfig> refresh() => load();
 }
 
 Future<void> _settle(WidgetTester tester) async {

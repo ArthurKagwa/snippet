@@ -1,0 +1,1 @@
+Snippet asks you to update when this version is no longer supported.

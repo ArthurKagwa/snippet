@@ -1,6 +1,7 @@
 import '../cards/card_content.dart';
 import '../cards/card_style_overrides.dart';
 import '../data/bible_models.dart';
+import 'android_update_policy.dart';
 
 /// Remotely updatable content (verse suggestions, announcements, styles).
 class ContentConfig {
@@ -11,6 +12,7 @@ class ContentConfig {
     this.cardStyles = CardStyleOverrides.none,
     this.inviteMessage = defaultInviteMessage,
     this.shareCaption = defaultShareCaption,
+    this.androidUpdate = AndroidUpdatePolicy.none,
   });
 
   /// Verse of the day by local date key (see [localDateKey]).
@@ -30,6 +32,10 @@ class ContentConfig {
   /// `{translation}` (KJV), `{verse}` (the verse text) and
   /// `{reference_line}` (PSALM 46:10 · KJV) are filled in.
   final String shareCaption;
+
+  /// When Android builds older than [AndroidUpdatePolicy.minBuild] must update.
+  /// [AndroidUpdatePolicy.none] means this install is allowed.
+  final AndroidUpdatePolicy androidUpdate;
 
   String captionFor(CardContent content) => shareCaption
       .replaceAll('{reference_line}', content.referenceLine)
@@ -93,7 +99,12 @@ class FeaturedVerse {
 /// [LocalContentConfigService] serves the bundled defaults;
 /// FirebaseContentConfigService serves Firebase Remote Config.
 abstract class ContentConfigService {
+  /// The config to use now. May be the last fetch.
   Future<ContentConfig> load();
+
+  /// Reads again. A failed refresh should throw or return the last good
+  /// config, never a made-up update requirement.
+  Future<ContentConfig> refresh();
 }
 
 const defaultInviteMessage =
@@ -114,4 +125,7 @@ class LocalContentConfigService implements ContentConfigService {
 
   @override
   Future<ContentConfig> load() async => defaultContentConfig;
+
+  @override
+  Future<ContentConfig> refresh() => load();
 }

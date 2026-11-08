@@ -21,6 +21,7 @@ Built with Flutter for Android and iOS (`com.arthur.snippet`). Website: [snippet
 - **Optional account**: email and password or Google sign-in only gates the Library. Picking, swiping and exporting never need it.
 - **Library**: saved cards sync to your account through Firestore.
 - **Hot content**: featured verses and an announcement banner come from Firebase Remote Config, with bundled fallbacks.
+- **Required Android update**: a minimum version code in Remote Config shows a blocking screen. The Update button opens this app on Google Play. Builds before this screen (version code 13 and earlier) do not enforce it.
 - **Verse reminders**: local notifications, no server involved.
 
 ## Bible texts: public domain
@@ -57,7 +58,7 @@ lib/
     auth_service.dart             AuthService + LocalAuthService (offline fallback)
     firebase_auth_service.dart    Firebase email/password + Google sign-in
     content_config_service.dart   ContentConfigService + LocalContentConfigService (bundled defaults)
-    firebase_content_config_service.dart  Remote Config: verse_calendar, fallback_verse, announcement
+    firebase_content_config_service.dart  Remote Config, including min_android_build
     export_service.dart           PNG capture, save to gallery (gal), share (share_plus)
     services.dart                 InheritedWidget container for the services above
 assets/bibles/{kjv,web}.json      66 books; {id,name,license,books:[{id,name,chapters:[[verse,...]]}]}
@@ -147,7 +148,11 @@ The app runs fully offline if Firebase is unavailable (local auth, cards kept on
   and do not send real mail.
 - Remote Config parameters live in `remoteconfig.template.json`:
   `verse_calendar` (JSON object of the phone's local date to a ref, e.g. `{"2026-10-21": "ISA 40:31", "2026-10-22": "LAM 3:22-23"}`),
-  `fallback_verse` (ref used for any day missing from the calendar; empty or unreadable = `GEN 1:1`) and `announcement` (text, empty = none).
+  `fallback_verse` (ref used for any day missing from the calendar; empty or unreadable = `GEN 1:1`), `announcement` (text, empty = none),
+  `min_android_build` (Android version code; empty or unreadable means no requirement),
+  `android_update_title` and `android_update_message` (plain text on the required-update screen; empty means the built-in copy).
+  The Update button tries Play's immediate in-app update, then opens this app's Play listing. It does not follow a link from Remote Config.
+  Raise `min_android_build` only after that version code is completed on Play. Version code 13 and earlier ignore it.
   Edit them in the console, or `firebase deploy --only remoteconfig` (this replaces the console template).
   New values reach users on their next launch, which also reschedules the next 14 days of reminders from the calendar.
   Entries with a bad date or ref are skipped, so that day uses the fallback.

@@ -61,5 +61,14 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:mimeType="image/*"/>
         </intent>
+        <!-- Play listing for the required-update action. Not a permission. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="market"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
     </queries>
 </manifest>

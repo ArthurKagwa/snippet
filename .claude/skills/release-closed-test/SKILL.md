@@ -91,6 +91,10 @@ Same lane by hand, from `android/` in a UTF-8 shell:
   layouts only to `app.build >= 7` (conditions `marker_text_android` /
   `marker_text_ios`). If a release adds a layout feature that old builds
   ignore, gate it the same way rather than changing the default value.
+- **Required updates.** `min_android_build` is the minimum Android version
+  code. Raise it only after that build is completed on Play. An empty or
+  unreadable value does not block anyone. Version code 13 and earlier do
+  not read it, so they cannot be forced to update.
 - **The 60 MB bundle can't go through browser automation** (Chrome
   extension upload limit is 10 MB), so fastlane is the only automated path.
 - `google-services.json` (Firebase app config) is not the Play key.

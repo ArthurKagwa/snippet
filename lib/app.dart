@@ -7,9 +7,12 @@ import 'data/json_library_backend.dart';
 import 'data/json_store.dart';
 import 'data/library_repository.dart';
 import 'features/shell/app_shell.dart';
+import 'features/update/required_update_gate.dart';
 import 'services/auth_service.dart';
 import 'services/content_config_service.dart';
 import 'services/export_service.dart';
+import 'services/play_listing.dart';
+import 'services/play_update.dart';
 import 'services/services.dart';
 import 'services/verse_reminder_service.dart';
 
@@ -26,6 +29,10 @@ class SnippetApp extends StatelessWidget {
     JsonStore? store,
     LibraryBackendFactory? libraryBackend,
     DateTime Function()? now,
+    bool? enforceAndroidUpdate,
+    AndroidBuildReader? androidBuild,
+    AndroidUpdateFlow? updateFlow,
+    PlayListing? playListing,
   }) : this._(
          bible: bible ?? BibleRepository(),
          auth: auth ?? LocalAuthService(),
@@ -35,6 +42,10 @@ class SnippetApp extends StatelessWidget {
          store: store ?? FileJsonStore(),
          libraryBackend: libraryBackend,
          now: now ?? DateTime.now,
+         enforceAndroidUpdate: enforceAndroidUpdate,
+         androidBuild: androidBuild ?? const PlatformAndroidBuild(),
+         updateFlow: updateFlow ?? const PlatformAndroidUpdate(),
+         playListing: playListing ?? const ExternalPlayListing(),
          key: key,
        );
 
@@ -48,6 +59,10 @@ class SnippetApp extends StatelessWidget {
     required JsonStore store,
     LibraryBackendFactory? libraryBackend,
     required this.now,
+    required this.enforceAndroidUpdate,
+    required this.androidBuild,
+    required this.updateFlow,
+    required this.playListing,
   }) : library = LibraryRepository(
          auth: auth,
          backendFor: (user) => libraryBackend == null || user.isAnonymous
@@ -64,6 +79,10 @@ class SnippetApp extends StatelessWidget {
   final LibraryRepository library;
   final AppSettings settings;
   final DateTime Function() now;
+  final bool? enforceAndroidUpdate;
+  final AndroidBuildReader androidBuild;
+  final AndroidUpdateFlow updateFlow;
+  final PlayListing playListing;
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +99,13 @@ class SnippetApp extends StatelessWidget {
         title: AppTheme.appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.cobaltSwipe(),
-        home: const AppShell(),
+        home: RequiredUpdateGate(
+          enforce: enforceAndroidUpdate,
+          androidBuild: androidBuild,
+          updateFlow: updateFlow,
+          playListing: playListing,
+          child: const AppShell(),
+        ),
       ),
     );
   }
