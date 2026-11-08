@@ -71,24 +71,24 @@
     },
     "min_android_build": {
       "defaultValue": {
-        "value": ""
+        "value": "14"
       },
       "valueType": "STRING",
-      "description": "Minimum supported Android version code (the number after + in the app version). Empty or unreadable means no requirement. Set a positive integer only after that build is completed on Google Play. Android builds below it must update. Builds released before this check, version code 13 and earlier, do not enforce it."
+      "description": "Minimum Android version code. Empty or unreadable means no requirement. Set this only to a version code already completed on Google Play. Builds below it must update. Version code 13 and earlier do not enforce it."
     },
     "android_update_title": {
       "defaultValue": {
         "value": "Update Snippet"
       },
       "valueType": "STRING",
-      "description": "Title on the required-update screen. Empty or unreadable means the built-in title. Plain text."
+      "description": "Title on the required-update screen. Empty or unreadable means the built-in title."
     },
     "android_update_message": {
       "defaultValue": {
         "value": "This version of Snippet is no longer supported. Update it on Google Play to keep reading and sharing verses."
       },
       "valueType": "STRING",
-      "description": "Message on the required-update screen. Plain text. Empty or unreadable means the built-in message. The Update button opens this app's Google Play listing."
+      "description": "Message on the required-update screen. Empty or unreadable means the built-in message. The Update button opens this app on Google Play."
     }
   }
 }
